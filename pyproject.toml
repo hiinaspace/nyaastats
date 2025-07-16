@@ -10,6 +10,7 @@ dependencies = [
     "guessit>=3.7.0",
     "bencodepy>=0.9.5",
     "pydantic>=2.0.0",
+    "pydantic-settings>=2.10.1",
 ]
 
 [project.optional-dependencies]
