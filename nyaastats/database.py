@@ -1,10 +1,10 @@
 import json
+import logging
 import sqlite3
+from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import datetime
-from typing import Any, Dict, Iterator, Optional
-
-import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +79,9 @@ class Database:
         finally:
             conn.close()
 
-    def insert_torrent(self, torrent_data: Dict[str, Any], guessit_data: Dict[str, Any]) -> None:
+    def insert_torrent(
+        self, torrent_data: dict[str, Any], guessit_data: dict[str, Any]
+    ) -> None:
         """Insert a torrent with metadata and initial stats."""
         with self.get_conn() as conn:
             # Insert torrent metadata
@@ -116,7 +118,8 @@ class Database:
                         {
                             k: v
                             for k, v in guessit_data.items()
-                            if k not in [
+                            if k
+                            not in [
                                 "title",
                                 "episode",
                                 "season",
@@ -152,11 +155,13 @@ class Database:
 
             conn.commit()
 
-    def insert_stats(self, infohash: str, stats: Dict[str, int], timestamp: Optional[datetime] = None) -> None:
+    def insert_stats(
+        self, infohash: str, stats: dict[str, int], timestamp: datetime | None = None
+    ) -> None:
         """Insert statistics for a torrent."""
         if timestamp is None:
             timestamp = datetime.utcnow()
-        
+
         with self.get_conn() as conn:
             conn.execute(
                 """
@@ -191,7 +196,7 @@ class Database:
             )
             return cursor.fetchone() is not None
 
-    def get_recent_stats(self, infohash: str, limit: int = 3) -> list[Dict[str, Any]]:
+    def get_recent_stats(self, infohash: str, limit: int = 3) -> list[dict[str, Any]]:
         """Get recent statistics for a torrent."""
         with self.get_conn() as conn:
             cursor = conn.execute(

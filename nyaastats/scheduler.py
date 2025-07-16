@@ -1,5 +1,4 @@
 import logging
-from typing import Dict, List, Optional
 
 from .database import Database
 
@@ -11,7 +10,7 @@ class Scheduler:
         self.db = db
         self.batch_size = batch_size
 
-    def get_due_torrents(self) -> List[str]:
+    def get_due_torrents(self) -> list[str]:
         """Get torrents that are due for scraping based on time-decay algorithm."""
         with self.db.get_conn() as conn:
             cursor = conn.execute(
@@ -46,34 +45,34 @@ class Scheduler:
                 (self.batch_size,),
             )
 
-            return [row['infohash'] for row in cursor.fetchall()]
+            return [row["infohash"] for row in cursor.fetchall()]
 
-    def get_metrics(self) -> Dict[str, int]:
+    def get_metrics(self) -> dict[str, int]:
         """Get current system metrics."""
         with self.db.get_conn() as conn:
             metrics = {}
 
             # Total torrents
             cursor = conn.execute("SELECT COUNT(*) as count FROM torrents")
-            metrics['torrents_total'] = cursor.fetchone()['count']
+            metrics["torrents_total"] = cursor.fetchone()["count"]
 
             # Active torrents
             cursor = conn.execute(
                 "SELECT COUNT(*) as count FROM torrents WHERE status = 'active'"
             )
-            metrics['torrents_active'] = cursor.fetchone()['count']
+            metrics["torrents_active"] = cursor.fetchone()["count"]
 
             # Dead torrents
             cursor = conn.execute(
                 "SELECT COUNT(*) as count FROM torrents WHERE status = 'dead'"
             )
-            metrics['torrents_dead'] = cursor.fetchone()['count']
+            metrics["torrents_dead"] = cursor.fetchone()["count"]
 
             # Guessit failed torrents
             cursor = conn.execute(
                 "SELECT COUNT(*) as count FROM torrents WHERE status = 'guessit_failed'"
             )
-            metrics['torrents_guessit_failed'] = cursor.fetchone()['count']
+            metrics["torrents_guessit_failed"] = cursor.fetchone()["count"]
 
             # Queue depth (torrents due for scraping)
             cursor = conn.execute(
@@ -104,11 +103,11 @@ class Scheduler:
                   )
                 """
             )
-            metrics['queue_depth'] = cursor.fetchone()['count']
+            metrics["queue_depth"] = cursor.fetchone()["count"]
 
             # Total stats entries
             cursor = conn.execute("SELECT COUNT(*) as count FROM stats")
-            metrics['stats_total'] = cursor.fetchone()['count']
+            metrics["stats_total"] = cursor.fetchone()["count"]
 
             # Recent stats (last 24 hours)
             cursor = conn.execute(
@@ -117,16 +116,16 @@ class Scheduler:
                 WHERE julianday('now') - julianday(timestamp) <= 1
                 """
             )
-            metrics['stats_recent'] = cursor.fetchone()['count']
+            metrics["stats_recent"] = cursor.fetchone()["count"]
 
             return metrics
 
-    def get_torrent_scrape_schedule(self, infohash: str) -> Optional[Dict[str, any]]:
+    def get_torrent_scrape_schedule(self, infohash: str) -> dict[str, any] | None:
         """Get scrape schedule information for a specific torrent."""
         with self.db.get_conn() as conn:
             cursor = conn.execute(
                 """
-                SELECT 
+                SELECT
                     t.infohash,
                     t.pubdate,
                     t.status,
@@ -169,12 +168,12 @@ class Scheduler:
                 return dict(row)
             return None
 
-    def get_schedule_summary(self) -> Dict[str, int]:
+    def get_schedule_summary(self) -> dict[str, int]:
         """Get summary of torrents by schedule type."""
         with self.db.get_conn() as conn:
             cursor = conn.execute(
                 """
-                SELECT 
+                SELECT
                     CASE
                         WHEN t.status != 'active' THEN t.status
                         WHEN s.last_scrape IS NULL THEN 'never_scraped'
@@ -195,4 +194,4 @@ class Scheduler:
                 """
             )
 
-            return {row['schedule_type']: row['count'] for row in cursor.fetchall()}
+            return {row["schedule_type"]: row["count"] for row in cursor.fetchall()}
