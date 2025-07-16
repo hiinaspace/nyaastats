@@ -9,14 +9,11 @@ dependencies = [
     "feedparser>=6.0.0",
     "guessit>=3.7.0",
     "bencodepy>=0.9.5",
-    "pydantic>=2.0.0"
+    "pydantic>=2.0.0",
 ]
 
 [project.optional-dependencies]
-dev = [
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0"
-]
+dev = ["pytest>=7.0.0", "pytest-cov>=4.0.0"]
 
 [project.scripts]
 nyaastats = "nyaastats.main:main"
@@ -28,17 +25,17 @@ line-length = 88
 
 [tool.ruff.lint]
 select = [
-    "E",   # pycodestyle errors
-    "W",   # pycodestyle warnings
-    "F",   # Pyflakes
-    "I",   # isort
-    "B",   # flake8-bugbear
-    "C4",  # flake8-comprehensions
-    "UP",  # pyupgrade
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # Pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "UP", # pyupgrade
 ]
 ignore = [
-    "E501",  # line too long (handled by line-length)
-    "B008",  # do not perform function calls in argument defaults
+    "E501", # line too long (handled by line-length)
+    "B008", # do not perform function calls in argument defaults
 ]
 
 [tool.ruff.format]
@@ -54,8 +51,4 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [dependency-groups]
-dev = [
-    "pytest>=8.4.1",
-    "pytest-cov>=6.2.1",
-    "ruff>=0.12.3",
-]
+dev = ["pytest>=8.4.1", "pytest-cov>=6.2.1", "ruff>=0.12.3"]
