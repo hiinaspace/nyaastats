@@ -9,10 +9,6 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 SCHEMA = """
--- Enable WAL mode for concurrent access
-PRAGMA journal_mode=WAL;
-PRAGMA synchronous=NORMAL;
-
 CREATE TABLE IF NOT EXISTS torrents (
     infohash TEXT PRIMARY KEY,
     filename TEXT NOT NULL,
@@ -61,23 +57,37 @@ CREATE INDEX IF NOT EXISTS idx_torrents_status ON torrents(status);
 class Database:
     def __init__(self, db_path: str = "nyaastats.db"):
         self.db_path = db_path
+        self._memory_conn = None
         self.init_db()
 
     def init_db(self) -> None:
         """Initialize the database with schema."""
         with self.get_conn() as conn:
+            # Only enable WAL mode for file-based databases, not in-memory
+            if self.db_path != ":memory:":
+                conn.execute("PRAGMA journal_mode=WAL")
+                conn.execute("PRAGMA synchronous=NORMAL")
+            
             conn.executescript(SCHEMA)
             conn.commit()
 
     @contextmanager
     def get_conn(self) -> Iterator[sqlite3.Connection]:
         """Get a database connection with row factory."""
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
-        try:
-            yield conn
-        finally:
-            conn.close()
+        if self.db_path == ":memory:":
+            # For in-memory databases, maintain a persistent connection
+            if self._memory_conn is None:
+                self._memory_conn = sqlite3.connect(self.db_path)
+                self._memory_conn.row_factory = sqlite3.Row
+            yield self._memory_conn
+        else:
+            # For file databases, create new connections as needed
+            conn = sqlite3.connect(self.db_path)
+            conn.row_factory = sqlite3.Row
+            try:
+                yield conn
+            finally:
+                conn.close()
 
     def insert_torrent(
         self, torrent_data: dict[str, Any], guessit_data: dict[str, Any]

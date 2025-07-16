@@ -1,6 +1,4 @@
-import tempfile
 from datetime import datetime, timedelta
-from pathlib import Path
 
 import pytest
 
@@ -11,14 +9,8 @@ from nyaastats.scheduler import Scheduler
 @pytest.fixture
 def temp_db():
     """Create a temporary database for testing."""
-    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
-        db_path = f.name
-
-    db = Database(db_path)
+    db = Database(":memory:")
     yield db
-
-    # Cleanup
-    Path(db_path).unlink(missing_ok=True)
 
 
 @pytest.fixture

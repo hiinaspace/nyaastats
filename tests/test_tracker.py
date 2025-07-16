@@ -1,6 +1,4 @@
-import tempfile
 from datetime import datetime
-from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
@@ -12,14 +10,8 @@ from nyaastats.tracker import TrackerScraper
 @pytest.fixture
 def temp_db():
     """Create a temporary database for testing."""
-    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
-        db_path = f.name
-
-    db = Database(db_path)
+    db = Database(":memory:")
     yield db
-
-    # Cleanup
-    Path(db_path).unlink(missing_ok=True)
 
 
 @pytest.fixture
