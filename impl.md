@@ -33,6 +33,8 @@ logfire>=0.30.0         # Observability (optional initially)
 whenever # Date parsing utilities
 ```
 
+use ruff to lint and format the code, so `uv run ruff check/format ` (might have to set up `pyproject.toml` for ruff)
+
 ## Implementation Steps
 
 ### Step 1: Database Setup
