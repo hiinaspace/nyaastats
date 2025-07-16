@@ -25,12 +25,14 @@ class TrackerScraper:
 
         # Build query string with URL-encoded infohashes
         params = []
+        valid_infohashes = []
         for infohash in infohashes:
             try:
                 # Convert hex to bytes then URL encode
                 info_hash_bytes = bytes.fromhex(infohash)
                 encoded = quote(info_hash_bytes, safe="")
                 params.append(f"info_hash={encoded}")
+                valid_infohashes.append(infohash)
             except ValueError as e:
                 logger.warning(f"Invalid infohash format '{infohash}': {e}")
                 continue
@@ -59,8 +61,8 @@ class TrackerScraper:
                     "downloads": stats.get(b"downloaded", 0),
                 }
 
-            # Fill in zeros for any missing infohashes
-            for infohash in infohashes:
+            # Fill in zeros for any missing valid infohashes
+            for infohash in valid_infohashes:
                 if infohash not in results:
                     results[infohash] = {"seeders": 0, "leechers": 0, "downloads": 0}
 
@@ -68,9 +70,10 @@ class TrackerScraper:
 
         except Exception as e:
             logger.error(f"Tracker scrape failed: {e}")
-            # Return zeros for all requested torrents
+            # Return zeros for all valid torrents
             return {
-                ih: {"seeders": 0, "leechers": 0, "downloads": 0} for ih in infohashes
+                ih: {"seeders": 0, "leechers": 0, "downloads": 0}
+                for ih in valid_infohashes
             }
 
     def update_stats(self, infohash: str, stats: dict[str, int]) -> None:

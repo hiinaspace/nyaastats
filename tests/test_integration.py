@@ -67,18 +67,52 @@ def example_rss_content():
 </rss>"""
 
 
-def test_end_to_end_rss_processing(temp_db, example_rss_content):
+def test_end_to_end_rss_processing(temp_db):
     """Test complete RSS processing pipeline."""
+    # Create minimal RSS content for testing
+    test_rss_content = """<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:nyaa="https://nyaa.si/xmlns/nyaa">
+    <channel>
+        <title>Nyaa - Test Feed</title>
+        <item>
+            <title>[LonelyChaser-Inka] Tongari Boushi no Memoru 12</title>
+            <link>https://nyaa.si/download/1993842.torrent</link>
+            <guid isPermaLink="true">https://nyaa.si/view/1993842</guid>
+            <pubDate>Wed, 16 Jul 2025 01:53:15 -0000</pubDate>
+            <nyaa:seeders>14</nyaa:seeders>
+            <nyaa:leechers>5</nyaa:leechers>
+            <nyaa:downloads>26</nyaa:downloads>
+            <nyaa:infoHash>f87db04e1531c5f6fbaca3e6e2876f9c2982f46a</nyaa:infoHash>
+            <nyaa:size>1.1 GiB</nyaa:size>
+            <nyaa:trusted>No</nyaa:trusted>
+            <nyaa:remake>No</nyaa:remake>
+        </item>
+        <item>
+            <title>[ToonsHub] The Shiunji Family Children S01E12 1080p CR WEB-DL AAC2.0 H.264 (Shiunji-ke no Kodomotachi, Dual-Audio, Multi-Subs)</title>
+            <link>https://nyaa.si/download/1993841.torrent</link>
+            <guid isPermaLink="true">https://nyaa.si/view/1993841</guid>
+            <pubDate>Wed, 16 Jul 2025 01:34:58 -0000</pubDate>
+            <nyaa:seeders>21</nyaa:seeders>
+            <nyaa:leechers>6</nyaa:leechers>
+            <nyaa:downloads>37</nyaa:downloads>
+            <nyaa:infoHash>20a760df29d3bea030cf5f920ae5c932ca78f1b3</nyaa:infoHash>
+            <nyaa:size>1.4 GiB</nyaa:size>
+            <nyaa:trusted>No</nyaa:trusted>
+            <nyaa:remake>No</nyaa:remake>
+        </item>
+    </channel>
+</rss>"""
+
     # Setup RSS fetcher
     rss_fetcher = RSSFetcher(temp_db)
 
     # Mock HTTP response
-    with patch("nyaastats.rss_fetcher.httpx.Client") as mock_client:
-        mock_response = Mock()
-        mock_response.text = example_rss_content
-        mock_response.raise_for_status = Mock()
-        mock_client.return_value.get.return_value = mock_response
+    mock_response = Mock()
+    mock_response.text = test_rss_content
+    mock_response.raise_for_status = Mock()
 
+    # Mock the client.get method directly
+    with patch.object(rss_fetcher.client, "get", return_value=mock_response):
         # Mock guessit to return predictable results
         with patch("nyaastats.rss_fetcher.guessit.guessit") as mock_guessit:
             mock_guessit.side_effect = [
@@ -149,19 +183,53 @@ def test_end_to_end_rss_processing(temp_db, example_rss_content):
                 assert stats_row["downloads"] == 26
 
 
-def test_scheduler_integration(temp_db, example_rss_content):
+def test_scheduler_integration(temp_db):
     """Test scheduler integration with real RSS data."""
+    # Create minimal RSS content for testing
+    test_rss_content = """<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:nyaa="https://nyaa.si/xmlns/nyaa">
+    <channel>
+        <title>Nyaa - Test Feed</title>
+        <item>
+            <title>[LonelyChaser-Inka] Tongari Boushi no Memoru 12</title>
+            <link>https://nyaa.si/download/1993842.torrent</link>
+            <guid isPermaLink="true">https://nyaa.si/view/1993842</guid>
+            <pubDate>Wed, 16 Jul 2025 01:53:15 -0000</pubDate>
+            <nyaa:seeders>14</nyaa:seeders>
+            <nyaa:leechers>5</nyaa:leechers>
+            <nyaa:downloads>26</nyaa:downloads>
+            <nyaa:infoHash>f87db04e1531c5f6fbaca3e6e2876f9c2982f46a</nyaa:infoHash>
+            <nyaa:size>1.1 GiB</nyaa:size>
+            <nyaa:trusted>No</nyaa:trusted>
+            <nyaa:remake>No</nyaa:remake>
+        </item>
+        <item>
+            <title>[ToonsHub] The Shiunji Family Children S01E12 1080p CR WEB-DL AAC2.0 H.264 (Shiunji-ke no Kodomotachi, Dual-Audio, Multi-Subs)</title>
+            <link>https://nyaa.si/download/1993841.torrent</link>
+            <guid isPermaLink="true">https://nyaa.si/view/1993841</guid>
+            <pubDate>Wed, 16 Jul 2025 01:34:58 -0000</pubDate>
+            <nyaa:seeders>21</nyaa:seeders>
+            <nyaa:leechers>6</nyaa:leechers>
+            <nyaa:downloads>37</nyaa:downloads>
+            <nyaa:infoHash>20a760df29d3bea030cf5f920ae5c932ca78f1b3</nyaa:infoHash>
+            <nyaa:size>1.4 GiB</nyaa:size>
+            <nyaa:trusted>No</nyaa:trusted>
+            <nyaa:remake>No</nyaa:remake>
+        </item>
+    </channel>
+</rss>"""
+
     # Setup components
     rss_fetcher = RSSFetcher(temp_db)
     scheduler = Scheduler(temp_db)
 
     # Mock HTTP response and process RSS
-    with patch("nyaastats.rss_fetcher.httpx.Client") as mock_client:
-        mock_response = Mock()
-        mock_response.text = example_rss_content
-        mock_response.raise_for_status = Mock()
-        mock_client.return_value.get.return_value = mock_response
+    mock_response = Mock()
+    mock_response.text = test_rss_content
+    mock_response.raise_for_status = Mock()
 
+    # Mock the client.get method directly
+    with patch.object(rss_fetcher.client, "get", return_value=mock_response):
         with patch("nyaastats.rss_fetcher.guessit.guessit") as mock_guessit:
             mock_guessit.return_value = {"title": "Test Anime", "type": "episode"}
 
@@ -187,20 +255,54 @@ def test_scheduler_integration(temp_db, example_rss_content):
             assert "20a760df29d3bea030cf5f920ae5c932ca78f1b3" in due_torrents
 
 
-def test_tracker_integration(temp_db, example_rss_content):
+def test_tracker_integration(temp_db):
     """Test tracker integration with processed RSS data."""
+    # Create minimal RSS content for testing
+    test_rss_content = """<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:nyaa="https://nyaa.si/xmlns/nyaa">
+    <channel>
+        <title>Nyaa - Test Feed</title>
+        <item>
+            <title>[LonelyChaser-Inka] Tongari Boushi no Memoru 12</title>
+            <link>https://nyaa.si/download/1993842.torrent</link>
+            <guid isPermaLink="true">https://nyaa.si/view/1993842</guid>
+            <pubDate>Wed, 16 Jul 2025 01:53:15 -0000</pubDate>
+            <nyaa:seeders>14</nyaa:seeders>
+            <nyaa:leechers>5</nyaa:leechers>
+            <nyaa:downloads>26</nyaa:downloads>
+            <nyaa:infoHash>f87db04e1531c5f6fbaca3e6e2876f9c2982f46a</nyaa:infoHash>
+            <nyaa:size>1.1 GiB</nyaa:size>
+            <nyaa:trusted>No</nyaa:trusted>
+            <nyaa:remake>No</nyaa:remake>
+        </item>
+        <item>
+            <title>[ToonsHub] The Shiunji Family Children S01E12 1080p CR WEB-DL AAC2.0 H.264 (Shiunji-ke no Kodomotachi, Dual-Audio, Multi-Subs)</title>
+            <link>https://nyaa.si/download/1993841.torrent</link>
+            <guid isPermaLink="true">https://nyaa.si/view/1993841</guid>
+            <pubDate>Wed, 16 Jul 2025 01:34:58 -0000</pubDate>
+            <nyaa:seeders>21</nyaa:seeders>
+            <nyaa:leechers>6</nyaa:leechers>
+            <nyaa:downloads>37</nyaa:downloads>
+            <nyaa:infoHash>20a760df29d3bea030cf5f920ae5c932ca78f1b3</nyaa:infoHash>
+            <nyaa:size>1.4 GiB</nyaa:size>
+            <nyaa:trusted>No</nyaa:trusted>
+            <nyaa:remake>No</nyaa:remake>
+        </item>
+    </channel>
+</rss>"""
+
     # Setup components
     rss_fetcher = RSSFetcher(temp_db)
     tracker_scraper = TrackerScraper(temp_db)
     scheduler = Scheduler(temp_db)
 
     # Process RSS first
-    with patch("nyaastats.rss_fetcher.httpx.Client") as mock_client:
-        mock_response = Mock()
-        mock_response.text = example_rss_content
-        mock_response.raise_for_status = Mock()
-        mock_client.return_value.get.return_value = mock_response
+    mock_response = Mock()
+    mock_response.text = test_rss_content
+    mock_response.raise_for_status = Mock()
 
+    # Mock the client.get method directly
+    with patch.object(rss_fetcher.client, "get", return_value=mock_response):
         with patch("nyaastats.rss_fetcher.guessit.guessit") as mock_guessit:
             mock_guessit.return_value = {"title": "Test Anime", "type": "episode"}
 
@@ -326,12 +428,12 @@ def test_guessit_failure_handling(temp_db):
 
     rss_fetcher = RSSFetcher(temp_db)
 
-    with patch("nyaastats.rss_fetcher.httpx.Client") as mock_client:
-        mock_response = Mock()
-        mock_response.text = rss_content
-        mock_response.raise_for_status = Mock()
-        mock_client.return_value.get.return_value = mock_response
+    mock_response = Mock()
+    mock_response.text = rss_content
+    mock_response.raise_for_status = Mock()
 
+    # Mock the client.get method directly
+    with patch.object(rss_fetcher.client, "get", return_value=mock_response):
         # Mock guessit to raise an exception
         with patch("nyaastats.rss_fetcher.guessit.guessit") as mock_guessit:
             mock_guessit.side_effect = Exception("Guessit parsing failed")

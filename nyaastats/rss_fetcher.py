@@ -45,7 +45,7 @@ class RSSFetcher:
             infohash = getattr(entry, "infohash", "")
 
         # Parse GUID for nyaa ID
-        guid_url = urlparse(entry.get("guid", ""))
+        guid_url = urlparse(getattr(entry, "guid", ""))
         nyaa_id = None
         if guid_url.path:
             try:
@@ -60,7 +60,7 @@ class RSSFetcher:
         size_bytes = self._parse_size(size_str)
 
         # Parse dates - handle both RSS date formats
-        pubdate_str = entry.get("published", "")
+        pubdate_str = getattr(entry, "published", "")
         if pubdate_str:
             try:
                 # Use feedparser's built-in date parsing
@@ -77,7 +77,7 @@ class RSSFetcher:
 
         torrent_data = {
             "infohash": infohash.lower(),
-            "filename": entry.get("title", ""),
+            "filename": getattr(entry, "title", ""),
             "pubdate": pubdate,
             "size_bytes": size_bytes,
             "nyaa_id": nyaa_id,
@@ -97,11 +97,11 @@ class RSSFetcher:
                 # Convert any Path objects to strings
                 for key, value in guessit_data.items():
                     if hasattr(value, "__fspath__"):
-                        guessit_data[key] = str(value)
+                        guessit_data[key] = value.__fspath__()
                     elif isinstance(value, list):
                         # Handle lists that might contain Path objects
                         guessit_data[key] = [
-                            str(item) if hasattr(item, "__fspath__") else item
+                            item.__fspath__() if hasattr(item, "__fspath__") else item
                             for item in value
                         ]
             except Exception as e:

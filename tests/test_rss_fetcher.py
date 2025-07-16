@@ -71,30 +71,29 @@ def test_parse_size():
     assert fetcher._parse_size("1.5 XB") == 0
 
 
-@patch("nyaastats.rss_fetcher.httpx.Client")
-def test_fetch_feed(mock_client, rss_fetcher, mock_rss_response):
+def test_fetch_feed(rss_fetcher, mock_rss_response):
     """Test RSS feed fetching."""
     # Mock HTTP response
     mock_response = Mock()
     mock_response.text = mock_rss_response
     mock_response.raise_for_status = Mock()
 
-    mock_client.return_value.get.return_value = mock_response
+    # Mock the client.get method directly
+    with patch.object(rss_fetcher.client, "get", return_value=mock_response):
+        # Test fetching without pagination
+        feed = rss_fetcher.fetch_feed()
 
-    # Test fetching without pagination
-    feed = rss_fetcher.fetch_feed()
+        assert len(feed.entries) == 1
+        assert (
+            feed.entries[0].title
+            == "[TestGroup] Test Anime S01E01 [1080p] [x264] [AAC].mkv"
+        )
 
-    assert len(feed.entries) == 1
-    assert (
-        feed.entries[0].title
-        == "[TestGroup] Test Anime S01E01 [1080p] [x264] [AAC].mkv"
-    )
+        # Test fetching with pagination
+        feed = rss_fetcher.fetch_feed(page=2)
 
-    # Test fetching with pagination
-    feed = rss_fetcher.fetch_feed(page=2)
-
-    # Verify URL was called with page parameter
-    mock_client.return_value.get.assert_called_with(f"{rss_fetcher.feed_url}&p=2")
+        # Verify URL was called with page parameter
+        rss_fetcher.client.get.assert_called_with(f"{rss_fetcher.feed_url}&p=2")
 
 
 def test_parse_entry_basic(rss_fetcher):
@@ -225,38 +224,37 @@ def test_parse_entry_missing_fields(rss_fetcher):
             assert torrent_data["pubdate"] == datetime(2025, 1, 1, 12, 0, 0)
 
 
-@patch("nyaastats.rss_fetcher.httpx.Client")
-def test_process_feed(mock_client, rss_fetcher, mock_rss_response):
+def test_process_feed(rss_fetcher, mock_rss_response):
     """Test processing RSS feed."""
     # Mock HTTP response
     mock_response = Mock()
     mock_response.text = mock_rss_response
     mock_response.raise_for_status = Mock()
 
-    mock_client.return_value.get.return_value = mock_response
+    # Mock the client.get method directly
+    with patch.object(rss_fetcher.client, "get", return_value=mock_response):
+        # Mock guessit
+        with patch("nyaastats.rss_fetcher.guessit.guessit") as mock_guessit:
+            mock_guessit.return_value = {
+                "title": "Test Anime",
+                "season": 1,
+                "episode": 1,
+                "resolution": "1080p",
+                "video_codec": "H.264",
+                "audio_codec": "AAC",
+                "container": "mkv",
+                "release_group": "TestGroup",
+                "type": "episode",
+            }
 
-    # Mock guessit
-    with patch("nyaastats.rss_fetcher.guessit.guessit") as mock_guessit:
-        mock_guessit.return_value = {
-            "title": "Test Anime",
-            "season": 1,
-            "episode": 1,
-            "resolution": "1080p",
-            "video_codec": "H.264",
-            "audio_codec": "AAC",
-            "container": "mkv",
-            "release_group": "TestGroup",
-            "type": "episode",
-        }
+            processed = rss_fetcher.process_feed()
 
-        processed = rss_fetcher.process_feed()
+            assert processed == 1
 
-        assert processed == 1
-
-        # Verify torrent was stored in database
-        assert rss_fetcher.db.get_torrent_exists(
-            "abcdef1234567890abcdef1234567890abcdef12"
-        )
+            # Verify torrent was stored in database
+            assert rss_fetcher.db.get_torrent_exists(
+                "abcdef1234567890abcdef1234567890abcdef12"
+            )
 
 
 def test_process_feed_skip_invalid_entries(rss_fetcher):
@@ -283,6 +281,14 @@ def test_process_feed_skip_invalid_entries(rss_fetcher):
                     {
                         "infohash": "abcdef1234567890abcdef1234567890abcdef12",
                         "filename": "Valid Title",
+                        "pubdate": datetime(2025, 1, 1, 12, 0, 0),
+                        "size_bytes": 1000000,
+                        "nyaa_id": 123456,
+                        "trusted": False,
+                        "remake": False,
+                        "seeders": 10,
+                        "leechers": 2,
+                        "downloads": 100,
                     },
                     {},
                 ),  # Valid entry

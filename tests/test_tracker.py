@@ -317,19 +317,21 @@ def test_scrape_batch_url_encoding(tracker_scraper):
     """Test that infohashes are properly URL encoded."""
     infohashes = ["abcdef1234567890abcdef1234567890abcdef12"]
 
-    with patch("nyaastats.tracker.httpx.Client") as mock_client:
-        mock_response = Mock()
-        mock_response.content = b"dummy"
-        mock_response.raise_for_status = Mock()
-        mock_client.return_value.get.return_value = mock_response
+    mock_response = Mock()
+    mock_response.content = b"dummy"
+    mock_response.raise_for_status = Mock()
 
+    # Mock the client.get method directly
+    with patch.object(
+        tracker_scraper.client, "get", return_value=mock_response
+    ) as mock_get:
         with patch("nyaastats.tracker.bencodepy.decode") as mock_decode:
             mock_decode.return_value = {b"files": {}}
 
             tracker_scraper.scrape_batch(infohashes)
 
             # Check that the URL was properly constructed
-            called_url = mock_client.return_value.get.call_args[0][0]
+            called_url = mock_get.call_args[0][0]
             assert "info_hash=" in called_url
             assert tracker_scraper.tracker_url in called_url
 
