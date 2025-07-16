@@ -1,23 +1,8 @@
 from datetime import datetime
 from unittest.mock import Mock, patch
 
-import pytest
-
 from nyaastats.database import Database
 from nyaastats.tracker import TrackerScraper
-
-
-@pytest.fixture
-def temp_db():
-    """Create a temporary database for testing."""
-    db = Database(":memory:")
-    yield db
-
-
-@pytest.fixture
-def tracker_scraper(temp_db):
-    """Create tracker scraper instance."""
-    return TrackerScraper(temp_db)
 
 
 def test_scrape_batch_success(tracker_scraper):

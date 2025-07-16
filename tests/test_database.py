@@ -1,16 +1,7 @@
 import json
 from datetime import datetime
 
-import pytest
-
 from nyaastats.database import Database
-
-
-@pytest.fixture
-def temp_db():
-    """Create a temporary database for testing."""
-    db = Database(":memory:")
-    yield db
 
 
 def test_database_init(temp_db):

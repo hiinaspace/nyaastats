@@ -8,13 +8,6 @@ from nyaastats.rss_fetcher import RSSFetcher
 
 
 @pytest.fixture
-def temp_db():
-    """Create a temporary database for testing."""
-    db = Database(":memory:")
-    yield db
-
-
-@pytest.fixture
 def mock_rss_response():
     """Mock RSS response content."""
     return """<?xml version="1.0" encoding="UTF-8"?>
@@ -38,10 +31,6 @@ def mock_rss_response():
 </rss>"""
 
 
-@pytest.fixture
-def rss_fetcher(temp_db):
-    """Create RSS fetcher instance."""
-    return RSSFetcher(temp_db)
 
 
 def test_parse_size():

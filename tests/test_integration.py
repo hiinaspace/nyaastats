@@ -12,13 +12,6 @@ from nyaastats.tracker import TrackerScraper
 
 
 @pytest.fixture
-def temp_db():
-    """Create a temporary database for testing."""
-    db = Database(":memory:")
-    yield db
-
-
-@pytest.fixture
 def example_rss_content():
     """Load the example RSS fixture."""
     fixture_path = Path(__file__).parent / "fixtures" / "example.rss"

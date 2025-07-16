@@ -1,22 +1,7 @@
 from datetime import datetime, timedelta
 
-import pytest
-
 from nyaastats.database import Database
 from nyaastats.scheduler import Scheduler
-
-
-@pytest.fixture
-def temp_db():
-    """Create a temporary database for testing."""
-    db = Database(":memory:")
-    yield db
-
-
-@pytest.fixture
-def scheduler(temp_db):
-    """Create scheduler instance."""
-    return Scheduler(temp_db, batch_size=10)
 
 
 def test_get_due_torrents_never_scraped(scheduler):
