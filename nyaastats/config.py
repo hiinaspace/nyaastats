@@ -37,12 +37,6 @@ class Settings(BaseSettings, cli_parse_args=True):
         description="Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)",
     )
 
-    # Optional observability
-    enable_logfire: bool = Field(
-        default=False, description="Enable Logfire observability integration"
-    )
-    logfire_token: str = Field(default="", description="Logfire authentication token")
-
     class Config:
         env_prefix = "NYAA_"
         case_sensitive = False
