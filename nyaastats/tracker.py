@@ -6,6 +6,7 @@ import bencodepy
 import httpx
 
 from .database import Database
+from .models import StatsData
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ class TrackerScraper:
         self.tracker_url = tracker_url
         self.client = httpx.Client(timeout=30.0)
 
-    def scrape_batch(self, infohashes: list[str]) -> dict[str, dict[str, int]]:
+    def scrape_batch(self, infohashes: list[str]) -> dict[str, StatsData]:
         """Scrape a batch of infohashes from the tracker."""
         if not infohashes:
             return {}
@@ -55,16 +56,16 @@ class TrackerScraper:
 
             for info_hash_bytes, stats in files.items():
                 infohash = info_hash_bytes.hex()
-                results[infohash] = {
-                    "seeders": stats.get(b"complete", 0),
-                    "leechers": stats.get(b"incomplete", 0),
-                    "downloads": stats.get(b"downloaded", 0),
-                }
+                results[infohash] = StatsData(
+                    seeders=stats.get(b"complete", 0),
+                    leechers=stats.get(b"incomplete", 0),
+                    downloads=stats.get(b"downloaded", 0),
+                )
 
             # Fill in zeros for any missing valid infohashes
             for infohash in valid_infohashes:
                 if infohash not in results:
-                    results[infohash] = {"seeders": 0, "leechers": 0, "downloads": 0}
+                    results[infohash] = StatsData(seeders=0, leechers=0, downloads=0)
 
             return results
 
@@ -72,11 +73,11 @@ class TrackerScraper:
             logger.error(f"Tracker scrape failed: {e}")
             # Return zeros for all valid torrents
             return {
-                ih: {"seeders": 0, "leechers": 0, "downloads": 0}
+                ih: StatsData(seeders=0, leechers=0, downloads=0)
                 for ih in valid_infohashes
             }
 
-    def update_stats(self, infohash: str, stats: dict[str, int]) -> None:
+    def update_stats(self, infohash: str, stats: StatsData) -> None:
         """Update stats for a single infohash."""
         timestamp = datetime.utcnow()
 
@@ -101,7 +102,7 @@ class TrackerScraper:
             for row in recent_stats
         )
 
-    def update_batch_stats(self, results: dict[str, dict[str, int]]) -> None:
+    def update_batch_stats(self, results: dict[str, StatsData]) -> None:
         """Update stats for a batch of torrents."""
         for infohash, stats in results.items():
             self.update_stats(infohash, stats)

@@ -6,6 +6,8 @@ from contextlib import contextmanager
 from datetime import datetime
 from typing import Any
 
+from .models import GuessitData, StatsData, TorrentData
+
 logger = logging.getLogger(__name__)
 
 SCHEMA = """
@@ -67,7 +69,7 @@ class Database:
             if self.db_path != ":memory:":
                 conn.execute("PRAGMA journal_mode=WAL")
                 conn.execute("PRAGMA synchronous=NORMAL")
-            
+
             conn.executescript(SCHEMA)
             conn.commit()
 
@@ -90,10 +92,13 @@ class Database:
                 conn.close()
 
     def insert_torrent(
-        self, torrent_data: dict[str, Any], guessit_data: dict[str, Any]
+        self, torrent_data: TorrentData, guessit_data: GuessitData
     ) -> None:
         """Insert a torrent with metadata and initial stats."""
         with self.get_conn() as conn:
+            # Convert guessit_data to dict for processing
+            guessit_dict = guessit_data.model_dump()
+
             # Insert torrent metadata
             conn.execute(
                 """
@@ -105,32 +110,33 @@ class Database:
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    torrent_data["infohash"],
-                    torrent_data["filename"],
-                    torrent_data["pubdate"],
-                    torrent_data["size_bytes"],
-                    torrent_data["nyaa_id"],
-                    torrent_data["trusted"],
-                    torrent_data["remake"],
-                    guessit_data.get("title"),
-                    guessit_data.get("episode"),
-                    guessit_data.get("season"),
-                    guessit_data.get("year"),
-                    guessit_data.get("release_group"),
-                    guessit_data.get("resolution"),
-                    guessit_data.get("video_codec"),
-                    guessit_data.get("audio_codec"),
-                    guessit_data.get("source"),
-                    guessit_data.get("container"),
-                    guessit_data.get("language"),
-                    json.dumps(guessit_data.get("subtitles", [])),
+                    torrent_data.infohash,
+                    torrent_data.filename,
+                    torrent_data.pubdate,
+                    torrent_data.size_bytes,
+                    torrent_data.nyaa_id,
+                    torrent_data.trusted,
+                    torrent_data.remake,
+                    guessit_data.title,
+                    guessit_data.episode,
+                    guessit_data.season,
+                    guessit_data.year,
+                    guessit_data.release_group,
+                    guessit_data.resolution,
+                    guessit_data.video_codec,
+                    guessit_data.audio_codec,
+                    guessit_data.source,
+                    guessit_data.container,
+                    guessit_data.language,
+                    json.dumps(guessit_data.subtitles or []),
                     json.dumps(
                         {
                             k: v
-                            for k, v in guessit_data.items()
+                            for k, v in guessit_dict.items()
                             if k
                             not in [
                                 "title",
+                                "alternative_title",
                                 "episode",
                                 "season",
                                 "year",
@@ -155,18 +161,18 @@ class Database:
                 VALUES (?, ?, ?, ?, ?)
                 """,
                 (
-                    torrent_data["infohash"],
-                    torrent_data["pubdate"],
-                    torrent_data["seeders"],
-                    torrent_data["leechers"],
-                    torrent_data["downloads"],
+                    torrent_data.infohash,
+                    torrent_data.pubdate,
+                    torrent_data.seeders,
+                    torrent_data.leechers,
+                    torrent_data.downloads,
                 ),
             )
 
             conn.commit()
 
     def insert_stats(
-        self, infohash: str, stats: dict[str, int], timestamp: datetime | None = None
+        self, infohash: str, stats: StatsData, timestamp: datetime | None = None
     ) -> None:
         """Insert statistics for a torrent."""
         if timestamp is None:
@@ -181,9 +187,9 @@ class Database:
                 (
                     infohash,
                     timestamp,
-                    stats["seeders"],
-                    stats["leechers"],
-                    stats["downloads"],
+                    stats.seeders,
+                    stats.leechers,
+                    stats.downloads,
                 ),
             )
             conn.commit()

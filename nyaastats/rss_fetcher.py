@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime
-from typing import Any
 from urllib.parse import urlparse
 
 import feedparser
@@ -8,6 +7,7 @@ import guessit
 import httpx
 
 from .database import Database
+from .models import GuessitData, TorrentData
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class RSSFetcher:
 
     def parse_entry(
         self, entry: feedparser.FeedParserDict
-    ) -> tuple[dict[str, Any], dict[str, Any]]:
+    ) -> tuple[TorrentData, GuessitData]:
         """Parse RSS entry into torrent data and guessit metadata."""
         # Extract nyaa-specific fields from namespaced elements
         infohash = getattr(entry, "nyaa_infohash", "")
@@ -75,43 +75,44 @@ class RSSFetcher:
         else:
             pubdate = datetime.utcnow()
 
-        torrent_data = {
-            "infohash": infohash.lower(),
-            "filename": getattr(entry, "title", ""),
-            "pubdate": pubdate,
-            "size_bytes": size_bytes,
-            "nyaa_id": nyaa_id,
-            "trusted": getattr(entry, "nyaa_trusted", "No") == "Yes",
-            "remake": getattr(entry, "nyaa_remake", "No") == "Yes",
-            "seeders": int(getattr(entry, "nyaa_seeders", "0")),
-            "leechers": int(getattr(entry, "nyaa_leechers", "0")),
-            "downloads": int(getattr(entry, "nyaa_downloads", "0")),
-        }
+        torrent_data = TorrentData(
+            infohash=infohash.lower(),
+            filename=getattr(entry, "title", ""),
+            pubdate=pubdate,
+            size_bytes=size_bytes,
+            nyaa_id=nyaa_id,
+            trusted=getattr(entry, "nyaa_trusted", "No") == "Yes",
+            remake=getattr(entry, "nyaa_remake", "No") == "Yes",
+            seeders=int(getattr(entry, "nyaa_seeders", "0")),
+            leechers=int(getattr(entry, "nyaa_leechers", "0")),
+            downloads=int(getattr(entry, "nyaa_downloads", "0")),
+        )
 
         # Extract metadata with guessit
-        guessit_data = {}
-        if torrent_data["filename"]:
+        guessit_dict = {}
+        if torrent_data.filename:
             try:
-                guessit_result = guessit.guessit(torrent_data["filename"])
-                guessit_data = dict(guessit_result)
+                guessit_result = guessit.guessit(torrent_data.filename)
+                guessit_dict = dict(guessit_result)
                 # Convert any Path objects to strings
-                for key, value in guessit_data.items():
+                for key, value in guessit_dict.items():
                     if hasattr(value, "__fspath__"):
-                        guessit_data[key] = value.__fspath__()
+                        guessit_dict[key] = value.__fspath__()
                     elif isinstance(value, list):
                         # Handle lists that might contain Path objects
-                        guessit_data[key] = [
+                        guessit_dict[key] = [
                             item.__fspath__() if hasattr(item, "__fspath__") else item
                             for item in value
                         ]
             except Exception as e:
-                logger.warning(f"Guessit failed for {torrent_data['filename']}: {e}")
-                guessit_data = {}
+                logger.warning(f"Guessit failed for {torrent_data.filename}: {e}")
+                guessit_dict = {}
                 # Mark as failed in database if torrent already exists
-                if self.db.get_torrent_exists(torrent_data["infohash"]):
-                    self.db.mark_torrent_status(
-                        torrent_data["infohash"], "guessit_failed"
-                    )
+                if self.db.get_torrent_exists(torrent_data.infohash):
+                    self.db.mark_torrent_status(torrent_data.infohash, "guessit_failed")
+
+        # Create GuessitData model
+        guessit_data = GuessitData(**guessit_dict)
 
         return torrent_data, guessit_data
 
@@ -154,7 +155,7 @@ class RSSFetcher:
                 torrent_data, guessit_data = self.parse_entry(entry)
 
                 # Skip if we don't have essential data
-                if not torrent_data["infohash"] or not torrent_data["filename"]:
+                if not torrent_data.infohash or not torrent_data.filename:
                     logger.warning(
                         f"Skipping entry with missing infohash or filename: {entry.get('title', 'Unknown')}"
                     )

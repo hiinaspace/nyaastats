@@ -3,7 +3,6 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from nyaastats.database import Database
 from nyaastats.rss_fetcher import RSSFetcher
 
 
@@ -29,8 +28,6 @@ def mock_rss_response():
         </item>
     </channel>
 </rss>"""
-
-
 
 
 def test_parse_size():

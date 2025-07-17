@@ -1,8 +1,7 @@
 from datetime import datetime
 from unittest.mock import Mock, patch
 
-from nyaastats.database import Database
-from nyaastats.tracker import TrackerScraper
+from nyaastats.models import GuessitData, StatsData, TorrentData
 
 
 def test_scrape_batch_success(tracker_scraper):
@@ -40,16 +39,14 @@ def test_scrape_batch_success(tracker_scraper):
             results = tracker_scraper.scrape_batch(infohashes)
 
             assert len(results) == 2
-            assert results["abcdef1234567890abcdef1234567890abcdef12"] == {
-                "seeders": 10,
-                "leechers": 2,
-                "downloads": 100,
-            }
-            assert results["fedcba0987654321fedcba0987654321fedcba09"] == {
-                "seeders": 5,
-                "leechers": 1,
-                "downloads": 50,
-            }
+            expected_stats1 = StatsData(seeders=10, leechers=2, downloads=100)
+            assert (
+                results["abcdef1234567890abcdef1234567890abcdef12"] == expected_stats1
+            )
+            expected_stats2 = StatsData(seeders=5, leechers=1, downloads=50)
+            assert (
+                results["fedcba0987654321fedcba0987654321fedcba09"] == expected_stats2
+            )
 
 
 def test_scrape_batch_empty_list(tracker_scraper):
@@ -119,17 +116,14 @@ def test_scrape_batch_missing_torrents(tracker_scraper):
             results = tracker_scraper.scrape_batch(infohashes)
 
             assert len(results) == 2
-            assert results["abcdef1234567890abcdef1234567890abcdef12"] == {
-                "seeders": 10,
-                "leechers": 2,
-                "downloads": 100,
-            }
+            expected_stats = StatsData(seeders=10, leechers=2, downloads=100)
+            assert results["abcdef1234567890abcdef1234567890abcdef12"] == expected_stats
             # Missing torrent should get zeros
-            assert results["fedcba0987654321fedcba0987654321fedcba09"] == {
-                "seeders": 0,
-                "leechers": 0,
-                "downloads": 0,
-            }
+            expected_zero_stats = StatsData(seeders=0, leechers=0, downloads=0)
+            assert (
+                results["fedcba0987654321fedcba0987654321fedcba09"]
+                == expected_zero_stats
+            )
 
 
 def test_scrape_batch_http_error(tracker_scraper):
@@ -142,19 +136,16 @@ def test_scrape_batch_http_error(tracker_scraper):
         results = tracker_scraper.scrape_batch(infohashes)
 
         # Should return zeros for all requested torrents
+        expected_zero_stats = StatsData(seeders=0, leechers=0, downloads=0)
         assert results == {
-            "abcdef1234567890abcdef1234567890abcdef12": {
-                "seeders": 0,
-                "leechers": 0,
-                "downloads": 0,
-            }
+            "abcdef1234567890abcdef1234567890abcdef12": expected_zero_stats
         }
 
 
 def test_update_stats(tracker_scraper):
     """Test updating stats for a single torrent."""
     infohash = "abcdef1234567890abcdef1234567890abcdef12"
-    stats = {"seeders": 10, "leechers": 2, "downloads": 100}
+    stats = StatsData(seeders=10, leechers=2, downloads=100)
 
     with patch("nyaastats.tracker.datetime") as mock_datetime:
         mock_datetime.utcnow.return_value = datetime(2025, 1, 1, 12, 0, 0)
@@ -174,7 +165,7 @@ def test_should_mark_dead_true(tracker_scraper):
     infohash = "abcdef1234567890abcdef1234567890abcdef12"
 
     # Insert 3 consecutive zero stats
-    zero_stats = {"seeders": 0, "leechers": 0, "downloads": 0}
+    zero_stats = StatsData(seeders=0, leechers=0, downloads=0)
     for i in range(3):
         timestamp = datetime(2025, 1, 1, 12, i, 0)
         tracker_scraper.db.insert_stats(infohash, zero_stats, timestamp)
@@ -187,7 +178,7 @@ def test_should_mark_dead_false_not_enough_stats(tracker_scraper):
     infohash = "abcdef1234567890abcdef1234567890abcdef12"
 
     # Insert only 2 stats
-    zero_stats = {"seeders": 0, "leechers": 0, "downloads": 0}
+    zero_stats = StatsData(seeders=0, leechers=0, downloads=0)
     for i in range(2):
         timestamp = datetime(2025, 1, 1, 12, i, 0)
         tracker_scraper.db.insert_stats(infohash, zero_stats, timestamp)
@@ -201,9 +192,9 @@ def test_should_mark_dead_false_non_zero_stats(tracker_scraper):
 
     # Insert mixed stats
     stats_data = [
-        {"seeders": 0, "leechers": 0, "downloads": 0},
-        {"seeders": 1, "leechers": 0, "downloads": 5},  # Non-zero
-        {"seeders": 0, "leechers": 0, "downloads": 0},
+        StatsData(seeders=0, leechers=0, downloads=0),
+        StatsData(seeders=1, leechers=0, downloads=5),  # Non-zero
+        StatsData(seeders=0, leechers=0, downloads=0),
     ]
 
     for i, stats in enumerate(stats_data):
@@ -218,22 +209,22 @@ def test_update_stats_marks_dead(tracker_scraper):
     infohash = "abcdef1234567890abcdef1234567890abcdef12"
 
     # First insert a torrent
-    torrent_data = {
-        "infohash": infohash,
-        "filename": "test.mkv",
-        "pubdate": datetime(2025, 1, 1, 12, 0, 0),
-        "size_bytes": 1000000,
-        "nyaa_id": 12345,
-        "trusted": False,
-        "remake": False,
-        "seeders": 5,
-        "leechers": 1,
-        "downloads": 50,
-    }
-    tracker_scraper.db.insert_torrent(torrent_data, {})
+    torrent_data = TorrentData(
+        infohash=infohash,
+        filename="test.mkv",
+        pubdate=datetime(2025, 1, 1, 12, 0, 0),
+        size_bytes=1000000,
+        nyaa_id=12345,
+        trusted=False,
+        remake=False,
+        seeders=5,
+        leechers=1,
+        downloads=50,
+    )
+    tracker_scraper.db.insert_torrent(torrent_data, GuessitData())
 
     # Insert 2 previous zero stats
-    zero_stats = {"seeders": 0, "leechers": 0, "downloads": 0}
+    zero_stats = StatsData(seeders=0, leechers=0, downloads=0)
     for i in range(2):
         timestamp = datetime(2025, 1, 1, 12, i, 0)
         tracker_scraper.db.insert_stats(infohash, zero_stats, timestamp)
@@ -256,16 +247,16 @@ def test_update_stats_marks_dead(tracker_scraper):
 def test_update_batch_stats(tracker_scraper):
     """Test updating stats for multiple torrents."""
     results = {
-        "abcdef1234567890abcdef1234567890abcdef12": {
-            "seeders": 10,
-            "leechers": 2,
-            "downloads": 100,
-        },
-        "fedcba0987654321fedcba0987654321fedcba09": {
-            "seeders": 5,
-            "leechers": 1,
-            "downloads": 50,
-        },
+        "abcdef1234567890abcdef1234567890abcdef12": StatsData(
+            seeders=10,
+            leechers=2,
+            downloads=100,
+        ),
+        "fedcba0987654321fedcba0987654321fedcba09": StatsData(
+            seeders=5,
+            leechers=1,
+            downloads=50,
+        ),
     }
 
     with patch.object(tracker_scraper, "update_stats") as mock_update:
@@ -275,11 +266,11 @@ def test_update_batch_stats(tracker_scraper):
         assert mock_update.call_count == 2
         mock_update.assert_any_call(
             "abcdef1234567890abcdef1234567890abcdef12",
-            {"seeders": 10, "leechers": 2, "downloads": 100},
+            StatsData(seeders=10, leechers=2, downloads=100),
         )
         mock_update.assert_any_call(
             "fedcba0987654321fedcba0987654321fedcba09",
-            {"seeders": 5, "leechers": 1, "downloads": 50},
+            StatsData(seeders=5, leechers=1, downloads=50),
         )
 
 
@@ -329,10 +320,7 @@ def test_scrape_batch_bencode_decode_error(tracker_scraper):
             results = tracker_scraper.scrape_batch(infohashes)
 
             # Should return zeros for all requested torrents
+            expected_zero_stats = StatsData(seeders=0, leechers=0, downloads=0)
             assert results == {
-                "abcdef1234567890abcdef1234567890abcdef12": {
-                    "seeders": 0,
-                    "leechers": 0,
-                    "downloads": 0,
-                }
+                "abcdef1234567890abcdef1234567890abcdef12": expected_zero_stats
             }

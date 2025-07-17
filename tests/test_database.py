@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 
-from nyaastats.database import Database
+from nyaastats.models import GuessitData, StatsData, TorrentData
 
 
 def test_database_init(temp_db):
@@ -53,77 +53,77 @@ def test_database_schema(temp_db):
 
 def test_insert_torrent(temp_db):
     """Test inserting a torrent."""
-    torrent_data = {
-        "infohash": "abcdef1234567890abcdef1234567890abcdef12",
-        "filename": "[Test] Anime Episode 01 [1080p].mkv",
-        "pubdate": datetime(2023, 1, 1, 12, 0, 0),
-        "size_bytes": 1000000000,
-        "nyaa_id": 12345,
-        "trusted": True,
-        "remake": False,
-        "seeders": 10,
-        "leechers": 2,
-        "downloads": 100,
-    }
+    torrent_data = TorrentData(
+        infohash="abcdef1234567890abcdef1234567890abcdef12",
+        filename="[Test] Anime Episode 01 [1080p].mkv",
+        pubdate=datetime(2023, 1, 1, 12, 0, 0),
+        size_bytes=1000000000,
+        nyaa_id=12345,
+        trusted=True,
+        remake=False,
+        seeders=10,
+        leechers=2,
+        downloads=100,
+    )
 
-    guessit_data = {
-        "title": "Anime",
-        "episode": 1,
-        "resolution": "1080p",
-        "container": "mkv",
-        "release_group": "Test",
-        "video_codec": "H.264",
-        "audio_codec": "AAC",
-        "source": "BluRay",
-        "language": "en",
-        "subtitles": ["en", "jp"],
-        "custom_field": "custom_value",  # This will go into "other"
-    }
+    guessit_data = GuessitData(
+        title="Anime",
+        episode=1,
+        resolution="1080p",
+        container="mkv",
+        release_group="Test",
+        video_codec="H.264",
+        audio_codec="AAC",
+        source="BluRay",
+        language="en",
+        subtitles=["en", "jp"],
+        custom_field="custom_value",  # This will go into "other"
+    )
 
     temp_db.insert_torrent(torrent_data, guessit_data)
 
     # Verify torrent was inserted
     with temp_db.get_conn() as conn:
         cursor = conn.execute(
-            "SELECT * FROM torrents WHERE infohash = ?", (torrent_data["infohash"],)
+            "SELECT * FROM torrents WHERE infohash = ?", (torrent_data.infohash,)
         )
         row = cursor.fetchone()
 
         assert row is not None
-        assert row["infohash"] == torrent_data["infohash"]
-        assert row["filename"] == torrent_data["filename"]
-        assert row["size_bytes"] == torrent_data["size_bytes"]
-        assert row["nyaa_id"] == torrent_data["nyaa_id"]
-        assert row["trusted"] == torrent_data["trusted"]
-        assert row["remake"] == torrent_data["remake"]
-        assert row["title"] == guessit_data["title"]
-        assert row["episode"] == guessit_data["episode"]
-        assert row["resolution"] == guessit_data["resolution"]
-        assert row["container"] == guessit_data["container"]
-        assert row["release_group"] == guessit_data["release_group"]
-        assert row["video_codec"] == guessit_data["video_codec"]
-        assert row["audio_codec"] == guessit_data["audio_codec"]
-        assert row["source"] == guessit_data["source"]
-        assert row["language"] == guessit_data["language"]
-        assert json.loads(row["subtitles"]) == guessit_data["subtitles"]
+        assert row["infohash"] == torrent_data.infohash
+        assert row["filename"] == torrent_data.filename
+        assert row["size_bytes"] == torrent_data.size_bytes
+        assert row["nyaa_id"] == torrent_data.nyaa_id
+        assert row["trusted"] == torrent_data.trusted
+        assert row["remake"] == torrent_data.remake
+        assert row["title"] == guessit_data.title
+        assert row["episode"] == guessit_data.episode
+        assert row["resolution"] == guessit_data.resolution
+        assert row["container"] == guessit_data.container
+        assert row["release_group"] == guessit_data.release_group
+        assert row["video_codec"] == guessit_data.video_codec
+        assert row["audio_codec"] == guessit_data.audio_codec
+        assert row["source"] == guessit_data.source
+        assert row["language"] == guessit_data.language
+        assert json.loads(row["subtitles"]) == guessit_data.subtitles
         assert json.loads(row["other"]) == {"custom_field": "custom_value"}
 
         # Verify initial stats were inserted
         cursor = conn.execute(
-            "SELECT * FROM stats WHERE infohash = ?", (torrent_data["infohash"],)
+            "SELECT * FROM stats WHERE infohash = ?", (torrent_data.infohash,)
         )
         stats_row = cursor.fetchone()
 
         assert stats_row is not None
-        assert stats_row["seeders"] == torrent_data["seeders"]
-        assert stats_row["leechers"] == torrent_data["leechers"]
-        assert stats_row["downloads"] == torrent_data["downloads"]
+        assert stats_row["seeders"] == torrent_data.seeders
+        assert stats_row["leechers"] == torrent_data.leechers
+        assert stats_row["downloads"] == torrent_data.downloads
 
 
 def test_insert_stats(temp_db):
     """Test inserting statistics."""
     infohash = "abcdef1234567890abcdef1234567890abcdef12"
-    stats = {"seeders": 5, "leechers": 1, "downloads": 50}
+    stats = StatsData(seeders=5, leechers=1, downloads=50)
     timestamp = datetime(2023, 1, 2, 12, 0, 0)
 
     temp_db.insert_stats(infohash, stats, timestamp)
@@ -134,36 +134,36 @@ def test_insert_stats(temp_db):
 
         assert row is not None
         assert row["infohash"] == infohash
-        assert row["seeders"] == stats["seeders"]
-        assert row["leechers"] == stats["leechers"]
-        assert row["downloads"] == stats["downloads"]
+        assert row["seeders"] == stats.seeders
+        assert row["leechers"] == stats.leechers
+        assert row["downloads"] == stats.downloads
 
 
 def test_mark_torrent_status(temp_db):
     """Test marking torrent status."""
     # First insert a torrent
-    torrent_data = {
-        "infohash": "abcdef1234567890abcdef1234567890abcdef12",
-        "filename": "[Test] Anime Episode 01 [1080p].mkv",
-        "pubdate": datetime(2023, 1, 1, 12, 0, 0),
-        "size_bytes": 1000000000,
-        "nyaa_id": 12345,
-        "trusted": True,
-        "remake": False,
-        "seeders": 10,
-        "leechers": 2,
-        "downloads": 100,
-    }
+    torrent_data = TorrentData(
+        infohash="abcdef1234567890abcdef1234567890abcdef12",
+        filename="[Test] Anime Episode 01 [1080p].mkv",
+        pubdate=datetime(2023, 1, 1, 12, 0, 0),
+        size_bytes=1000000000,
+        nyaa_id=12345,
+        trusted=True,
+        remake=False,
+        seeders=10,
+        leechers=2,
+        downloads=100,
+    )
 
-    temp_db.insert_torrent(torrent_data, {})
+    temp_db.insert_torrent(torrent_data, GuessitData())
 
     # Mark as dead
-    temp_db.mark_torrent_status(torrent_data["infohash"], "dead")
+    temp_db.mark_torrent_status(torrent_data.infohash, "dead")
 
     with temp_db.get_conn() as conn:
         cursor = conn.execute(
             "SELECT status FROM torrents WHERE infohash = ?",
-            (torrent_data["infohash"],),
+            (torrent_data.infohash,),
         )
         row = cursor.fetchone()
 
@@ -179,20 +179,20 @@ def test_get_torrent_exists(temp_db):
     assert not temp_db.get_torrent_exists(infohash)
 
     # Insert a torrent
-    torrent_data = {
-        "infohash": infohash,
-        "filename": "[Test] Anime Episode 01 [1080p].mkv",
-        "pubdate": datetime(2023, 1, 1, 12, 0, 0),
-        "size_bytes": 1000000000,
-        "nyaa_id": 12345,
-        "trusted": True,
-        "remake": False,
-        "seeders": 10,
-        "leechers": 2,
-        "downloads": 100,
-    }
+    torrent_data = TorrentData(
+        infohash=infohash,
+        filename="[Test] Anime Episode 01 [1080p].mkv",
+        pubdate=datetime(2023, 1, 1, 12, 0, 0),
+        size_bytes=1000000000,
+        nyaa_id=12345,
+        trusted=True,
+        remake=False,
+        seeders=10,
+        leechers=2,
+        downloads=100,
+    )
 
-    temp_db.insert_torrent(torrent_data, {})
+    temp_db.insert_torrent(torrent_data, GuessitData())
 
     # Should exist now
     assert temp_db.get_torrent_exists(infohash)
@@ -205,19 +205,19 @@ def test_get_recent_stats(temp_db):
     # Insert multiple stats
     stats_data = [
         (
-            {"seeders": 10, "leechers": 2, "downloads": 100},
+            StatsData(seeders=10, leechers=2, downloads=100),
             datetime(2023, 1, 1, 12, 0, 0),
         ),
         (
-            {"seeders": 8, "leechers": 1, "downloads": 105},
+            StatsData(seeders=8, leechers=1, downloads=105),
             datetime(2023, 1, 1, 13, 0, 0),
         ),
         (
-            {"seeders": 5, "leechers": 0, "downloads": 110},
+            StatsData(seeders=5, leechers=0, downloads=110),
             datetime(2023, 1, 1, 14, 0, 0),
         ),
         (
-            {"seeders": 3, "leechers": 1, "downloads": 115},
+            StatsData(seeders=3, leechers=1, downloads=115),
             datetime(2023, 1, 1, 15, 0, 0),
         ),
     ]
@@ -259,30 +259,30 @@ def test_indexes_exist(temp_db):
 
 def test_insert_duplicate_torrent(temp_db):
     """Test inserting duplicate torrent (should be ignored)."""
-    torrent_data = {
-        "infohash": "abcdef1234567890abcdef1234567890abcdef12",
-        "filename": "[Test] Anime Episode 01 [1080p].mkv",
-        "pubdate": datetime(2023, 1, 1, 12, 0, 0),
-        "size_bytes": 1000000000,
-        "nyaa_id": 12345,
-        "trusted": True,
-        "remake": False,
-        "seeders": 10,
-        "leechers": 2,
-        "downloads": 100,
-    }
+    torrent_data = TorrentData(
+        infohash="abcdef1234567890abcdef1234567890abcdef12",
+        filename="[Test] Anime Episode 01 [1080p].mkv",
+        pubdate=datetime(2023, 1, 1, 12, 0, 0),
+        size_bytes=1000000000,
+        nyaa_id=12345,
+        trusted=True,
+        remake=False,
+        seeders=10,
+        leechers=2,
+        downloads=100,
+    )
 
     # Insert first time
-    temp_db.insert_torrent(torrent_data, {"title": "First"})
+    temp_db.insert_torrent(torrent_data, GuessitData(title="First"))
 
     # Insert duplicate (should be ignored)
-    temp_db.insert_torrent(torrent_data, {"title": "Second"})
+    temp_db.insert_torrent(torrent_data, GuessitData(title="Second"))
 
     # Check only one record exists
     with temp_db.get_conn() as conn:
         cursor = conn.execute(
             "SELECT COUNT(*) as count FROM torrents WHERE infohash = ?",
-            (torrent_data["infohash"],),
+            (torrent_data.infohash,),
         )
         count = cursor.fetchone()["count"]
 
@@ -290,7 +290,7 @@ def test_insert_duplicate_torrent(temp_db):
 
         # Check the title is still from first insert
         cursor = conn.execute(
-            "SELECT title FROM torrents WHERE infohash = ?", (torrent_data["infohash"],)
+            "SELECT title FROM torrents WHERE infohash = ?", (torrent_data.infohash,)
         )
         row = cursor.fetchone()
 
