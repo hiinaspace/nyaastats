@@ -32,74 +32,45 @@ def test_end_to_end_rss_processing(temp_db, example_rss_content):
 
     # Mock the client.get method directly
     with patch.object(rss_fetcher.client, "get", return_value=mock_response):
-        # Mock guessit to return predictable results
-        with patch("nyaastats.rss_fetcher.guessit.guessit") as mock_guessit:
-            mock_guessit.side_effect = [
-                {
-                    "title": "Tongari Boushi no Memoru",
-                    "episode": 12,
-                    "release_group": "LonelyChaser-Inka",
-                    "type": "episode",
-                },
-                {
-                    "title": "The Shiunji Family Children",
-                    "season": 1,
-                    "episode": 12,
-                    "resolution": "1080p",
-                    "source": "Web",
-                    "video_codec": "H.264",
-                    "audio_codec": "AAC",
-                    "container": "mp4",
-                    "release_group": "ToonsHub",
-                    "type": "episode",
-                },
-            ]
+        # Use real guessit to test Language object conversion
+        # Process the feed
+        processed = rss_fetcher.process_feed()
 
-            # Process the feed
-            processed = rss_fetcher.process_feed()
+        # Verify processing (example.rss has 75 items)
+        assert processed == 75
 
-            # Verify processing (example.rss has 75 items)
-            assert processed == 75
+        # Check that torrents were inserted
+        assert temp_db.get_torrent_exists("f87db04e1531c5f6fbaca3e6e2876f9c2982f46a")
+        assert temp_db.get_torrent_exists("20a760df29d3bea030cf5f920ae5c932ca78f1b3")
 
-            # Check that torrents were inserted
-            assert temp_db.get_torrent_exists(
-                "f87db04e1531c5f6fbaca3e6e2876f9c2982f46a"
+        # Check torrent details
+        with temp_db.get_conn() as conn:
+            cursor = conn.execute(
+                "SELECT * FROM torrents WHERE infohash = ?",
+                ("f87db04e1531c5f6fbaca3e6e2876f9c2982f46a",),
             )
-            assert temp_db.get_torrent_exists(
-                "20a760df29d3bea030cf5f920ae5c932ca78f1b3"
+            row = cursor.fetchone()
+
+            assert row is not None
+            assert row["filename"] == "[LonelyChaser-Inka] Tongari Boushi no Memoru 12"
+            assert row["nyaa_id"] == 1993842
+            assert row["size_bytes"] == int(1.1 * 1024**3)
+            assert not row["trusted"]
+            assert not row["remake"]
+            # With real guessit, we verify the data was processed without errors
+            # but don't assume specific guessit results
+
+            # Check initial stats were inserted
+            cursor = conn.execute(
+                "SELECT * FROM stats WHERE infohash = ?",
+                ("f87db04e1531c5f6fbaca3e6e2876f9c2982f46a",),
             )
+            stats_row = cursor.fetchone()
 
-            # Check torrent details
-            with temp_db.get_conn() as conn:
-                cursor = conn.execute(
-                    "SELECT * FROM torrents WHERE infohash = ?",
-                    ("f87db04e1531c5f6fbaca3e6e2876f9c2982f46a",),
-                )
-                row = cursor.fetchone()
-
-                assert row is not None
-                assert (
-                    row["filename"] == "[LonelyChaser-Inka] Tongari Boushi no Memoru 12"
-                )
-                assert row["nyaa_id"] == 1993842
-                assert row["size_bytes"] == int(1.1 * 1024**3)
-                assert not row["trusted"]
-                assert not row["remake"]
-                assert row["title"] == "Tongari Boushi no Memoru"
-                assert row["episode"] == 12
-                assert row["release_group"] == "LonelyChaser-Inka"
-
-                # Check initial stats were inserted
-                cursor = conn.execute(
-                    "SELECT * FROM stats WHERE infohash = ?",
-                    ("f87db04e1531c5f6fbaca3e6e2876f9c2982f46a",),
-                )
-                stats_row = cursor.fetchone()
-
-                assert stats_row is not None
-                assert stats_row["seeders"] == 14
-                assert stats_row["leechers"] == 5
-                assert stats_row["downloads"] == 26
+            assert stats_row is not None
+            assert stats_row["seeders"] == 14
+            assert stats_row["leechers"] == 5
+            assert stats_row["downloads"] == 26
 
 
 def test_scheduler_integration(temp_db):

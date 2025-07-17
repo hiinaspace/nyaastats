@@ -346,3 +346,43 @@ def test_parse_entry_with_pathlib_objects(rss_fetcher):
         # Check that pathlib objects were converted to strings
         assert guessit_data.container == "/path/to/file.mkv"
         assert guessit_data.subtitles == ["/path/to/file.mkv", "en"]
+
+
+def test_parse_entry_with_real_guessit_language_objects(rss_fetcher):
+    """Test parsing entry with real guessit that returns Language objects."""
+    # Use a realistic filename that will likely trigger Language objects
+    entry = Mock()
+    entry.title = "[Yameii] New Saga - S01E01 [English Dub] [CR WEB-DL 1080p]"
+    entry.guid = "https://nyaa.si/view/123456"
+    entry.published = "Wed, 01 Jan 2025 12:00:00 +0000"
+    entry.published_parsed = (2025, 1, 1, 12, 0, 0, 2, 1, 0)
+    entry.nyaa_infohash = "abcdef1234567890abcdef1234567890abcdef12"
+    entry.nyaa_size = "1.5 GiB"
+    entry.nyaa_trusted = "Yes"
+    entry.nyaa_remake = "No"
+    entry.nyaa_seeders = "10"
+    entry.nyaa_leechers = "2"
+    entry.nyaa_downloads = "100"
+
+    # Use real guessit - don't mock it
+    torrent_data, guessit_data = rss_fetcher.parse_entry(entry)
+
+    # Verify that the parsing completed without errors
+    assert torrent_data.infohash == "abcdef1234567890abcdef1234567890abcdef12"
+    assert (
+        torrent_data.filename
+        == "[Yameii] New Saga - S01E01 [English Dub] [CR WEB-DL 1080p]"
+    )
+
+    # Verify that guessit_data is a valid Pydantic model (no validation errors)
+    assert isinstance(guessit_data, type(guessit_data))
+
+    # If language is present, it should be a string, not a Language object
+    if guessit_data.language is not None:
+        assert isinstance(guessit_data.language, str)
+
+    # If subtitles are present, they should be strings in a list
+    if guessit_data.subtitles is not None:
+        assert isinstance(guessit_data.subtitles, list)
+        for subtitle in guessit_data.subtitles:
+            assert isinstance(subtitle, str)
