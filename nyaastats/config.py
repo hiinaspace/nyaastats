@@ -27,8 +27,8 @@ class Settings(BaseSettings):
     scrape_batch_size: int = Field(
         default=20, description="Number of torrents to scrape in one batch"
     )
-    scrape_interval_seconds: int = Field(
-        default=30, description="Interval between scrape operations in seconds"
+    scrape_window_minutes: int = Field(
+        default=30, description="Minutes ahead to include torrents in batching window"
     )
 
     # Logging

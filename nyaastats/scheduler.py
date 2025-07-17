@@ -22,8 +22,13 @@ class Scheduler:
 
     def get_due_torrents(self) -> list[str]:
         """Get torrents that are due for scraping based on time-decay algorithm."""
+        return self.get_due_torrents_with_window(0)
+
+    def get_due_torrents_with_window(self, window_minutes: int) -> list[str]:
+        """Get torrents that are due for scraping within a time window for batching."""
         now = self.now_func()
         now_julian = now.timestamp() / 86400.0 + 2440587.5  # Convert to julian day
+        window_days = window_minutes / (24 * 60)  # Convert minutes to days
 
         with self.db.get_conn() as conn:
             cursor = conn.execute(
@@ -41,13 +46,13 @@ class Scheduler:
                     OR
                     CASE
                       WHEN (:now - julianday(t.pubdate)) <= 2 THEN
-                        (:now - julianday(s.last_scrape)) * 24 >= 1
+                        (:now - julianday(s.last_scrape) + :window) * 24 >= 1
                       WHEN (:now - julianday(t.pubdate)) <= 7 THEN
-                        (:now - julianday(s.last_scrape)) * 24 >= 4
+                        (:now - julianday(s.last_scrape) + :window) * 24 >= 4
                       WHEN (:now - julianday(t.pubdate)) <= 30 THEN
-                        (:now - julianday(s.last_scrape)) >= 1
+                        (:now - julianday(s.last_scrape) + :window) >= 1
                       WHEN (:now - julianday(t.pubdate)) <= 180 THEN
-                        (:now - julianday(s.last_scrape)) >= 7
+                        (:now - julianday(s.last_scrape) + :window) >= 7
                       ELSE
                         FALSE
                     END
@@ -55,7 +60,11 @@ class Scheduler:
                 ORDER BY s.last_scrape ASC NULLS FIRST
                 LIMIT :batch_size
                 """,
-                {"now": now_julian, "batch_size": self.batch_size},
+                {
+                    "now": now_julian,
+                    "window": window_days,
+                    "batch_size": self.batch_size,
+                },
             )
 
             return [row["infohash"] for row in cursor.fetchall()]

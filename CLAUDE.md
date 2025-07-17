@@ -33,11 +33,15 @@ uvx ty check
 
 ### Running the Application
 ```bash
-# Start the main daemon
+# Run once (for cron or manual execution)
 uv run nyaastats
 
 # Run backfill script
 uv run nyaastats-backfill --help
+
+# Example cron setup for hourly execution
+# Add to crontab with: crontab -e
+# 0 * * * * cd /path/to/nyaastats && uv run nyaastats
 ```
 
 ### Development Setup
@@ -68,9 +72,9 @@ nyaastats/
 │   ├── database.py      # SQLite operations
 │   ├── rss_fetcher.py   # RSS parsing with guessit
 │   ├── tracker.py       # BitTorrent scraping
-│   ├── scheduler.py     # Time-decay algorithm
+│   ├── scheduler.py     # Time-decay algorithm with batching
 │   ├── config.py        # Pydantic configuration
-│   ├── main.py          # Main daemon
+│   ├── main.py          # Main run-once execution
 │   └── backfill.py      # Historical data script
 ├── tests/               # Test modules
 ├── pyproject.toml       # Project config and dependencies

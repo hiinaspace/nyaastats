@@ -11,17 +11,26 @@ This project tracks download, seed, and leech counts from the nyaa.si torrent tr
 1. **RSS Fetcher**: Discovers new torrents and performs historical backfill
 2. **Metadata Parser**: Uses guessit to extract structured data from filenames
 3. **Tracker Scraper**: Fetches current stats from BitTorrent HTTP scrape protocol
-4. **Time-Decay Scheduler**: Determines which torrents to scrape based on age
+4. **Time-Decay Scheduler**: Determines which torrents to scrape based on age with batching windows
 5. **Database**: SQLite with time-series stats and torrent metadata
+
+### Execution Model
+
+The system uses a **run-once model** executed via cron, rather than a long-running daemon:
+
+1. **RSS Fetch**: Check if RSS should be fetched based on interval, process if needed
+2. **Batch Scraping**: Query for torrents due within batching window, scrape in batches
+3. **Statistics**: Print current metrics and schedule summary
+4. **Exit**: Clean up resources and exit
 
 ### Data Flow
 
 ```
-RSS Feed → Parse XML → Extract Metadata → Store in DB
-                            ↓
-                    HTTP Scrape API ← Time-Decay Query
-                            ↓
-                    Update Stats Table
+Cron Scheduler → RSS Feed → Parse XML → Extract Metadata → Store in DB
+                                                  ↓
+                              HTTP Scrape API ← Time-Decay Query (with batching window)
+                                                  ↓
+                                          Update Stats Table → Print Stats → Exit
 ```
 
 ## Data Model
@@ -104,6 +113,15 @@ Torrents are scraped at decreasing frequency based on age:
 - **Month 2-6**: Every week
 - **After 6 months**: Never (unless manually reset)
 
+### Batching Window Optimization
+
+To improve efficiency, the scheduler includes a configurable batching window (default: 30 minutes) that allows scraping torrents that will be due within the window, rather than waiting for their exact due time. This batching approach:
+
+- Reduces total number of scrape requests
+- Improves tracker resource utilization
+- Has minimal impact on data quality given the hour/day/week cadence
+- Allows for more efficient batch processing
+
 #### SQL Query for Due Torrents
 ```sql
 SELECT t.infohash
@@ -182,16 +200,28 @@ Multiple info_hash parameters can be included (tested limit ~40).
 
 ## Operational Considerations
 
+### Cron-Based Execution
+The system is designed to run via cron scheduler:
+```bash
+# Run every hour
+0 * * * * cd /path/to/nyaastats && uv run nyaastats
+
+# Or run every 30 minutes for more frequent updates
+*/30 * * * * cd /path/to/nyaastats && uv run nyaastats
+```
+
 ### Rate Limiting
-- RSS fetch: Once per hour
-- Tracker scrape: Maximum 1 request per minute
-- Batch size: ~40 infohashes per scrape request
+- RSS fetch: Once per hour (configurable)
+- Tracker scrape: No artificial rate limiting (runs only when scheduled)
+- Batch size: ~20 infohashes per scrape request (configurable)
+- Batching window: 30 minutes ahead to improve batch efficiency
 
 ### Error Handling
 - Network failures: Exponential backoff with max 5 retries
 - Malformed RSS: Log and skip entry
 - Guessit failures: Mark as 'guessit_failed' status
 - Tracker errors: Treat as 0/0/0 response
+- Process failures: Cron handles restart/retry logic
 
 ### Monitoring Metrics
 - `torrents.total`: Total torrents tracked
@@ -201,15 +231,47 @@ Multiple info_hash parameters can be included (tested limit ~40).
 - `rss.last_success`: Time since last RSS fetch
 - `tracker.response_time`: Average scrape response time
 
+### Monitoring Integration
+- **Cron logs**: Monitor cron execution success/failure
+- **Application logs**: Structured logging for each execution
+- **Resource efficiency**: Only uses CPU/memory when actually working
+- **Fault tolerance**: Each execution is independent, failures don't affect future runs
+
 ### Data Retention
 No automatic retention policy - data grows at approximately:
 - ~100 torrents/day × 365 days = 36,500 torrents/year
 - ~50 stat points/torrent × 36,500 = 1.8M rows/year
 - Estimated size: <1GB/year
 
+## Configuration
+
+### Environment Variables
+All configuration can be set via environment variables with `NYAA_` prefix:
+
+- `NYAA_RSS_FETCH_INTERVAL_HOURS` (default: 1): RSS fetch interval
+- `NYAA_SCRAPE_BATCH_SIZE` (default: 20): Torrents per batch
+- `NYAA_SCRAPE_WINDOW_MINUTES` (default: 30): Batching window for due torrents
+- `NYAA_LOG_LEVEL` (default: INFO): Logging verbosity
+- `NYAA_DB_PATH` (default: nyaastats.db): Database file path
+
+### Cron Configuration Examples
+```bash
+# Basic hourly execution
+0 * * * * cd /path/to/nyaastats && uv run nyaastats
+
+# More frequent execution (every 30 minutes)
+*/30 * * * * cd /path/to/nyaastats && uv run nyaastats
+
+# With custom environment variables
+0 * * * * cd /path/to/nyaastats && NYAA_SCRAPE_WINDOW_MINUTES=60 uv run nyaastats
+
+# With logging to file
+0 * * * * cd /path/to/nyaastats && uv run nyaastats >> /var/log/nyaastats.log 2>&1
+```
+
 ## Future Considerations
 
-### Potential Extensionstrs
+### Potential Extensions
 - Support for additional nyaa categories (non-English, etc)
 - Integration with external anime databases (MAL, AniList)
 - Advanced torrent grouping/deduplication
