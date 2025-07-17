@@ -1,9 +1,10 @@
 import logging
-from datetime import datetime
+from collections.abc import Callable
 from urllib.parse import quote
 
 import bencodepy
 import httpx
+from whenever import Instant
 
 from .database import Database
 from .models import StatsData
@@ -17,10 +18,12 @@ class TrackerScraper:
         db: Database,
         client: httpx.Client,
         tracker_url: str = "http://nyaa.tracker.wf:7777/scrape",
+        now_func: Callable[[], Instant] = Instant.now,
     ):
         self.db = db
         self.tracker_url = tracker_url
         self.client = client
+        self.now_func = now_func
 
     def scrape_batch(self, infohashes: list[str]) -> dict[str, StatsData]:
         """Scrape a batch of infohashes from the tracker."""
@@ -83,7 +86,7 @@ class TrackerScraper:
 
     def update_stats(self, infohash: str, stats: StatsData) -> None:
         """Update stats for a single infohash."""
-        timestamp = datetime.utcnow()
+        timestamp = self.now_func()
 
         # Insert the stats
         self.db.insert_stats(infohash, stats, timestamp)

@@ -2,9 +2,10 @@ import logging
 import signal
 import sys
 import time
-from datetime import datetime, timedelta
+from collections.abc import Callable
 
 import httpx
+from whenever import Instant, hours
 
 from .config import settings
 from .database import Database
@@ -23,8 +24,9 @@ logger = logging.getLogger(__name__)
 class NyaaTracker:
     """Main daemon class that coordinates all components."""
 
-    def __init__(self):
-        self.db = Database(settings.db_path)
+    def __init__(self, now_func: Callable[[], Instant] = Instant.now):
+        self.now_func = now_func
+        self.db = Database(settings.db_path, now_func)
 
         # Create HTTP clients with proper configuration
         self.rss_client = httpx.Client(
@@ -37,16 +39,16 @@ class NyaaTracker:
             headers={"User-Agent": "nyaastats/1.0 Tracker Scraper"},
         )
 
-        self.rss_fetcher = RSSFetcher(self.db, self.rss_client, settings.rss_url)
+        self.rss_fetcher = RSSFetcher(self.db, self.rss_client, settings.rss_url, now_func)
         self.tracker = TrackerScraper(
-            self.db, self.tracker_client, settings.tracker_url
+            self.db, self.tracker_client, settings.tracker_url, now_func
         )
         self.scheduler = Scheduler(self.db, settings.scrape_batch_size)
         self.running = True
 
         # Track last RSS fetch
-        self.last_rss_fetch: datetime | None = None
-        self.rss_fetch_interval = timedelta(hours=settings.rss_fetch_interval_hours)
+        self.last_rss_fetch: Instant | None = None
+        self.rss_fetch_interval_hours = settings.rss_fetch_interval_hours
 
         # Setup signal handlers
         signal.signal(signal.SIGINT, self._signal_handler)
@@ -76,7 +78,7 @@ class NyaaTracker:
                     logger.info("Fetching RSS feed")
                     try:
                         processed = self.rss_fetcher.process_feed()
-                        self.last_rss_fetch = datetime.utcnow()
+                        self.last_rss_fetch = self.now_func()
                         logger.info(
                             f"RSS fetch completed, processed {processed} entries"
                         )
@@ -143,7 +145,9 @@ class NyaaTracker:
         if self.last_rss_fetch is None:
             return True
 
-        return datetime.utcnow() - self.last_rss_fetch > self.rss_fetch_interval
+        time_since_last = self.now_func() - self.last_rss_fetch
+        interval_duration = hours(self.rss_fetch_interval_hours)
+        return time_since_last >= interval_duration
 
     def _cleanup(self) -> None:
         """Clean up resources."""
@@ -159,12 +163,12 @@ class NyaaTracker:
         """Get current daemon status."""
         return {
             "running": self.running,
-            "last_rss_fetch": self.last_rss_fetch.isoformat()
+            "last_rss_fetch": self.last_rss_fetch.format_common_iso()
             if self.last_rss_fetch
             else None,
             "next_rss_fetch": (
-                self.last_rss_fetch + self.rss_fetch_interval
-            ).isoformat()
+                self.last_rss_fetch.add(hours=self.rss_fetch_interval_hours)
+            ).format_common_iso()
             if self.last_rss_fetch
             else None,
             "metrics": self.scheduler.get_metrics(),

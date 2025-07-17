@@ -1,10 +1,11 @@
 import logging
-from datetime import datetime
+from collections.abc import Callable
 from urllib.parse import urlparse
 
 import feedparser
 import guessit
 import httpx
+from whenever import Instant
 
 from .database import Database
 from .models import GuessitData, TorrentData
@@ -18,10 +19,12 @@ class RSSFetcher:
         db: Database,
         client: httpx.Client,
         feed_url: str = "https://nyaa.si/?page=rss&c=1_2&f=0",
+        now_func: Callable[[], Instant] = Instant.now,
     ):
         self.db = db
         self.feed_url = feed_url
         self.client = client
+        self.now_func = now_func
 
     def fetch_feed(self, page: int | None = None) -> feedparser.FeedParserDict:
         """Fetch RSS feed, optionally with pagination."""
@@ -71,7 +74,7 @@ class RSSFetcher:
                     # published_parsed is a time.struct_time with at least 6 elements
                     parsed_time = entry.published_parsed
                     if len(parsed_time) >= 6:
-                        pubdate = datetime(
+                        pubdate = Instant.from_utc(
                             parsed_time[0],
                             parsed_time[1],
                             parsed_time[2],
@@ -80,15 +83,15 @@ class RSSFetcher:
                             parsed_time[5],
                         )
                     else:
-                        pubdate = datetime.utcnow()
+                        pubdate = self.now_func()
                 else:
                     # Fallback to manual parsing - feedparser should handle this
-                    pubdate = datetime.utcnow()
+                    pubdate = self.now_func()
             except Exception as e:
                 logger.warning(f"Failed to parse pubdate '{pubdate_str}': {e}")
-                pubdate = datetime.utcnow()
+                pubdate = self.now_func()
         else:
-            pubdate = datetime.utcnow()
+            pubdate = self.now_func()
 
         torrent_data = TorrentData(
             infohash=infohash.lower(),

@@ -1,5 +1,6 @@
-from datetime import datetime
 from unittest.mock import Mock, patch
+
+from whenever import Instant
 
 from nyaastats.models import GuessitData, StatsData, TorrentData
 
@@ -147,17 +148,15 @@ def test_update_stats(tracker_scraper):
     infohash = "abcdef1234567890abcdef1234567890abcdef12"
     stats = StatsData(seeders=10, leechers=2, downloads=100)
 
-    with patch("nyaastats.tracker.datetime") as mock_datetime:
-        mock_datetime.utcnow.return_value = datetime(2025, 1, 1, 12, 0, 0)
+    # Since we use controlled time through fixtures, no mocking needed
+    tracker_scraper.update_stats(infohash, stats)
 
-        tracker_scraper.update_stats(infohash, stats)
-
-        # Check that stats were inserted
-        recent_stats = tracker_scraper.db.get_recent_stats(infohash, limit=1)
-        assert len(recent_stats) == 1
-        assert recent_stats[0]["seeders"] == 10
-        assert recent_stats[0]["leechers"] == 2
-        assert recent_stats[0]["downloads"] == 100
+    # Check that stats were inserted
+    recent_stats = tracker_scraper.db.get_recent_stats(infohash, limit=1)
+    assert len(recent_stats) == 1
+    assert recent_stats[0]["seeders"] == 10
+    assert recent_stats[0]["leechers"] == 2
+    assert recent_stats[0]["downloads"] == 100
 
 
 def test_should_mark_dead_true(tracker_scraper):
@@ -167,7 +166,7 @@ def test_should_mark_dead_true(tracker_scraper):
     # Insert 3 consecutive zero stats
     zero_stats = StatsData(seeders=0, leechers=0, downloads=0)
     for i in range(3):
-        timestamp = datetime(2025, 1, 1, 12, i, 0)
+        timestamp = Instant.from_utc(2025, 1, 1, 12, i, 0)
         tracker_scraper.db.insert_stats(infohash, zero_stats, timestamp)
 
     assert tracker_scraper._should_mark_dead(infohash)
@@ -180,7 +179,7 @@ def test_should_mark_dead_false_not_enough_stats(tracker_scraper):
     # Insert only 2 stats
     zero_stats = StatsData(seeders=0, leechers=0, downloads=0)
     for i in range(2):
-        timestamp = datetime(2025, 1, 1, 12, i, 0)
+        timestamp = Instant.from_utc(2025, 1, 1, 12, i, 0)
         tracker_scraper.db.insert_stats(infohash, zero_stats, timestamp)
 
     assert not tracker_scraper._should_mark_dead(infohash)
@@ -198,7 +197,7 @@ def test_should_mark_dead_false_non_zero_stats(tracker_scraper):
     ]
 
     for i, stats in enumerate(stats_data):
-        timestamp = datetime(2025, 1, 1, 12, i, 0)
+        timestamp = Instant.from_utc(2025, 1, 1, 12, i, 0)
         tracker_scraper.db.insert_stats(infohash, stats, timestamp)
 
     assert not tracker_scraper._should_mark_dead(infohash)
@@ -212,7 +211,7 @@ def test_update_stats_marks_dead(tracker_scraper):
     torrent_data = TorrentData(
         infohash=infohash,
         filename="test.mkv",
-        pubdate=datetime(2025, 1, 1, 12, 0, 0),
+        pubdate=Instant.from_utc(2025, 1, 1, 12, 0, 0),
         size_bytes=1000000,
         nyaa_id=12345,
         trusted=False,
@@ -226,22 +225,20 @@ def test_update_stats_marks_dead(tracker_scraper):
     # Insert 2 previous zero stats
     zero_stats = StatsData(seeders=0, leechers=0, downloads=0)
     for i in range(2):
-        timestamp = datetime(2025, 1, 1, 12, i, 0)
+        timestamp = Instant.from_utc(2025, 1, 1, 12, i, 0)
         tracker_scraper.db.insert_stats(infohash, zero_stats, timestamp)
 
     # Update with another zero stat (should mark as dead)
-    with patch("nyaastats.tracker.datetime") as mock_datetime:
-        mock_datetime.utcnow.return_value = datetime(2025, 1, 1, 12, 2, 0)
+    # Since we use controlled time through fixtures, no mocking needed
+    tracker_scraper.update_stats(infohash, zero_stats)
 
-        tracker_scraper.update_stats(infohash, zero_stats)
-
-        # Check that torrent was marked as dead
-        with tracker_scraper.db.get_conn() as conn:
-            cursor = conn.execute(
-                "SELECT status FROM torrents WHERE infohash = ?", (infohash,)
-            )
-            row = cursor.fetchone()
-            assert row["status"] == "dead"
+    # Check that torrent was marked as dead
+    with tracker_scraper.db.get_conn() as conn:
+        cursor = conn.execute(
+            "SELECT status FROM torrents WHERE infohash = ?", (infohash,)
+        )
+        row = cursor.fetchone()
+        assert row["status"] == "dead"
 
 
 def test_update_batch_stats(tracker_scraper):

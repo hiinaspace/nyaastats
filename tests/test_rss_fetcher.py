@@ -1,7 +1,7 @@
-from datetime import datetime
 from unittest.mock import Mock, patch
 
 import pytest
+from whenever import Instant
 
 from nyaastats.rss_fetcher import RSSFetcher
 
@@ -181,26 +181,25 @@ def test_parse_entry_missing_fields(rss_fetcher):
     entry.nyaa_leechers = "0"
     entry.nyaa_downloads = "0"
 
-    # Mock datetime.utcnow for consistent testing
-    with patch("nyaastats.rss_fetcher.datetime") as mock_datetime:
-        mock_datetime.utcnow.return_value = datetime(2025, 1, 1, 12, 0, 0)
+    # Since we use controlled time through fixtures, no mocking needed
+    # Mock guessit
+    from unittest.mock import patch
+    with patch("nyaastats.rss_fetcher.guessit.guessit") as mock_guessit:
+        mock_guessit.return_value = {}
 
-        # Mock guessit
-        with patch("nyaastats.rss_fetcher.guessit.guessit") as mock_guessit:
-            mock_guessit.return_value = {}
+        torrent_data, guessit_data = rss_fetcher.parse_entry(entry)
 
-            torrent_data, guessit_data = rss_fetcher.parse_entry(entry)
-
-            assert torrent_data.infohash == "abcdef1234567890abcdef1234567890abcdef12"
-            assert torrent_data.filename == "Test Torrent"
-            assert torrent_data.size_bytes == 0
-            assert torrent_data.nyaa_id is None
-            assert not torrent_data.trusted
-            assert torrent_data.remake
-            assert torrent_data.seeders == 0
-            assert torrent_data.leechers == 0
-            assert torrent_data.downloads == 0
-            assert torrent_data.pubdate == datetime(2025, 1, 1, 12, 0, 0)
+        assert torrent_data.infohash == "abcdef1234567890abcdef1234567890abcdef12"
+        assert torrent_data.filename == "Test Torrent"
+        assert torrent_data.size_bytes == 0
+        assert torrent_data.nyaa_id is None
+        assert not torrent_data.trusted
+        assert torrent_data.remake
+        assert torrent_data.seeders == 0
+        assert torrent_data.leechers == 0
+        assert torrent_data.downloads == 0
+        # Uses the fixed_time from fixture (2025, 1, 1, 12, 0, 0)
+        assert torrent_data.pubdate == Instant.from_utc(2025, 1, 1, 12, 0, 0)
 
 
 def test_process_feed(rss_fetcher, mock_rss_response):
@@ -261,7 +260,7 @@ def test_process_feed_skip_invalid_entries(rss_fetcher):
                     TorrentData(
                         infohash="",
                         filename="",
-                        pubdate=datetime(2025, 1, 1),
+                        pubdate=Instant.from_utc(2025, 1, 1),
                         size_bytes=0,
                         nyaa_id=None,
                         trusted=False,
@@ -276,7 +275,7 @@ def test_process_feed_skip_invalid_entries(rss_fetcher):
                     TorrentData(
                         infohash="abcdef1234567890abcdef1234567890abcdef12",
                         filename="Valid Title",
-                        pubdate=datetime(2025, 1, 1, 12, 0, 0),
+                        pubdate=Instant.from_utc(2025, 1, 1, 12, 0, 0),
                         size_bytes=1000000,
                         nyaa_id=123456,
                         trusted=False,

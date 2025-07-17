@@ -1,8 +1,7 @@
 """Pydantic models for nyaastats data structures."""
 
-from datetime import datetime
-
 from pydantic import BaseModel, ConfigDict
+from whenever import Instant
 
 
 class StatsData(BaseModel):
@@ -43,7 +42,7 @@ class TorrentData(BaseModel):
 
     infohash: str
     filename: str
-    pubdate: datetime
+    pubdate: Instant
     size_bytes: int
     nyaa_id: int | None = None
     trusted: bool = False

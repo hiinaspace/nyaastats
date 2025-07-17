@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from whenever import Instant
 
 from nyaastats.models import GuessitData, StatsData, TorrentData
 
@@ -9,7 +9,7 @@ def test_get_due_torrents_never_scraped(scheduler):
     torrent_data = TorrentData(
         infohash="abcdef1234567890abcdef1234567890abcdef12",
         filename="test.mkv",
-        pubdate=datetime.utcnow() - timedelta(hours=1),
+        pubdate=Instant.from_utc(2025, 1, 1, 11, 0, 0),  # 1 hour ago
         size_bytes=1000000,
         nyaa_id=12345,
         trusted=False,
@@ -31,13 +31,11 @@ def test_get_due_torrents_never_scraped(scheduler):
 
 def test_get_due_torrents_recent_hourly(scheduler):
     """Test getting torrents in hourly schedule (first 48 hours)."""
-    base_time = datetime.utcnow()
-
     # Insert a torrent published 1 hour ago
     torrent_data = TorrentData(
         infohash="abcdef1234567890abcdef1234567890abcdef12",
         filename="test.mkv",
-        pubdate=base_time - timedelta(hours=1),
+        pubdate=Instant.from_utc(2025, 1, 1, 11, 0, 0),  # 1 hour ago
         size_bytes=1000000,
         nyaa_id=12345,
         trusted=False,
@@ -52,7 +50,7 @@ def test_get_due_torrents_recent_hourly(scheduler):
     scheduler.db.insert_stats(
         torrent_data.infohash,
         StatsData(seeders=5, leechers=1, downloads=50),
-        base_time - timedelta(hours=2),
+        Instant.from_utc(2025, 1, 1, 10, 0, 0),  # 2 hours ago
     )
 
     due_torrents = scheduler.get_due_torrents()
@@ -61,13 +59,11 @@ def test_get_due_torrents_recent_hourly(scheduler):
 
 def test_get_due_torrents_recent_not_due(scheduler):
     """Test torrents that are not due for scraping."""
-    base_time = datetime.utcnow()
-
     # Insert a torrent published 1 hour ago
     torrent_data = TorrentData(
         infohash="abcdef1234567890abcdef1234567890abcdef12",
         filename="test.mkv",
-        pubdate=base_time - timedelta(hours=1),
+        pubdate=Instant.from_utc(2025, 1, 1, 11, 0, 0),  # 1 hour ago
         size_bytes=1000000,
         nyaa_id=12345,
         trusted=False,
@@ -82,7 +78,7 @@ def test_get_due_torrents_recent_not_due(scheduler):
     scheduler.db.insert_stats(
         torrent_data.infohash,
         StatsData(seeders=5, leechers=1, downloads=50),
-        base_time - timedelta(minutes=30),
+        Instant.from_utc(2025, 1, 1, 11, 30, 0),  # 30 minutes ago
     )
 
     due_torrents = scheduler.get_due_torrents()
@@ -91,13 +87,11 @@ def test_get_due_torrents_recent_not_due(scheduler):
 
 def test_get_due_torrents_four_hour_schedule(scheduler):
     """Test torrents in 4-hour schedule (days 3-7)."""
-    base_time = datetime.utcnow()
-
     # Insert a torrent published 5 days ago
     torrent_data = TorrentData(
         infohash="abcdef1234567890abcdef1234567890abcdef12",
         filename="test.mkv",
-        pubdate=base_time - timedelta(days=5),
+        pubdate=Instant.from_utc(2024, 12, 27, 12, 0, 0),  # 5 days ago
         size_bytes=1000000,
         nyaa_id=12345,
         trusted=False,
@@ -112,7 +106,7 @@ def test_get_due_torrents_four_hour_schedule(scheduler):
     scheduler.db.insert_stats(
         torrent_data.infohash,
         StatsData(seeders=5, leechers=1, downloads=50),
-        base_time - timedelta(hours=5),
+        Instant.from_utc(2025, 1, 1, 7, 0, 0),  # 5 hours ago
     )
 
     due_torrents = scheduler.get_due_torrents()
@@ -121,13 +115,11 @@ def test_get_due_torrents_four_hour_schedule(scheduler):
 
 def test_get_due_torrents_daily_schedule(scheduler):
     """Test torrents in daily schedule (weeks 2-4)."""
-    base_time = datetime.utcnow()
-
     # Insert a torrent published 20 days ago
     torrent_data = TorrentData(
         infohash="abcdef1234567890abcdef1234567890abcdef12",
         filename="test.mkv",
-        pubdate=base_time - timedelta(days=20),
+        pubdate=Instant.from_utc(2024, 12, 12, 12, 0, 0),  # 20 days ago
         size_bytes=1000000,
         nyaa_id=12345,
         trusted=False,
@@ -142,7 +134,7 @@ def test_get_due_torrents_daily_schedule(scheduler):
     scheduler.db.insert_stats(
         torrent_data.infohash,
         StatsData(seeders=5, leechers=1, downloads=50),
-        base_time - timedelta(days=2),
+        Instant.from_utc(2024, 12, 30, 12, 0, 0),  # 2 days ago
     )
 
     due_torrents = scheduler.get_due_torrents()
@@ -151,13 +143,11 @@ def test_get_due_torrents_daily_schedule(scheduler):
 
 def test_get_due_torrents_weekly_schedule(scheduler):
     """Test torrents in weekly schedule (months 2-6)."""
-    base_time = datetime.utcnow()
-
     # Insert a torrent published 120 days ago
     torrent_data = TorrentData(
         infohash="abcdef1234567890abcdef1234567890abcdef12",
         filename="test.mkv",
-        pubdate=base_time - timedelta(days=120),
+        pubdate=Instant.from_utc(2024, 9, 3, 12, 0, 0),  # ~120 days ago
         size_bytes=1000000,
         nyaa_id=12345,
         trusted=False,
@@ -172,7 +162,7 @@ def test_get_due_torrents_weekly_schedule(scheduler):
     scheduler.db.insert_stats(
         torrent_data.infohash,
         StatsData(seeders=5, leechers=1, downloads=50),
-        base_time - timedelta(days=8),
+        Instant.from_utc(2024, 12, 24, 12, 0, 0),  # 8 days ago
     )
 
     due_torrents = scheduler.get_due_torrents()
@@ -181,13 +171,11 @@ def test_get_due_torrents_weekly_schedule(scheduler):
 
 def test_get_due_torrents_never_schedule(scheduler):
     """Test torrents that should never be scraped (>6 months)."""
-    base_time = datetime.utcnow()
-
     # Insert a torrent published 200 days ago
     torrent_data = TorrentData(
         infohash="abcdef1234567890abcdef1234567890abcdef12",
         filename="test.mkv",
-        pubdate=base_time - timedelta(days=200),
+        pubdate=Instant.from_utc(2024, 6, 14, 12, 0, 0),  # ~200 days ago
         size_bytes=1000000,
         nyaa_id=12345,
         trusted=False,
@@ -202,7 +190,7 @@ def test_get_due_torrents_never_schedule(scheduler):
     scheduler.db.insert_stats(
         torrent_data.infohash,
         StatsData(seeders=5, leechers=1, downloads=50),
-        base_time - timedelta(days=10),
+        Instant.from_utc(2024, 12, 22, 12, 0, 0),  # 10 days ago
     )
 
     due_torrents = scheduler.get_due_torrents()
@@ -211,13 +199,11 @@ def test_get_due_torrents_never_schedule(scheduler):
 
 def test_get_due_torrents_inactive_status(scheduler):
     """Test that inactive torrents are not included."""
-    base_time = datetime.utcnow()
-
     # Insert a torrent and mark it as dead
     torrent_data = TorrentData(
         infohash="abcdef1234567890abcdef1234567890abcdef12",
         filename="test.mkv",
-        pubdate=base_time - timedelta(hours=1),
+        pubdate=Instant.from_utc(2025, 1, 1, 11, 0, 0),  # 1 hour ago
         size_bytes=1000000,
         nyaa_id=12345,
         trusted=False,
@@ -235,8 +221,6 @@ def test_get_due_torrents_inactive_status(scheduler):
 
 def test_get_due_torrents_batch_size(scheduler):
     """Test that batch size is respected."""
-    base_time = datetime.utcnow()
-
     # Insert more torrents than batch size
     infohashes = []
     for i in range(15):  # More than batch_size of 10
@@ -246,7 +230,7 @@ def test_get_due_torrents_batch_size(scheduler):
         torrent_data = TorrentData(
             infohash=infohash,
             filename=f"test{i}.mkv",
-            pubdate=base_time - timedelta(hours=1),
+            pubdate=Instant.from_utc(2025, 1, 1, 11, 0, 0),  # 1 hour ago
             size_bytes=1000000,
             nyaa_id=12345 + i,
             trusted=False,
@@ -274,8 +258,6 @@ def test_get_due_torrents_batch_size(scheduler):
 
 def test_get_metrics(scheduler):
     """Test getting system metrics."""
-    base_time = datetime.utcnow()
-
     # Insert various types of torrents
     torrents = [
         ("abcdef1234567890abcdef1234567890abcdef12", "active"),
@@ -288,7 +270,7 @@ def test_get_metrics(scheduler):
         torrent_data = TorrentData(
             infohash=infohash,
             filename="test.mkv",
-            pubdate=base_time - timedelta(hours=1),
+            pubdate=Instant.from_utc(2025, 1, 1, 11, 0, 0),  # 1 hour ago
             size_bytes=1000000,
             nyaa_id=12345,
             trusted=False,
@@ -306,7 +288,7 @@ def test_get_metrics(scheduler):
     scheduler.db.insert_stats(
         "abcdef1234567890abcdef1234567890abcdef12",
         StatsData(seeders=5, leechers=1, downloads=50),
-        base_time,
+        Instant.from_utc(2025, 1, 1, 12, 0, 0),  # base_time
     )
 
     metrics = scheduler.get_metrics()
@@ -322,13 +304,15 @@ def test_get_metrics(scheduler):
 
 def test_get_torrent_scrape_schedule(scheduler):
     """Test getting scrape schedule for a specific torrent."""
-    base_time = datetime.utcnow()
+    # Use recent dates relative to real current time for this test
+    # since scheduler uses SQL 'now()' function
+    now = Instant.now()
 
-    # Insert a torrent in hourly schedule (1 hour ago)
+    # Insert a torrent in hourly schedule (1 hour ago from real now)
     torrent_data = TorrentData(
         infohash="abcdef1234567890abcdef1234567890abcdef12",
         filename="test.mkv",
-        pubdate=base_time - timedelta(hours=1),
+        pubdate=now.add(hours=-1),  # 1 hour ago from real time
         size_bytes=1000000,
         nyaa_id=12345,
         trusted=False,
@@ -339,12 +323,16 @@ def test_get_torrent_scrape_schedule(scheduler):
     )
     scheduler.db.insert_torrent(torrent_data, GuessitData())
 
-    # Insert more recent stats that are still > 1 hour ago to make it due
-    # This overwrites the initial stats created by insert_torrent
+    # Remove any initial stats created by insert_torrent and insert our own
+    with scheduler.db.get_conn() as conn:
+        conn.execute("DELETE FROM stats WHERE infohash = ?", (torrent_data.infohash,))
+        conn.commit()
+
+    # Insert stats that are > 1 hour ago to make it due
     scheduler.db.insert_stats(
         torrent_data.infohash,
         StatsData(seeders=5, leechers=1, downloads=50),
-        base_time - timedelta(hours=1, minutes=30),  # 1.5 hours ago, definitely > 1 hour
+        now.add(hours=-1, minutes=-30),  # 1.5 hours ago from real time
     )
 
     schedule_info = scheduler.get_torrent_scrape_schedule(torrent_data.infohash)
@@ -364,30 +352,28 @@ def test_get_torrent_scrape_schedule_nonexistent(scheduler):
 
 def test_get_schedule_summary(scheduler):
     """Test getting schedule summary."""
-    base_time = datetime.utcnow()
-
-    # Insert torrents in different schedules
+    # Insert torrents in different schedules with specific dates
     torrents = [
         (
             "abcdef1234567890abcdef1234567890abcdef12",
-            base_time - timedelta(hours=1),
-        ),  # hourly
+            Instant.from_utc(2025, 1, 1, 11, 0, 0),  # 1 hour ago - hourly
+        ),
         (
             "fedcba0987654321fedcba0987654321fedcba09",
-            base_time - timedelta(days=5),
-        ),  # every_4_hours
+            Instant.from_utc(2024, 12, 27, 12, 0, 0),  # 5 days ago - every_4_hours
+        ),
         (
             "123456789abcdef0123456789abcdef012345678",
-            base_time - timedelta(days=20),
-        ),  # daily
+            Instant.from_utc(2024, 12, 12, 12, 0, 0),  # 20 days ago - daily
+        ),
         (
             "876543210fedcba9876543210fedcba987654321",
-            base_time - timedelta(days=120),
-        ),  # weekly
+            Instant.from_utc(2024, 9, 3, 12, 0, 0),  # ~120 days ago - weekly
+        ),
         (
             "abcdef9876543210abcdef9876543210abcdef98",
-            base_time - timedelta(days=200),
-        ),  # never
+            Instant.from_utc(2024, 6, 14, 12, 0, 0),  # ~200 days ago - never
+        ),
     ]
 
     for infohash, pubdate in torrents:
@@ -409,7 +395,7 @@ def test_get_schedule_summary(scheduler):
         scheduler.db.insert_stats(
             infohash,
             StatsData(seeders=5, leechers=1, downloads=50),
-            base_time - timedelta(hours=1),
+            Instant.from_utc(2025, 1, 1, 11, 0, 0),  # 1 hour ago
         )
 
     # Mark one as dead

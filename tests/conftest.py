@@ -1,5 +1,6 @@
 import httpx
 import pytest
+from whenever import Instant
 
 from nyaastats.database import Database
 from nyaastats.rss_fetcher import RSSFetcher
@@ -8,9 +9,15 @@ from nyaastats.tracker import TrackerScraper
 
 
 @pytest.fixture
-def temp_db():
+def fixed_time():
+    """Provide a fixed time for testing."""
+    return Instant.from_utc(2025, 1, 1, 12, 0, 0)
+
+
+@pytest.fixture
+def temp_db(fixed_time):
     """Create a temporary database for testing."""
-    db = Database(":memory:")
+    db = Database(":memory:", now_func=lambda: fixed_time)
     yield db
 
 
@@ -21,15 +28,15 @@ def mock_client():
 
 
 @pytest.fixture
-def rss_fetcher(temp_db, mock_client):
+def rss_fetcher(temp_db, mock_client, fixed_time):
     """Create RSS fetcher instance."""
-    return RSSFetcher(temp_db, mock_client)
+    return RSSFetcher(temp_db, mock_client, now_func=lambda: fixed_time)
 
 
 @pytest.fixture
-def tracker_scraper(temp_db, mock_client):
+def tracker_scraper(temp_db, mock_client, fixed_time):
     """Create tracker scraper instance."""
-    return TrackerScraper(temp_db, mock_client)
+    return TrackerScraper(temp_db, mock_client, now_func=lambda: fixed_time)
 
 
 @pytest.fixture

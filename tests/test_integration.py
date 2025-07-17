@@ -4,6 +4,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
+from whenever import Instant
 
 from nyaastats.models import GuessitData, StatsData, TorrentData
 from nyaastats.rss_fetcher import RSSFetcher
@@ -253,13 +254,12 @@ def test_tracker_integration(temp_db):
 
 def test_dead_torrent_detection(temp_db):
     """Test dead torrent detection workflow."""
-    from datetime import datetime
 
     # Insert a torrent manually
     torrent_data = TorrentData(
         infohash="deadbeef1234567890deadbeef1234567890dead",
         filename="dead.torrent",
-        pubdate=datetime(2025, 1, 1, 12, 0, 0),
+        pubdate=Instant.from_utc(2025, 1, 1, 12, 0, 0),
         size_bytes=1000000,
         nyaa_id=99999,
         trusted=False,
@@ -278,11 +278,9 @@ def test_dead_torrent_detection(temp_db):
     # Simulate 3 consecutive zero responses
     zero_stats = StatsData(seeders=0, leechers=0, downloads=0)
 
-    for i in range(3):
-        with patch("nyaastats.tracker.datetime") as mock_datetime:
-            mock_datetime.utcnow.return_value = datetime(2025, 1, 1, 12, i, 0)
-
-            tracker_scraper.update_stats(torrent_data.infohash, zero_stats)
+    for _ in range(3):
+        # Since we use controlled time through fixtures, no mocking needed
+        tracker_scraper.update_stats(torrent_data.infohash, zero_stats)
 
     # Check that torrent was marked as dead
     with temp_db.get_conn() as conn:

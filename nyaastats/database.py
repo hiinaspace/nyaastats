@@ -1,10 +1,11 @@
 import json
 import logging
 import sqlite3
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
-from datetime import datetime
 from typing import Any
+
+from whenever import Instant
 
 from .models import GuessitData, StatsData, TorrentData
 
@@ -57,9 +58,14 @@ CREATE INDEX IF NOT EXISTS idx_torrents_status ON torrents(status);
 
 
 class Database:
-    def __init__(self, db_path: str = "nyaastats.db"):
+    def __init__(
+        self,
+        db_path: str = "nyaastats.db",
+        now_func: Callable[[], Instant] = Instant.now,
+    ):
         self.db_path = db_path
         self._memory_conn = None
+        self.now_func = now_func
         self.init_db()
 
     def init_db(self) -> None:
@@ -79,17 +85,34 @@ class Database:
         if self.db_path == ":memory:":
             # For in-memory databases, maintain a persistent connection
             if self._memory_conn is None:
-                self._memory_conn = sqlite3.connect(self.db_path)
+                self._memory_conn = sqlite3.connect(
+                    self.db_path, detect_types=sqlite3.PARSE_DECLTYPES
+                )
                 self._memory_conn.row_factory = sqlite3.Row
+                self._register_adapters_converters(self._memory_conn)
             yield self._memory_conn
         else:
             # For file databases, create new connections as needed
-            conn = sqlite3.connect(self.db_path)
+            conn = sqlite3.connect(self.db_path, detect_types=sqlite3.PARSE_DECLTYPES)
             conn.row_factory = sqlite3.Row
+            self._register_adapters_converters(conn)
             try:
                 yield conn
             finally:
                 conn.close()
+
+    def _register_adapters_converters(self, conn: sqlite3.Connection) -> None:
+        """Register adapters and converters for custom types."""
+        # Register Instant adapter and converter
+        def adapt_instant(instant: Instant) -> str:
+            return instant.format_common_iso()
+
+        def convert_instant(s: bytes) -> Instant:
+            return Instant.parse_common_iso(s.decode())
+
+        # Register with sqlite3
+        sqlite3.register_adapter(Instant, adapt_instant)
+        sqlite3.register_converter("TIMESTAMP", convert_instant)
 
     def insert_torrent(
         self, torrent_data: TorrentData, guessit_data: GuessitData
@@ -172,11 +195,11 @@ class Database:
             conn.commit()
 
     def insert_stats(
-        self, infohash: str, stats: StatsData, timestamp: datetime | None = None
+        self, infohash: str, stats: StatsData, timestamp: Instant | None = None
     ) -> None:
         """Insert statistics for a torrent."""
         if timestamp is None:
-            timestamp = datetime.utcnow()
+            timestamp = self.now_func()
 
         with self.get_conn() as conn:
             conn.execute(

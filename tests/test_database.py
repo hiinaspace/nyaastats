@@ -1,5 +1,6 @@
 import json
-from datetime import datetime
+
+from whenever import Instant
 
 from nyaastats.models import GuessitData, StatsData, TorrentData
 
@@ -56,7 +57,7 @@ def test_insert_torrent(temp_db):
     torrent_data = TorrentData(
         infohash="abcdef1234567890abcdef1234567890abcdef12",
         filename="[Test] Anime Episode 01 [1080p].mkv",
-        pubdate=datetime(2023, 1, 1, 12, 0, 0),
+        pubdate=Instant.from_utc(2023, 1, 1, 12, 0, 0),
         size_bytes=1000000000,
         nyaa_id=12345,
         trusted=True,
@@ -124,7 +125,7 @@ def test_insert_stats(temp_db):
     """Test inserting statistics."""
     infohash = "abcdef1234567890abcdef1234567890abcdef12"
     stats = StatsData(seeders=5, leechers=1, downloads=50)
-    timestamp = datetime(2023, 1, 2, 12, 0, 0)
+    timestamp = Instant.from_utc(2023, 1, 2, 12, 0, 0)
 
     temp_db.insert_stats(infohash, stats, timestamp)
 
@@ -145,7 +146,7 @@ def test_mark_torrent_status(temp_db):
     torrent_data = TorrentData(
         infohash="abcdef1234567890abcdef1234567890abcdef12",
         filename="[Test] Anime Episode 01 [1080p].mkv",
-        pubdate=datetime(2023, 1, 1, 12, 0, 0),
+        pubdate=Instant.from_utc(2023, 1, 1, 12, 0, 0),
         size_bytes=1000000000,
         nyaa_id=12345,
         trusted=True,
@@ -182,7 +183,7 @@ def test_get_torrent_exists(temp_db):
     torrent_data = TorrentData(
         infohash=infohash,
         filename="[Test] Anime Episode 01 [1080p].mkv",
-        pubdate=datetime(2023, 1, 1, 12, 0, 0),
+        pubdate=Instant.from_utc(2023, 1, 1, 12, 0, 0),
         size_bytes=1000000000,
         nyaa_id=12345,
         trusted=True,
@@ -206,19 +207,19 @@ def test_get_recent_stats(temp_db):
     stats_data = [
         (
             StatsData(seeders=10, leechers=2, downloads=100),
-            datetime(2023, 1, 1, 12, 0, 0),
+            Instant.from_utc(2023, 1, 1, 12, 0, 0),
         ),
         (
             StatsData(seeders=8, leechers=1, downloads=105),
-            datetime(2023, 1, 1, 13, 0, 0),
+            Instant.from_utc(2023, 1, 1, 13, 0, 0),
         ),
         (
             StatsData(seeders=5, leechers=0, downloads=110),
-            datetime(2023, 1, 1, 14, 0, 0),
+            Instant.from_utc(2023, 1, 1, 14, 0, 0),
         ),
         (
             StatsData(seeders=3, leechers=1, downloads=115),
-            datetime(2023, 1, 1, 15, 0, 0),
+            Instant.from_utc(2023, 1, 1, 15, 0, 0),
         ),
     ]
 
@@ -262,7 +263,7 @@ def test_insert_duplicate_torrent(temp_db):
     torrent_data = TorrentData(
         infohash="abcdef1234567890abcdef1234567890abcdef12",
         filename="[Test] Anime Episode 01 [1080p].mkv",
-        pubdate=datetime(2023, 1, 1, 12, 0, 0),
+        pubdate=Instant.from_utc(2023, 1, 1, 12, 0, 0),
         size_bytes=1000000000,
         nyaa_id=12345,
         trusted=True,
