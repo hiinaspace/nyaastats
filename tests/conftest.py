@@ -1,4 +1,5 @@
 import pytest
+import httpx
 
 from nyaastats.database import Database
 from nyaastats.rss_fetcher import RSSFetcher
@@ -14,15 +15,21 @@ def temp_db():
 
 
 @pytest.fixture
-def rss_fetcher(temp_db):
-    """Create RSS fetcher instance."""
-    return RSSFetcher(temp_db)
+def mock_client():
+    """Create a mock HTTP client for testing."""
+    return httpx.Client(timeout=30.0)
 
 
 @pytest.fixture
-def tracker_scraper(temp_db):
+def rss_fetcher(temp_db, mock_client):
+    """Create RSS fetcher instance."""
+    return RSSFetcher(temp_db, mock_client)
+
+
+@pytest.fixture
+def tracker_scraper(temp_db, mock_client):
     """Create tracker scraper instance."""
-    return TrackerScraper(temp_db)
+    return TrackerScraper(temp_db, mock_client)
 
 
 @pytest.fixture

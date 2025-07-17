@@ -90,7 +90,8 @@ def test_end_to_end_rss_processing(temp_db):
 </rss>"""
 
     # Setup RSS fetcher
-    rss_fetcher = RSSFetcher(temp_db)
+    import httpx
+    rss_fetcher = RSSFetcher(temp_db, httpx.Client())
 
     # Mock HTTP response
     mock_response = Mock()
@@ -206,7 +207,8 @@ def test_scheduler_integration(temp_db):
 </rss>"""
 
     # Setup components
-    rss_fetcher = RSSFetcher(temp_db)
+    import httpx
+    rss_fetcher = RSSFetcher(temp_db, httpx.Client())
     scheduler = Scheduler(temp_db)
 
     # Mock HTTP response and process RSS
@@ -278,8 +280,9 @@ def test_tracker_integration(temp_db):
 </rss>"""
 
     # Setup components
-    rss_fetcher = RSSFetcher(temp_db)
-    tracker_scraper = TrackerScraper(temp_db)
+    import httpx
+    rss_fetcher = RSSFetcher(temp_db, httpx.Client())
+    tracker_scraper = TrackerScraper(temp_db, httpx.Client())
     scheduler = Scheduler(temp_db)
 
     # Process RSS first
@@ -363,7 +366,8 @@ def test_dead_torrent_detection(temp_db):
     temp_db.insert_torrent(torrent_data, GuessitData())
 
     # Setup tracker scraper
-    tracker_scraper = TrackerScraper(temp_db)
+    import httpx
+    tracker_scraper = TrackerScraper(temp_db, httpx.Client())
 
     # Simulate 3 consecutive zero responses
     zero_stats = StatsData(seeders=0, leechers=0, downloads=0)
@@ -414,7 +418,8 @@ def test_guessit_failure_handling(temp_db):
     </channel>
 </rss>"""
 
-    rss_fetcher = RSSFetcher(temp_db)
+    import httpx
+    rss_fetcher = RSSFetcher(temp_db, httpx.Client())
 
     mock_response = Mock()
     mock_response.text = rss_content

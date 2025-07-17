@@ -274,11 +274,6 @@ def test_update_batch_stats(tracker_scraper):
         )
 
 
-def test_close(tracker_scraper):
-    """Test closing the tracker scraper."""
-    with patch.object(tracker_scraper.client, "close") as mock_close:
-        tracker_scraper.close()
-        mock_close.assert_called_once()
 
 
 def test_scrape_batch_url_encoding(tracker_scraper):

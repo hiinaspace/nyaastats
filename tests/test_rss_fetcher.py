@@ -32,7 +32,8 @@ def mock_rss_response():
 
 def test_parse_size():
     """Test size parsing functionality."""
-    fetcher = RSSFetcher(Mock())
+    import httpx
+    fetcher = RSSFetcher(Mock(), httpx.Client())
 
     # Test various size formats
     assert fetcher._parse_size("1.5 GiB") == int(1.5 * 1024**3)
@@ -297,11 +298,6 @@ def test_process_feed_exception_handling(rss_fetcher):
             assert processed == 0
 
 
-def test_close(rss_fetcher):
-    """Test closing the RSS fetcher."""
-    with patch.object(rss_fetcher.client, "close") as mock_close:
-        rss_fetcher.close()
-        mock_close.assert_called_once()
 
 
 def test_parse_entry_with_pathlib_objects(rss_fetcher):

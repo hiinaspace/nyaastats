@@ -4,6 +4,8 @@ import sys
 import time
 from datetime import datetime, timedelta
 
+import httpx
+
 from .config import settings
 from .database import Database
 from .rss_fetcher import RSSFetcher
@@ -23,8 +25,20 @@ class NyaaTracker:
 
     def __init__(self):
         self.db = Database(settings.db_path)
-        self.rss_fetcher = RSSFetcher(self.db, settings.rss_url)
-        self.tracker = TrackerScraper(self.db, settings.tracker_url)
+        
+        # Create HTTP clients with proper configuration
+        self.rss_client = httpx.Client(
+            timeout=30.0,
+            headers={"User-Agent": "nyaastats/1.0 RSS Fetcher"},
+            follow_redirects=True,
+        )
+        self.tracker_client = httpx.Client(
+            timeout=30.0,
+            headers={"User-Agent": "nyaastats/1.0 Tracker Scraper"},
+        )
+        
+        self.rss_fetcher = RSSFetcher(self.db, self.rss_client, settings.rss_url)
+        self.tracker = TrackerScraper(self.db, self.tracker_client, settings.tracker_url)
         self.scheduler = Scheduler(self.db, settings.scrape_batch_size)
         self.running = True
 
@@ -121,8 +135,9 @@ class NyaaTracker:
     def _cleanup(self) -> None:
         """Clean up resources."""
         try:
-            self.rss_fetcher.close()
-            self.tracker.close()
+            self.rss_client.close()
+            self.tracker_client.close()
+            self.db.vacuum()
             logger.info("Cleanup completed")
         except Exception as e:
             logger.error(f"Error during cleanup: {e}")

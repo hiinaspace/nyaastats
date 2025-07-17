@@ -2,6 +2,8 @@ import logging
 import sys
 import time
 
+import httpx
+
 from .config import settings
 from .database import Database
 from .rss_fetcher import RSSFetcher
@@ -17,7 +19,15 @@ logger = logging.getLogger(__name__)
 def backfill(max_pages: int = 100) -> None:
     """Perform historical backfill from RSS feed."""
     db = Database(settings.db_path)
-    fetcher = RSSFetcher(db, settings.rss_url)
+    
+    # Create HTTP client with proper configuration
+    client = httpx.Client(
+        timeout=30.0,
+        headers={"User-Agent": "nyaastats/1.0 Backfill Tool"},
+        follow_redirects=True,
+    )
+    
+    fetcher = RSSFetcher(db, client, settings.rss_url)
 
     logger.info(f"Starting backfill for up to {max_pages} pages")
     logger.info(f"RSS URL: {settings.rss_url}")
@@ -58,7 +68,7 @@ def backfill(max_pages: int = 100) -> None:
         logger.info(f"Schedule summary: {schedule_summary}")
 
     finally:
-        fetcher.close()
+        client.close()
 
 
 def main() -> None:

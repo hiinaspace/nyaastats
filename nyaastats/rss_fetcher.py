@@ -14,11 +14,14 @@ logger = logging.getLogger(__name__)
 
 class RSSFetcher:
     def __init__(
-        self, db: Database, feed_url: str = "https://nyaa.si/?page=rss&c=1_2&f=0"
+        self, 
+        db: Database, 
+        client: httpx.Client,
+        feed_url: str = "https://nyaa.si/?page=rss&c=1_2&f=0"
     ):
         self.db = db
         self.feed_url = feed_url
-        self.client = httpx.Client(timeout=30.0)
+        self.client = client
 
     def fetch_feed(self, page: int | None = None) -> feedparser.FeedParserDict:
         """Fetch RSS feed, optionally with pagination."""
@@ -171,6 +174,3 @@ class RSSFetcher:
         logger.info(f"Processed {processed} torrents from RSS feed")
         return processed
 
-    def close(self) -> None:
-        """Close the HTTP client."""
-        self.client.close()

@@ -13,11 +13,14 @@ logger = logging.getLogger(__name__)
 
 class TrackerScraper:
     def __init__(
-        self, db: Database, tracker_url: str = "http://nyaa.tracker.wf:7777/scrape"
+        self, 
+        db: Database, 
+        client: httpx.Client,
+        tracker_url: str = "http://nyaa.tracker.wf:7777/scrape"
     ):
         self.db = db
         self.tracker_url = tracker_url
-        self.client = httpx.Client(timeout=30.0)
+        self.client = client
 
     def scrape_batch(self, infohashes: list[str]) -> dict[str, StatsData]:
         """Scrape a batch of infohashes from the tracker."""
@@ -107,6 +110,3 @@ class TrackerScraper:
         for infohash, stats in results.items():
             self.update_stats(infohash, stats)
 
-    def close(self) -> None:
-        """Close the HTTP client."""
-        self.client.close()
