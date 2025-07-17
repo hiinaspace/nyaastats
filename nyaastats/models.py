@@ -25,7 +25,7 @@ class GuessitData(BaseModel):
     season: int | None = None
     year: int | None = None
     release_group: str | None = None
-    resolution: str | None = None
+    screen_size: str | None = None
     video_codec: str | None = None
     audio_codec: str | None = None
     source: str | None = None

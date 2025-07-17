@@ -34,13 +34,13 @@ Primary table for torrent metadata
 CREATE TABLE torrents (
     infohash TEXT PRIMARY KEY,          -- 40-char hex string
     filename TEXT NOT NULL,             -- Original filename from RSS
-    pubdate TIMESTAMP NOT NULL,         -- Publication date from RSS
+    pubdate TEXT NOT NULL,              -- ISO8601 Publication date from RSS
     size_bytes INTEGER,                 -- Size in bytes
     nyaa_id INTEGER,                    -- Nyaa torrent ID
     trusted BOOLEAN,                    -- Trusted uploader flag
     remake BOOLEAN,                     -- Remake flag
     status TEXT DEFAULT 'active',       -- 'active', 'dead', 'guessit_failed'
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TEXT
 
     -- Guessit extracted fields (nullable)
     title TEXT,
@@ -49,7 +49,7 @@ CREATE TABLE torrents (
     season INTEGER,
     year INTEGER,
     release_group TEXT,
-    resolution TEXT,                    -- '1080p', '720p', etc
+    screen_size TEXT,                   -- '1080p', '720p', etc
     video_codec TEXT,                   -- 'x265', 'x264', etc
     audio_codec TEXT,                   -- 'AAC', 'FLAC', etc
     source TEXT,                        -- 'Web', 'BluRay', etc
@@ -65,7 +65,7 @@ Time-series table for tracker statistics
 ```sql
 CREATE TABLE stats (
     infohash TEXT NOT NULL,
-    timestamp TIMESTAMP NOT NULL,
+    timestamp TEXT NOT NULL,
     seeders INTEGER NOT NULL,
     leechers INTEGER NOT NULL,
     downloads INTEGER NOT NULL,

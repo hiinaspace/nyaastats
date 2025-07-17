@@ -15,13 +15,13 @@ SCHEMA = """
 CREATE TABLE IF NOT EXISTS torrents (
     infohash TEXT PRIMARY KEY,
     filename TEXT NOT NULL,
-    pubdate TIMESTAMP NOT NULL,
+    pubdate TEXT NOT NULL,
     size_bytes INTEGER,
     nyaa_id INTEGER,
     trusted BOOLEAN DEFAULT 0,
     remake BOOLEAN DEFAULT 0,
     status TEXT DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TEXT,
 
     -- Guessit fields
     title TEXT,
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS torrents (
     season INTEGER,
     year INTEGER,
     release_group TEXT,
-    resolution TEXT,
+    screen_size TEXT,
     video_codec TEXT,
     audio_codec TEXT,
     source TEXT,
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS torrents (
 
 CREATE TABLE IF NOT EXISTS stats (
     infohash TEXT NOT NULL,
-    timestamp TIMESTAMP NOT NULL,
+    timestamp TEXT NOT NULL,
     seeders INTEGER NOT NULL,
     leechers INTEGER NOT NULL,
     downloads INTEGER NOT NULL,
@@ -103,6 +103,7 @@ class Database:
 
     def _register_adapters_converters(self, conn: sqlite3.Connection) -> None:
         """Register adapters and converters for custom types."""
+
         # Register Instant adapter and converter
         def adapt_instant(instant: Instant) -> str:
             # Use common ISO format that SQLite can understand and we can parse
@@ -110,20 +111,7 @@ class Database:
 
         def convert_instant(s: bytes) -> Instant:
             timestamp_str = s.decode()
-            # Handle different timestamp formats that SQLite might produce
-            try:
-                # Try common ISO format first (what we store)
-                return Instant.parse_common_iso(timestamp_str)
-            except ValueError:
-                # Handle SQLite's default CURRENT_TIMESTAMP format (YYYY-MM-DD HH:MM:SS)
-                if len(timestamp_str) == 19 and timestamp_str[4] == '-' and timestamp_str[7] == '-':
-                    # Parse YYYY-MM-DD HH:MM:SS format
-                    date_part, time_part = timestamp_str.split(' ')
-                    year, month, day = map(int, date_part.split('-'))
-                    hour, minute, second = map(int, time_part.split(':'))
-                    return Instant.from_utc(year, month, day, hour, minute, second)
-                else:
-                    raise ValueError(f"Cannot parse timestamp format: {timestamp_str}") from None
+            return Instant.parse_common_iso(timestamp_str)
 
         # Register with sqlite3
         sqlite3.register_adapter(Instant, adapt_instant)
@@ -143,7 +131,7 @@ class Database:
                 INSERT OR IGNORE INTO torrents (
                     infohash, filename, pubdate, size_bytes, nyaa_id,
                     trusted, remake, title, episode, season, year,
-                    release_group, resolution, video_codec, audio_codec,
+                    release_group, screen_size, video_codec, audio_codec,
                     source, container, language, subtitles, other
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
@@ -160,7 +148,7 @@ class Database:
                     guessit_data.season,
                     guessit_data.year,
                     guessit_data.release_group,
-                    guessit_data.resolution,
+                    guessit_data.screen_size,
                     guessit_data.video_codec,
                     guessit_data.audio_codec,
                     guessit_data.source,
@@ -179,7 +167,7 @@ class Database:
                                 "season",
                                 "year",
                                 "release_group",
-                                "resolution",
+                                "screen_size",
                                 "video_codec",
                                 "audio_codec",
                                 "source",

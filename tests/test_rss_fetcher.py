@@ -98,7 +98,7 @@ def test_parse_entry_basic(rss_fetcher):
             "title": "Test Anime",
             "season": 1,
             "episode": 1,
-            "resolution": "1080p",
+            "screen_size": "1080p",
             "video_codec": "H.264",
             "audio_codec": "AAC",
             "container": "mkv",
@@ -126,7 +126,7 @@ def test_parse_entry_basic(rss_fetcher):
         assert guessit_data.title == "Test Anime"
         assert guessit_data.season == 1
         assert guessit_data.episode == 1
-        assert guessit_data.resolution == "1080p"
+        assert guessit_data.screen_size == "1080p"
         assert guessit_data.video_codec == "H.264"
         assert guessit_data.audio_codec == "AAC"
         assert guessit_data.container == "mkv"
@@ -184,6 +184,7 @@ def test_parse_entry_missing_fields(rss_fetcher):
     # Since we use controlled time through fixtures, no mocking needed
     # Mock guessit
     from unittest.mock import patch
+
     with patch("nyaastats.rss_fetcher.guessit.guessit") as mock_guessit:
         mock_guessit.return_value = {}
 
@@ -217,7 +218,7 @@ def test_process_feed(rss_fetcher, mock_rss_response):
                 "title": "Test Anime",
                 "season": 1,
                 "episode": 1,
-                "resolution": "1080p",
+                "screen_size": "1080p",
                 "video_codec": "H.264",
                 "audio_codec": "AAC",
                 "container": "mkv",

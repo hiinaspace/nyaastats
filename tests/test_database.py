@@ -26,7 +26,7 @@ def test_database_schema(temp_db):
         expected_columns = {
             "infohash": "TEXT",
             "filename": "TEXT",
-            "pubdate": "TIMESTAMP",
+            "pubdate": "TEXT",
             "size_bytes": "INTEGER",
             "nyaa_id": "INTEGER",
             "trusted": "BOOLEAN",
@@ -37,7 +37,7 @@ def test_database_schema(temp_db):
             "season": "INTEGER",
             "year": "INTEGER",
             "release_group": "TEXT",
-            "resolution": "TEXT",
+            "screen_size": "TEXT",
             "video_codec": "TEXT",
             "audio_codec": "TEXT",
             "source": "TEXT",
@@ -70,7 +70,7 @@ def test_insert_torrent(temp_db):
     guessit_data = GuessitData(
         title="Anime",
         episode=1,
-        resolution="1080p",
+        screen_size="1080p",
         container="mkv",
         release_group="Test",
         video_codec="H.264",
@@ -99,7 +99,7 @@ def test_insert_torrent(temp_db):
         assert row["remake"] == torrent_data.remake
         assert row["title"] == guessit_data.title
         assert row["episode"] == guessit_data.episode
-        assert row["resolution"] == guessit_data.resolution
+        assert row["screen_size"] == guessit_data.screen_size
         assert row["container"] == guessit_data.container
         assert row["release_group"] == guessit_data.release_group
         assert row["video_codec"] == guessit_data.video_codec
