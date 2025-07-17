@@ -131,16 +131,13 @@ def test_scrape_batch_http_error(tracker_scraper):
     """Test scraping with HTTP error."""
     infohashes = ["abcdef1234567890abcdef1234567890abcdef12"]
 
-    with patch("nyaastats.tracker.httpx.Client") as mock_client:
-        mock_client.return_value.get.side_effect = Exception("HTTP Error")
+    with patch.object(tracker_scraper.client, "get") as mock_get:
+        mock_get.side_effect = Exception("HTTP Error")
 
         results = tracker_scraper.scrape_batch(infohashes)
 
-        # Should return zeros for all requested torrents
-        expected_zero_stats = StatsData(seeders=0, leechers=0, downloads=0)
-        assert results == {
-            "abcdef1234567890abcdef1234567890abcdef12": expected_zero_stats
-        }
+        # Should return empty dict for HTTP errors (don't count as individual torrent failures)
+        assert results == {}
 
 
 def test_update_stats(tracker_scraper):
@@ -305,19 +302,98 @@ def test_scrape_batch_bencode_decode_error(tracker_scraper):
     """Test scraping when bencode decoding fails."""
     infohashes = ["abcdef1234567890abcdef1234567890abcdef12"]
 
-    with patch("nyaastats.tracker.httpx.Client") as mock_client:
-        mock_response = Mock()
-        mock_response.content = b"invalid_bencode"
-        mock_response.raise_for_status = Mock()
-        mock_client.return_value.get.return_value = mock_response
+    mock_response = Mock()
+    mock_response.content = b"invalid_bencode"
+    mock_response.raise_for_status = Mock()
 
+    with patch.object(tracker_scraper.client, "get", return_value=mock_response):
         with patch("nyaastats.tracker.bencodepy.decode") as mock_decode:
             mock_decode.side_effect = Exception("Bencode decode error")
 
             results = tracker_scraper.scrape_batch(infohashes)
 
-            # Should return zeros for all requested torrents
-            expected_zero_stats = StatsData(seeders=0, leechers=0, downloads=0)
-            assert results == {
-                "abcdef1234567890abcdef1234567890abcdef12": expected_zero_stats
-            }
+            # Should return empty dict for decode errors (don't count as individual torrent failures)
+            assert results == {}
+
+
+def test_update_batch_stats_empty_results(tracker_scraper):
+    """Test update_batch_stats with empty results (simulates HTTP error)."""
+    # Should handle empty results gracefully without updating any stats
+    tracker_scraper.update_batch_stats({})
+
+    # No exception should be raised, and no stats should be updated
+    # This is mainly to ensure the method doesn't crash on empty input
+
+
+def test_update_batch_stats_with_data(tracker_scraper):
+    """Test update_batch_stats with actual data."""
+    infohash = "abcdef1234567890abcdef1234567890abcdef12"
+    stats = StatsData(seeders=10, leechers=2, downloads=100)
+
+    # Insert a torrent first so we can update its stats
+    torrent_data = TorrentData(
+        infohash=infohash,
+        filename="test.mkv",
+        pubdate=Instant.from_utc(2025, 1, 1, 12, 0, 0),
+        size_bytes=1000000,
+        nyaa_id=12345,
+        trusted=False,
+        remake=False,
+        seeders=5,
+        leechers=1,
+        downloads=50,
+        guessit_data=None,
+    )
+    tracker_scraper.db.insert_torrent(torrent_data)
+
+    # Update batch stats
+    tracker_scraper.update_batch_stats({infohash: stats})
+
+    # Verify stats were updated
+    recent_stats = tracker_scraper.db.get_recent_stats(infohash, limit=1)
+    assert len(recent_stats) == 1
+    assert recent_stats[0]["seeders"] == 10
+    assert recent_stats[0]["leechers"] == 2
+    assert recent_stats[0]["downloads"] == 100
+
+
+def test_http_error_does_not_count_toward_dead_detection(tracker_scraper):
+    """Test that HTTP errors don't count toward dead torrent detection."""
+    infohash = "abcdef1234567890abcdef1234567890abcdef12"
+
+    # First insert a torrent
+    torrent_data = TorrentData(
+        infohash=infohash,
+        filename="test.mkv",
+        pubdate=Instant.from_utc(2025, 1, 1, 12, 0, 0),
+        size_bytes=1000000,
+        nyaa_id=12345,
+        trusted=False,
+        remake=False,
+        seeders=5,
+        leechers=1,
+        downloads=50,
+        guessit_data=None,
+    )
+    tracker_scraper.db.insert_torrent(torrent_data)
+
+    # Simulate HTTP error - should return empty dict
+    with patch.object(tracker_scraper.client, "get") as mock_get:
+        mock_get.side_effect = Exception("HTTP Error")
+
+        results = tracker_scraper.scrape_batch([infohash])
+        tracker_scraper.update_batch_stats(results)
+
+    # No new stats should be inserted due to HTTP error
+    recent_stats = tracker_scraper.db.get_recent_stats(infohash, limit=10)
+    # Should only have the initial RSS stats, no new zero stats from HTTP error
+    assert len(recent_stats) == 1
+    assert recent_stats[0]["seeders"] == 5  # Original RSS data
+
+    # Torrent should still be active (not marked as dead)
+    with tracker_scraper.db.get_conn() as conn:
+        cursor = conn.execute(
+            "SELECT status FROM torrents WHERE infohash = ?", (infohash,)
+        )
+        row = cursor.fetchone()
+        assert row["status"] == "active"

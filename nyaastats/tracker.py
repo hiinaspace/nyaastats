@@ -85,12 +85,9 @@ class TrackerScraper:
 
         except Exception as e:
             logger.error(f"Tracker scrape failed: {e}")
-            # Return zeros for all valid torrents
-            # TODO don't return zero, total tracker failure shouldn't count for individual torrent missing
-            return {
-                ih: StatsData(seeders=0, leechers=0, downloads=0)
-                for ih in valid_infohashes
-            }
+            # Don't return any data for HTTP errors - network failures shouldn't count
+            # as individual torrent failures for dead torrent detection
+            return {}
 
     def update_stats(
         self, infohash: str, stats: StatsData, timestamp: Instant | None = None
@@ -122,5 +119,13 @@ class TrackerScraper:
 
     def update_batch_stats(self, results: dict[str, StatsData]) -> None:
         """Update stats for a batch of torrents."""
+        if not results:
+            logger.warning("No tracker results to update (possible network error)")
+            return
+
+        updated_count = 0
         for infohash, stats in results.items():
             self.update_stats(infohash, stats)
+            updated_count += 1
+
+        logger.info(f"Updated stats for {updated_count} torrents")
