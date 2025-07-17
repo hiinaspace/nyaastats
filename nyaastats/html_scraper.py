@@ -2,7 +2,7 @@ import json
 import logging
 import re
 from collections.abc import Callable
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 import guessit
 import httpx
@@ -24,30 +24,60 @@ class HtmlScraper:
         db: Database,
         client: httpx.Client,
         base_url: str = "https://nyaa.si",
+        custom_url: str | None = None,
         now_func: Callable[[], Instant] = Instant.now,
     ):
         self.db = db
         self.client = client
         self.base_url = base_url
+        self.custom_url = custom_url
         self.now_func = now_func
 
     def fetch_page(
         self, page: int = 1, category: str = "1_2", filter_type: str = "0"
     ) -> str:
-        """Fetch HTML page from Nyaa browse endpoint."""
-        params = {
-            "c": category,
-            "f": filter_type,
-            "p": str(page),
-        }
+        """Fetch HTML page from Nyaa browse endpoint or custom URL."""
+        if self.custom_url:
+            # Use custom URL with page parameter
+            url = self._build_paginated_url(self.custom_url, page)
+            params = None
+        else:
+            # Use default browse behavior
+            url = self.base_url
+            params = {
+                "c": category,
+                "f": filter_type,
+                "p": str(page),
+            }
 
         try:
-            response = self.client.get(self.base_url, params=params)
+            response = self.client.get(url, params=params)
             response.raise_for_status()
             return response.text
         except Exception as e:
             logger.error(f"Failed to fetch page {page}: {e}")
             raise
+
+    def _build_paginated_url(self, base_url: str, page: int) -> str:
+        """Build URL with page parameter for pagination."""
+        parsed = urlparse(base_url)
+        query_params = parse_qs(parsed.query)
+
+        # Add or update the page parameter
+        query_params["p"] = [str(page)]
+
+        # Rebuild the URL with the new query parameters
+        new_query = urlencode(query_params, doseq=True)
+        return urlunparse(
+            (
+                parsed.scheme,
+                parsed.netloc,
+                parsed.path,
+                parsed.params,
+                new_query,
+                parsed.fragment,
+            )
+        )
 
     def parse_html_page(self, html: str) -> list[TorrentData]:
         """Parse HTML page and extract torrent data."""

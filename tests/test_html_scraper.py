@@ -227,3 +227,92 @@ def test_parse_html_no_table(html_scraper):
     html_without_table = "<html><body><p>No table here</p></body></html>"
     results = html_scraper.parse_html_page(html_without_table)
     assert results == []
+
+
+def test_build_paginated_url(html_scraper):
+    """Test building paginated URLs from custom URLs."""
+    # Test user page URL
+    user_url = "https://nyaa.si/user/subsplease"
+    paginated_url = html_scraper._build_paginated_url(user_url, 11)
+    assert paginated_url == "https://nyaa.si/user/subsplease?p=11"
+
+    # Test search URL with existing parameters
+    search_url = "https://nyaa.si/?f=0&c=1_2&q=underwater"
+    paginated_url = html_scraper._build_paginated_url(search_url, 5)
+    assert "p=5" in paginated_url
+    assert "f=0" in paginated_url
+    assert "c=1_2" in paginated_url
+    assert "q=underwater" in paginated_url
+
+    # Test URL that already has a page parameter
+    existing_page_url = "https://nyaa.si/user/subsplease?p=1"
+    paginated_url = html_scraper._build_paginated_url(existing_page_url, 25)
+    assert paginated_url == "https://nyaa.si/user/subsplease?p=25"
+
+
+def test_fetch_page_with_custom_url(temp_db, fixed_time):
+    """Test fetching HTML page with custom URL."""
+    mock_client = Mock()
+    mock_response = Mock()
+    mock_response.text = "<html>custom page</html>"
+    mock_client.get.return_value = mock_response
+
+    # Create scraper with custom URL
+    scraper = HtmlScraper(
+        temp_db,
+        mock_client,
+        custom_url="https://nyaa.si/user/subsplease",
+        now_func=lambda: fixed_time,
+    )
+
+    result = scraper.fetch_page(page=2)
+
+    assert result == "<html>custom page</html>"
+    mock_client.get.assert_called_once_with(
+        "https://nyaa.si/user/subsplease?p=2", params=None
+    )
+
+
+def test_fetch_page_with_custom_url_search(temp_db, fixed_time):
+    """Test fetching HTML page with custom search URL."""
+    mock_client = Mock()
+    mock_response = Mock()
+    mock_response.text = "<html>search page</html>"
+    mock_client.get.return_value = mock_response
+
+    # Create scraper with custom search URL
+    scraper = HtmlScraper(
+        temp_db,
+        mock_client,
+        custom_url="https://nyaa.si/?f=0&c=1_2&q=underwater",
+        now_func=lambda: fixed_time,
+    )
+
+    result = scraper.fetch_page(page=3)
+
+    assert result == "<html>search page</html>"
+    # Check that the URL was called with proper pagination
+    called_url = mock_client.get.call_args[0][0]
+    assert "p=3" in called_url
+    assert "f=0" in called_url
+    assert "c=1_2" in called_url
+    assert "q=underwater" in called_url
+    mock_client.get.assert_called_once_with(called_url, params=None)
+
+
+def test_fetch_page_default_behavior_unchanged(temp_db, fixed_time):
+    """Test that default behavior still works without custom URL."""
+    mock_client = Mock()
+    mock_response = Mock()
+    mock_response.text = "<html>default page</html>"
+    mock_client.get.return_value = mock_response
+
+    # Create scraper without custom URL (default behavior)
+    scraper = HtmlScraper(temp_db, mock_client, now_func=lambda: fixed_time)
+
+    result = scraper.fetch_page(page=1)
+
+    assert result == "<html>default page</html>"
+    mock_client.get.assert_called_once_with(
+        "https://nyaa.si", params={"c": "1_2", "f": "0", "p": "1"}
+    )
