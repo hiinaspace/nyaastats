@@ -324,7 +324,7 @@ def test_get_torrent_scrape_schedule(scheduler):
     """Test getting scrape schedule for a specific torrent."""
     base_time = datetime.utcnow()
 
-    # Insert a torrent in hourly schedule
+    # Insert a torrent in hourly schedule (1 hour ago)
     torrent_data = TorrentData(
         infohash="abcdef1234567890abcdef1234567890abcdef12",
         filename="test.mkv",
@@ -339,11 +339,12 @@ def test_get_torrent_scrape_schedule(scheduler):
     )
     scheduler.db.insert_torrent(torrent_data, GuessitData())
 
-    # Insert stats from 2 hours ago
+    # Insert more recent stats that are still > 1 hour ago to make it due
+    # This overwrites the initial stats created by insert_torrent
     scheduler.db.insert_stats(
         torrent_data.infohash,
         StatsData(seeders=5, leechers=1, downloads=50),
-        base_time - timedelta(hours=2),
+        base_time - timedelta(hours=1, minutes=30),  # 1.5 hours ago, definitely > 1 hour
     )
 
     schedule_info = scheduler.get_torrent_scrape_schedule(torrent_data.infohash)
