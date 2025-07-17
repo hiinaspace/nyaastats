@@ -2,7 +2,7 @@ from pydantic import Field
 from pydantic_settings import BaseSettings
 
 
-class Settings(BaseSettings):
+class Settings(BaseSettings, cli_parse_args=True):
     """Configuration settings for nyaastats."""
 
     # Database
@@ -46,6 +46,9 @@ class Settings(BaseSettings):
     class Config:
         env_prefix = "NYAA_"
         case_sensitive = False
+        cli_prog_name = "nyaastats"
+        cli_kebab_case = True
 
 
-settings = Settings()
+# Note: Settings instance should be created in main() to enable CLI parsing
+# settings = Settings()

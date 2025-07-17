@@ -5,24 +5,22 @@ from collections.abc import Callable
 import httpx
 from whenever import Instant, hours
 
-from .config import settings
+from .config import Settings
 from .database import Database
 from .rss_fetcher import RSSFetcher
 from .scheduler import Scheduler
 from .tracker import TrackerScraper
 
-# Configure logging
-logging.basicConfig(
-    level=getattr(logging, settings.log_level.upper()),
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
 logger = logging.getLogger(__name__)
 
 
 class NyaaTracker:
     """Main coordinator class for run-once execution."""
 
-    def __init__(self, now_func: Callable[[], Instant] = Instant.now):
+    def __init__(
+        self, settings: Settings, now_func: Callable[[], Instant] = Instant.now
+    ):
+        self.settings = settings
         self.now_func = now_func
         self.db = Database(settings.db_path, now_func)
 
@@ -49,12 +47,14 @@ class NyaaTracker:
     def run(self) -> None:
         """Run once execution: RSS → Scrape → Stats → Exit."""
         logger.info("Starting Nyaa tracker run")
-        logger.info(f"RSS URL: {settings.rss_url}")
-        logger.info(f"Tracker URL: {settings.tracker_url}")
-        logger.info(f"Database: {settings.db_path}")
-        logger.info(f"Scrape batch size: {settings.scrape_batch_size}")
-        logger.info(f"RSS fetch interval: {settings.rss_fetch_interval_hours} hours")
-        logger.info(f"Scrape window: {settings.scrape_window_minutes} minutes")
+        logger.info(f"RSS URL: {self.settings.rss_url}")
+        logger.info(f"Tracker URL: {self.settings.tracker_url}")
+        logger.info(f"Database: {self.settings.db_path}")
+        logger.info(f"Scrape batch size: {self.settings.scrape_batch_size}")
+        logger.info(
+            f"RSS fetch interval: {self.settings.rss_fetch_interval_hours} hours"
+        )
+        logger.info(f"Scrape window: {self.settings.scrape_window_minutes} minutes")
 
         try:
             # 1. Fetch RSS if needed
@@ -70,7 +70,7 @@ class NyaaTracker:
 
             # 2. Scrape due torrents with batching window
             due_torrents = self.scheduler.get_due_torrents_with_window(
-                settings.scrape_window_minutes
+                self.settings.scrape_window_minutes
             )
 
             if due_torrents:
@@ -157,7 +157,16 @@ class NyaaTracker:
 def main() -> None:
     """Main entry point."""
     try:
-        tracker = NyaaTracker()
+        # Create settings instance with CLI parsing
+        settings = Settings()
+
+        # Configure logging based on parsed settings
+        logging.basicConfig(
+            level=getattr(logging, settings.log_level.upper()),
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        )
+
+        tracker = NyaaTracker(settings)
         tracker.run()
     except Exception as e:
         logger.error(f"Fatal error: {e}", exc_info=True)
