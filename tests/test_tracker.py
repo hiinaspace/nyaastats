@@ -229,7 +229,9 @@ def test_update_stats_marks_dead(tracker_scraper):
         conn.commit()
 
     for i in range(2):
-        timestamp = Instant.from_utc(2025, 1, 1, 11, i, 0)  # Use different hour to avoid conflict
+        timestamp = Instant.from_utc(
+            2025, 1, 1, 11, i, 0
+        )  # Use different hour to avoid conflict
         tracker_scraper.db.insert_stats(infohash, zero_stats, timestamp)
 
     # Update with another zero stat (should mark as dead)

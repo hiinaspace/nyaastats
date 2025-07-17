@@ -6,7 +6,7 @@ import httpx
 
 from .config import settings
 from .database import Database
-from .rss_fetcher import RSSFetcher
+from .html_scraper import HtmlScraper
 
 # Configure logging
 logging.basicConfig(
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 def backfill(max_pages: int = 100) -> None:
-    """Perform historical backfill from RSS feed."""
+    """Perform historical backfill from HTML browse pages."""
     db = Database(settings.db_path)
 
     # Create HTTP client with proper configuration
@@ -27,10 +27,10 @@ def backfill(max_pages: int = 100) -> None:
         follow_redirects=True,
     )
 
-    fetcher = RSSFetcher(db, client, settings.rss_url)
+    scraper = HtmlScraper(db, client)
 
     logger.info(f"Starting backfill for up to {max_pages} pages")
-    logger.info(f"RSS URL: {settings.rss_url}")
+    logger.info(f"Base URL: {scraper.base_url}")
     logger.info(f"Database: {settings.db_path}")
 
     total_processed = 0
@@ -40,15 +40,11 @@ def backfill(max_pages: int = 100) -> None:
             logger.info(f"Processing page {page}/{max_pages}")
 
             try:
-                processed = fetcher.process_feed(page=page)
+                processed = scraper.process_page(page=page)
                 total_processed += processed
 
-                if processed == 0:
-                    logger.info("No more entries found, backfill complete")
-                    break
-
                 # Rate limit - be nice to the server
-                time.sleep(2)
+                time.sleep(5)
 
             except Exception as e:
                 logger.error(f"Failed to process page {page}: {e}")
@@ -76,26 +72,20 @@ def main() -> None:
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Backfill historical torrent data from RSS feed"
+        description="Backfill historical torrent data from HTML browse pages"
     )
     parser.add_argument(
         "max_pages",
         type=int,
         nargs="?",
         default=100,
-        help="Maximum number of RSS pages to process (default: 100)",
+        help="Maximum number of HTML pages to process (default: 100)",
     )
     parser.add_argument(
         "--db-path",
         type=str,
         default=settings.db_path,
         help=f"Path to SQLite database (default: {settings.db_path})",
-    )
-    parser.add_argument(
-        "--rss-url",
-        type=str,
-        default=settings.rss_url,
-        help=f"RSS feed URL (default: {settings.rss_url})",
     )
     parser.add_argument(
         "--log-level",
@@ -109,7 +99,6 @@ def main() -> None:
 
     # Update settings with command line args
     settings.db_path = args.db_path
-    settings.rss_url = args.rss_url
     settings.log_level = args.log_level
 
     # Reconfigure logging with new level

@@ -86,14 +86,18 @@ class TrackerScraper:
         except Exception as e:
             logger.error(f"Tracker scrape failed: {e}")
             # Return zeros for all valid torrents
+            # TODO don't return zero, total tracker failure shouldn't count for individual torrent missing
             return {
                 ih: StatsData(seeders=0, leechers=0, downloads=0)
                 for ih in valid_infohashes
             }
 
-    def update_stats(self, infohash: str, stats: StatsData) -> None:
+    def update_stats(
+        self, infohash: str, stats: StatsData, timestamp: Instant | None = None
+    ) -> None:
         """Update stats for a single infohash."""
-        timestamp = self.now_func().round()
+        if timestamp is None:
+            timestamp = self.now_func().round()
 
         # Insert the stats
         self.db.insert_stats(infohash, stats, timestamp)

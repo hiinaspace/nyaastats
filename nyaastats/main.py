@@ -39,7 +39,9 @@ class NyaaTracker:
             headers={"User-Agent": "nyaastats/1.0 Tracker Scraper"},
         )
 
-        self.rss_fetcher = RSSFetcher(self.db, self.rss_client, settings.rss_url, now_func)
+        self.rss_fetcher = RSSFetcher(
+            self.db, self.rss_client, settings.rss_url, now_func
+        )
         self.tracker = TrackerScraper(
             self.db, self.tracker_client, settings.tracker_url, now_func
         )

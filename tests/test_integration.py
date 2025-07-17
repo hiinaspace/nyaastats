@@ -123,7 +123,7 @@ def test_scheduler_integration(temp_db):
 
     # Mock the client.get method directly
     with patch.object(rss_fetcher.client, "get", return_value=mock_response):
-        with patch("nyaastats.rss_fetcher.guessit.guessit") as mock_guessit:
+        with patch("nyaastats.guessit_utils.guessit.guessit") as mock_guessit:
             mock_guessit.return_value = {"title": "Test Anime", "type": "episode"}
 
             # Process RSS
@@ -198,7 +198,7 @@ def test_tracker_integration(temp_db):
 
     # Mock the client.get method directly
     with patch.object(rss_fetcher.client, "get", return_value=mock_response):
-        with patch("nyaastats.rss_fetcher.guessit.guessit") as mock_guessit:
+        with patch("nyaastats.guessit_utils.guessit.guessit") as mock_guessit:
             mock_guessit.return_value = {"title": "Test Anime", "type": "episode"}
 
             processed = rss_fetcher.process_feed()
@@ -278,11 +278,14 @@ def test_dead_torrent_detection(temp_db):
     # Simulate 3 consecutive zero responses
     zero_stats = StatsData(seeders=0, leechers=0, downloads=0)
 
-    for _ in range(3):
-        # Since we use controlled time through fixtures, no mocking needed
-        tracker_scraper.update_stats(torrent_data.infohash, zero_stats)
+    for i in range(3):
+        tracker_scraper.update_stats(
+            torrent_data.infohash,
+            zero_stats,
+            timestamp=torrent_data.pubdate.add(hours=i),
+        )
 
-    # Check that torrent was marked as dead
+    # Check that torrent watests/test_integration.py::test_dead_torrent_detections marked as dead
     with temp_db.get_conn() as conn:
         cursor = conn.execute(
             "SELECT status FROM torrents WHERE infohash = ?",
@@ -333,7 +336,7 @@ def test_guessit_failure_handling(temp_db):
     # Mock the client.get method directly
     with patch.object(rss_fetcher.client, "get", return_value=mock_response):
         # Mock guessit to raise an exception
-        with patch("nyaastats.rss_fetcher.guessit.guessit") as mock_guessit:
+        with patch("nyaastats.guessit_utils.guessit.guessit") as mock_guessit:
             mock_guessit.side_effect = Exception("Guessit parsing failed")
 
             # Process should still work despite guessit failure

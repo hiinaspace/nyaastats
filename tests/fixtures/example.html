@@ -1,0 +1,1879 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Browse :: Nyaa</title>
+
+		<meta name="viewport" content="width=480px">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<link rel="shortcut icon" type="image/png" href="/static/favicon.png">
+		<link rel="icon" type="image/png" href="/static/favicon.png">
+		<link rel="mask-icon" href="/static/pinned-tab.svg" color="#3582F7">
+		<link rel="alternate" type="application/rss+xml" href="https://nyaa.si/?page=rss&amp;c=1_2&amp;f=0" />
+
+		<meta property="og:site_name" content="Nyaa">
+		<meta property="og:title" content="Browse :: Nyaa">
+		<meta property="og:image" content="/static/img/avatar/default.png">
+<meta name="description" content="A BitTorrent community focused on Eastern Asian media including anime, manga, music, and more">
+<meta name="keywords" content="torrents, bittorrent, torrent, anime, manga, sukebei, download, nyaa, magnet, magnets">
+<meta property="og:description" content="Nyaa homepage">
+
+		<!-- Bootstrap core CSS -->
+		<!--
+			Note: This has been customized at http://getbootstrap.com/customize/ to
+			set the column breakpoint to tablet mode, instead of mobile. This is to
+			make the navbar not look awful on tablets.
+		-->
+		<link href="/static/css/bootstrap.min.css?t=1608007388" rel="stylesheet" id="bsThemeLink">
+		<link href="/static/css/bootstrap-xl-mod.css?t=1608007388" rel="stylesheet">
+		<!--
+			This theme changer script needs to be inline and right under the above stylesheet link to prevent FOUC (Flash Of Unstyled Content)
+			Development version is commented out in static/js/main.js at the bottom of the file
+		-->
+		<script>function toggleDarkMode(){"dark"===localStorage.getItem("theme")?setThemeLight():setThemeDark()}function setThemeDark(){bsThemeLink.href="/static/css/bootstrap-dark.min.css?t=1608007388",localStorage.setItem("theme","dark"),document.body!==null&&document.body.classList.add('dark')}function setThemeLight(){bsThemeLink.href="/static/css/bootstrap.min.css?t=1608007388",localStorage.setItem("theme","light"),document.body!==null&&document.body.classList.remove('dark')}if("undefined"!=typeof Storage){var bsThemeLink=document.getElementById("bsThemeLink");"dark"===localStorage.getItem("theme")&&setThemeDark()}</script>
+		<script>window.markdown_proxy_images=true;</script>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.2/css/bootstrap-select.min.css" integrity="sha256-an4uqLnVJ2flr7w0U74xiF4PJjO2N5Df91R2CUmCLCA=" crossorigin="anonymous" />
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous" />
+
+		<!-- Custom styles for this template -->
+		<link href="/static/css/main.css?t=1683696976" rel="stylesheet">
+
+		<!-- Core JavaScript -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/8.3.1/markdown-it.min.js" integrity="sha256-3WZyZQOe+ql3pLo90lrkRtALrlniGdnf//gRpW0UQks=" crossorigin="anonymous"></script>
+		<!-- Modified to not apply border-radius to selectpickers and stuff so our navbar looks cool -->
+		<script src="/static/js/bootstrap-select.min.js?t=1623304983"></script>
+		<script src="/static/js/main.min.js?t=1683696976"></script>
+
+		<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+		<!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+			<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+		<link rel="search" type="application/opensearchdescription+xml" title="Nyaa.si" href="/static/search.xml">
+	</head>
+	<body>
+		<!-- Fixed navbar -->
+		<nav class="navbar navbar-default navbar-static-top navbar-inverse">
+			<div class="container">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+					<span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="/">Nyaa</a>
+				</div><!--/.navbar-header -->
+				<div id="navbar" class="navbar-collapse collapse">
+					<ul class="nav navbar-nav">
+						<li ><a href="/upload">Upload</a></li>
+						<li class="dropdown">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+								Info
+								<span class="caret"></span>
+							</a>
+							<ul class="dropdown-menu">
+								<li ><a href="/rules">Rules</a></li>
+								<li ><a href="/help">Help</a></li>
+							</ul>
+						</li>
+						<li><a href="/?page=rss&amp;c=1_2&amp;f=0">RSS</a></li>
+						<li><a href="https://twitter.com/NyaaV2">Twitter</a></li>
+						<li><a href="//sukebei.nyaa.si">Fap</a></li>
+					</ul>
+
+					<ul class="nav navbar-nav navbar-right">
+						<li class="dropdown">
+							<a href="#" class="dropdown-toggle visible-lg visible-sm visible-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+								<i class="fa fa-user fa-fw"></i>
+								Guest
+								<span class="caret"></span>
+							</a>
+							<a href="#" class="dropdown-toggle hidden-lg hidden-sm hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+								<i class="fa fa-user fa-fw"></i>
+								<span class="caret"></span>
+							</a>
+							<ul class="dropdown-menu">
+								<li>
+									<a href="/login">
+										<i class="fa fa-sign-in fa-fw"></i>
+										Login
+									</a>
+								</li>
+								<li>
+									<a href="/register">
+										<i class="fa fa-pencil fa-fw"></i>
+										Register
+									</a>
+								</li>
+							</ul>
+						</li>
+					</ul>
+
+
+
+					<div class="search-container visible-xs visible-sm">
+						<form class="navbar-form navbar-right form" action="/" method="get">
+
+							<input type="text" class="form-control" name="q" placeholder="Search..." value="">
+							<br>
+
+							<select class="form-control" title="Filter" data-width="120px" name="f">
+								<option value="0" title="No filter" selected>No filter</option>
+								<option value="1" title="No remakes" >No remakes</option>
+								<option value="2" title="Trusted only" >Trusted only</option>
+							</select>
+
+							<br>
+
+							<select class="form-control" title="Category" data-width="200px" name="c">
+								<option value="0_0" title="All categories" selected>
+									All categories
+								</option>
+								<option value="1_0" title="Anime" >
+									Anime
+								</option>
+								<option value="1_1" title="Anime - AMV" >
+									- Anime Music Video
+								</option>
+								<option value="1_2" title="Anime - English" selected>
+									- English-translated
+								</option>
+								<option value="1_3" title="Anime - Non-English" >
+									- Non-English-translated
+								</option>
+								<option value="1_4" title="Anime - Raw" >
+									- Raw
+								</option>
+								<option value="2_0" title="Audio" >
+									Audio
+								</option>
+								<option value="2_1" title="Audio - Lossless" >
+									- Lossless
+								</option>
+								<option value="2_2" title="Audio - Lossy" >
+									- Lossy
+								</option>
+								<option value="3_0" title="Literature" >
+									Literature
+								</option>
+								<option value="3_1" title="Literature - English" >
+									- English-translated
+								</option>
+								<option value="3_2" title="Literature - Non-English" >
+									- Non-English-translated
+								</option>
+								<option value="3_3" title="Literature - Raw" >
+									- Raw
+								</option>
+								<option value="4_0" title="Live Action" >
+									Live Action
+								</option>
+								<option value="4_1" title="Live Action - English" >
+									- English-translated
+								</option>
+								<option value="4_2" title="Live Action - Idol/PV" >
+									- Idol/Promotional Video
+								</option>
+								<option value="4_3" title="Live Action - Non-English" >
+									- Non-English-translated
+								</option>
+								<option value="4_4" title="Live Action - Raw" >
+									- Raw
+								</option>
+								<option value="5_0" title="Pictures" >
+									Pictures
+								</option>
+								<option value="5_1" title="Pictures - Graphics" >
+									- Graphics
+								</option>
+								<option value="5_2" title="Pictures - Photos" >
+									- Photos
+								</option>
+								<option value="6_0" title="Software" >
+									Software
+								</option>
+								<option value="6_1" title="Software - Apps" >
+									- Applications
+								</option>
+								<option value="6_2" title="Software - Games" >
+									- Games
+								</option>
+							</select>
+
+							<br>
+
+							<button class="btn btn-primary form-control" type="submit">
+								<i class="fa fa-search fa-fw"></i> Search
+							</button>
+						</form>
+					</div><!--/.search-container -->
+
+					<form class="navbar-form navbar-right form" action="/" method="get">
+						<div class="input-group search-container hidden-xs hidden-sm">
+							<div class="input-group-btn nav-filter" id="navFilter-criteria">
+								<select class="selectpicker show-tick" title="Filter" data-width="120px" name="f">
+									<option value="0" title="No filter" selected>No filter</option>
+									<option value="1" title="No remakes" >No remakes</option>
+									<option value="2" title="Trusted only" >Trusted only</option>
+								</select>
+							</div>
+
+							<div class="input-group-btn nav-filter" id="navFilter-category">
+								<!--
+									On narrow viewports, there isn't enough room to fit the full stuff in the selectpicker, so we show a full-width one on wide viewports, but squish it on narrow ones.
+								-->
+								<select class="selectpicker show-tick" title="Category" data-width="130px" name="c">
+									<option value="0_0" title="All categories" selected>
+										All categories
+									</option>
+									<option value="1_0" title="Anime" >
+										Anime
+									</option>
+									<option value="1_1" title="Anime - AMV" >
+										- Anime Music Video
+									</option>
+									<option value="1_2" title="Anime - English" selected>
+										- English-translated
+									</option>
+									<option value="1_3" title="Anime - Non-English" >
+										- Non-English-translated
+									</option>
+									<option value="1_4" title="Anime - Raw" >
+										- Raw
+									</option>
+									<option value="2_0" title="Audio" >
+										Audio
+									</option>
+									<option value="2_1" title="Audio - Lossless" >
+										- Lossless
+									</option>
+									<option value="2_2" title="Audio - Lossy" >
+										- Lossy
+									</option>
+									<option value="3_0" title="Literature" >
+										Literature
+									</option>
+									<option value="3_1" title="Literature - English" >
+										- English-translated
+									</option>
+									<option value="3_2" title="Literature - Non-English" >
+										- Non-English-translated
+									</option>
+									<option value="3_3" title="Literature - Raw" >
+										- Raw
+									</option>
+									<option value="4_0" title="Live Action" >
+										Live Action
+									</option>
+									<option value="4_1" title="Live Action - English" >
+										- English-translated
+									</option>
+									<option value="4_2" title="Live Action - Idol/PV" >
+										- Idol/Promotional Video
+									</option>
+									<option value="4_3" title="Live Action - Non-English" >
+										- Non-English-translated
+									</option>
+									<option value="4_4" title="Live Action - Raw" >
+										- Raw
+									</option>
+									<option value="5_0" title="Pictures" >
+										Pictures
+									</option>
+									<option value="5_1" title="Pictures - Graphics" >
+										- Graphics
+									</option>
+									<option value="5_2" title="Pictures - Photos" >
+										- Photos
+									</option>
+									<option value="6_0" title="Software" >
+										Software
+									</option>
+									<option value="6_1" title="Software - Apps" >
+										- Applications
+									</option>
+									<option value="6_2" title="Software - Games" >
+										- Games
+									</option>
+								</select>
+							</div>
+							<input type="text" class="form-control search-bar" name="q" placeholder="Search..." value="" />
+							<div class="input-group-btn search-btn">
+								<button class="btn btn-primary" type="submit">
+									<i class="fa fa-search fa-fw"></i>
+								</button>
+							</div>
+						</div>
+					</form>
+				</div><!--/.nav-collapse -->
+			</div><!--/.container -->
+		</nav>
+
+		<div class="container">
+
+
+
+
+
+<div class="table-responsive">
+	<table class="table table-bordered table-hover table-striped torrent-list">
+		<thead>
+			<tr>
+				<th class="hdr-category text-center" style="width:80px;">Category</th>
+				<th class="hdr-name" style="width:auto;">Name</th>
+				<th class="hdr-comments sorting text-center" title="Comments" style="width:50px;"><a href="/?c=1_2&amp;f=0&amp;s=comments&amp;o=desc"></a><i class="fa fa-comments-o"></i></th>
+				<th class="hdr-link text-center" style="width:70px;">Link</th>
+				<th class="hdr-size sorting text-center" style="width:100px;"><a href="/?c=1_2&amp;f=0&amp;s=size&amp;o=desc"></a>Size</th>
+				<th class="hdr-date sorting_desc text-center" title="In UTC" style="width:140px;"><a href="/?c=1_2&amp;f=0&amp;s=id&amp;o=asc"></a>Date</th>
+
+				<th class="hdr-seeders sorting text-center" title="Seeders" style="width:50px;"><a href="/?c=1_2&amp;f=0&amp;s=seeders&amp;o=desc"></a><i class="fa fa-arrow-up" aria-hidden="true"></i></th>
+				<th class="hdr-leechers sorting text-center" title="Leechers" style="width:50px;"><a href="/?c=1_2&amp;f=0&amp;s=leechers&amp;o=desc"></a><i class="fa fa-arrow-down" aria-hidden="true"></i></th>
+				<th class="hdr-downloads sorting text-center" title="Completed downloads" style="width:50px;"><a href="/?c=1_2&amp;f=0&amp;s=downloads&amp;o=desc"></a><i class="fa fa-check" aria-hidden="true"></i></th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr class="success">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994292" title="[Erai-raws] Bullet/Bullet - 01 ~ 08 [1080p DSNP WEBRip HEVC AAC][MultiSub] [BATCH]">[Erai-raws] Bullet/Bullet - 01 ~ 08 [1080p DSNP WEBRip HEVC AAC][MultiSub] [BATCH]</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994292.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:81d19980b33b96ab49dae00e5d75539c7b300e85&amp;dn=%5BErai-raws%5D%20Bullet%2FBullet%20-%2001%20~%2008%20%5B1080p%20DSNP%20WEBRip%20HEVC%20AAC%5D%5BMultiSub%5D%20%5BBATCH%5D&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">5.2 GiB</td>
+				<td class="text-center" data-timestamp="1752733034">2025-07-17 06:17</td>
+
+				<td class="text-center">41</td>
+				<td class="text-center">52</td>
+				<td class="text-center">65</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994291#comments" class="comments" title="4 comments">
+						<i class="fa fa-comments-o"></i>4</a>
+					<a href="/view/1994291" title="[FLE] The Fragrant Flower Blooms with Dignity - S01E02 (WEB 1080p HEVC AAC) | Kaoru Hana wa Rin to Saku Season 1 Episode 2">[FLE] The Fragrant Flower Blooms with Dignity - S01E02 (WEB 1080p HEVC AAC) | Kaoru Hana wa Rin to Saku Season 1 Episode 2</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994291.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:a40fd60fd323d815fb3f1a2ac8b7ea9e9afcad21&amp;dn=%5BFLE%5D%20The%20Fragrant%20Flower%20Blooms%20with%20Dignity%20-%20S01E02%20%28WEB%201080p%20HEVC%20AAC%29%20%7C%20Kaoru%20Hana%20wa%20Rin%20to%20Saku%20Season%201%20Episode%202&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">1.2 GiB</td>
+				<td class="text-center" data-timestamp="1752733032">2025-07-17 06:17</td>
+
+				<td class="text-center">31</td>
+				<td class="text-center">13</td>
+				<td class="text-center">48</td>
+			</tr>
+			<tr class="danger">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994290" title="[DubOnly] Sentai Daishikkaku 2nd Season - 10 | Go! Go! Loser Ranger! Season 2 [English Dub][1080p]">[DubOnly] Sentai Daishikkaku 2nd Season - 10 | Go! Go! Loser Ranger! Season 2 [English Dub][1080p]</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994290.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:e91145cfbeafd0f7ef73be7e31b2e44651b97b8f&amp;dn=%5BDubOnly%5D%20Sentai%20Daishikkaku%202nd%20Season%20-%2010%20%7C%20Go%21%20Go%21%20Loser%20Ranger%21%20Season%202%20%5BEnglish%20Dub%5D%5B1080p%5D&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">925.2 MiB</td>
+				<td class="text-center" data-timestamp="1752730682">2025-07-17 05:38</td>
+
+				<td class="text-center">80</td>
+				<td class="text-center">14</td>
+				<td class="text-center">179</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994237" title="[PrinceOtaku] Magical DoReMi - 9-12 [English Dub] 480p WEB">[PrinceOtaku] Magical DoReMi - 9-12 [English Dub] 480p WEB</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994237.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:81ab70b189d774eae559d6120857e633c723003d&amp;dn=%5BPrinceOtaku%5D%20Magical%20DoReMi%20-%209-12%20%5BEnglish%20Dub%5D%20480p%20WEB&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">309.2 MiB</td>
+				<td class="text-center" data-timestamp="1752718349">2025-07-17 02:12</td>
+
+				<td class="text-center">6</td>
+				<td class="text-center">5</td>
+				<td class="text-center">22</td>
+			</tr>
+			<tr class="danger">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994236" title="[DKB] Jigoku Sensei Nube (2025) - S01E04 [1080p][HEVC x265 10bit][Multi-Subs][weekly]">[DKB] Jigoku Sensei Nube (2025) - S01E04 [1080p][HEVC x265 10bit][Multi-Subs][weekly]</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994236.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:63b2fe7b312efde54a352859b22c27b1f7a071a2&amp;dn=%5BDKB%5D%20Jigoku%20Sensei%20Nube%20%282025%29%20-%20S01E04%20%5B1080p%5D%5BHEVC%20x265%2010bit%5D%5BMulti-Subs%5D%5Bweekly%5D&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">418.9 MiB</td>
+				<td class="text-center" data-timestamp="1752716496">2025-07-17 01:41</td>
+
+				<td class="text-center">89</td>
+				<td class="text-center">8</td>
+				<td class="text-center">324</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994227#comments" class="comments" title="3 comments">
+						<i class="fa fa-comments-o"></i>3</a>
+					<a href="/view/1994227" title="Tate no Yuusha no Nariagari S4 - 02 (Aniplus 1920x1080 x264 AAC).mp4 (The Rising of the Shield Hero Season 4)">Tate no Yuusha no Nariagari S4 - 02 (Aniplus 1920x1080 x264 AAC).mp4 (The Rising of the Shield Hero Season 4)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994227.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:6d1912557ec003d210aef7849942d6376be15964&amp;dn=Tate%20no%20Yuusha%20no%20Nariagari%20S4%20-%2002%20%28Aniplus%201920x1080%20x264%20AAC%29.mp4%20%28The%20Rising%20of%20the%20Shield%20Hero%20Season%204%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">861.0 MiB</td>
+				<td class="text-center" data-timestamp="1752712922">2025-07-17 00:42</td>
+
+				<td class="text-center">4</td>
+				<td class="text-center">4</td>
+				<td class="text-center">18</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994226" title="Tate no Yuusha no Nariagari S4 - 01 (Aniplus 1920x1080 x264 AAC).mp4 (The Rising of the Shield Hero Season 4)">Tate no Yuusha no Nariagari S4 - 01 (Aniplus 1920x1080 x264 AAC).mp4 (The Rising of the Shield Hero Season 4)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994226.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:7344c6a0f02afd25ade8bc3be402bcf9f62053e2&amp;dn=Tate%20no%20Yuusha%20no%20Nariagari%20S4%20-%2001%20%28Aniplus%201920x1080%20x264%20AAC%29.mp4%20%28The%20Rising%20of%20the%20Shield%20Hero%20Season%204%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">862.9 MiB</td>
+				<td class="text-center" data-timestamp="1752712918">2025-07-17 00:41</td>
+
+				<td class="text-center">9</td>
+				<td class="text-center">5</td>
+				<td class="text-center">23</td>
+			</tr>
+			<tr class="success">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994222" title="[Chihiro] Sailor Moon Crystal Season 3 - 07 [Blu-ray 1080p HEVC FLAC][06C02F1C].mkv">[Chihiro] Sailor Moon Crystal Season 3 - 07 [Blu-ray 1080p HEVC FLAC][06C02F1C].mkv</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994222.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:020ebd52b061ce0d61fe41c67c1e213b19af57c3&amp;dn=%5BChihiro%5D%20Sailor%20Moon%20Crystal%20Season%203%20-%2007%20%5BBlu-ray%201080p%20HEVC%20FLAC%5D%5B06C02F1C%5D.mkv&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">1.3 GiB</td>
+				<td class="text-center" data-timestamp="1752708626">2025-07-16 23:30</td>
+
+				<td class="text-center">41</td>
+				<td class="text-center">2</td>
+				<td class="text-center">117</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994214" title="[Sokudo] Jidouhanbaiki ni Umarekawatta | Reborn as a Vending Machine S02E03 [1080p AV1] (weekly)">[Sokudo] Jidouhanbaiki ni Umarekawatta | Reborn as a Vending Machine S02E03 [1080p AV1] (weekly)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994214.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:346af46953f554c6db9f00ab1abb85a35231acde&amp;dn=%5BSokudo%5D%20Jidouhanbaiki%20ni%20Umarekawatta%20%7C%20Reborn%20as%20a%20Vending%20Machine%20S02E03%20%5B1080p%20AV1%5D%20%28weekly%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">272.1 MiB</td>
+				<td class="text-center" data-timestamp="1752706851">2025-07-16 23:00</td>
+
+				<td class="text-center">7</td>
+				<td class="text-center">3</td>
+				<td class="text-center">24</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994213" title="[Sokudo] Jidouhanbaiki ni Umarekawatta | Reborn as a Vending Machine S02E02 [1080p AV1] (weekly)">[Sokudo] Jidouhanbaiki ni Umarekawatta | Reborn as a Vending Machine S02E02 [1080p AV1] (weekly)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994213.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:c5c74f9f76ed88f9fd6d7499010ac26ca7a3d7d9&amp;dn=%5BSokudo%5D%20Jidouhanbaiki%20ni%20Umarekawatta%20%7C%20Reborn%20as%20a%20Vending%20Machine%20S02E02%20%5B1080p%20AV1%5D%20%28weekly%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">288.8 MiB</td>
+				<td class="text-center" data-timestamp="1752706849">2025-07-16 23:00</td>
+
+				<td class="text-center">13</td>
+				<td class="text-center">4</td>
+				<td class="text-center">32</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994212" title="Binan Koukou Chikyuu Bouei-bu Haikara! - 02 (1080p AMZN WEB-DL DDP2.0 H.264) | Cute High Earth Defense Club Hi-CARA!">Binan Koukou Chikyuu Bouei-bu Haikara! - 02 (1080p AMZN WEB-DL DDP2.0 H.264) | Cute High Earth Defense Club Hi-CARA!</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994212.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:fb4de755cc6445e7b7a4df05e64692830f9de491&amp;dn=Binan%20Koukou%20Chikyuu%20Bouei-bu%20Haikara%21%20-%2002%20%281080p%20AMZN%20WEB-DL%20DDP2.0%20H.264%29%20%7C%20Cute%20High%20Earth%20Defense%20Club%20Hi-CARA%21&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">874.2 MiB</td>
+				<td class="text-center" data-timestamp="1752706314">2025-07-16 22:51</td>
+
+				<td class="text-center">19</td>
+				<td class="text-center">1</td>
+				<td class="text-center">57</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994211" title="[Judas] Mattaku Saikin no Tantei to Kitara (Detectives These Days Are Crazy!) - S01E03 [1080p][HEVC x265 10bit][Multi-Subs] (Weekly)">[Judas] Mattaku Saikin no Tantei to Kitara (Detectives These Days Are Crazy!) - S01E03 [1080p][HEVC x265 10bit][Multi-Subs] (Weekly)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994211.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:070b9052437c3d4c3615f79daf70e8dc1be6fac2&amp;dn=%5BJudas%5D%20Mattaku%20Saikin%20no%20Tantei%20to%20Kitara%20%28Detectives%20These%20Days%20Are%20Crazy%21%29%20-%20S01E03%20%5B1080p%5D%5BHEVC%20x265%2010bit%5D%5BMulti-Subs%5D%20%28Weekly%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">284.1 MiB</td>
+				<td class="text-center" data-timestamp="1752705143">2025-07-16 22:32</td>
+
+				<td class="text-center">42</td>
+				<td class="text-center">4</td>
+				<td class="text-center">201</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994210" title="[Yameii] New Saga - S01E01 [English Dub] [CR WEB-DL 1080p] [1C88BB2F] (Tsuyokute New Saga)">[Yameii] New Saga - S01E01 [English Dub] [CR WEB-DL 1080p] [1C88BB2F] (Tsuyokute New Saga)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994210.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:129603a56f0b9f12a9a2da5da42f51036017700d&amp;dn=%5BYameii%5D%20New%20Saga%20-%20S01E01%20%5BEnglish%20Dub%5D%20%5BCR%20WEB-DL%201080p%5D%20%5B1C88BB2F%5D%20%28Tsuyokute%20New%20Saga%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">1.3 GiB</td>
+				<td class="text-center" data-timestamp="1752704309">2025-07-16 22:18</td>
+
+				<td class="text-center">96</td>
+				<td class="text-center">6</td>
+				<td class="text-center">361</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994209" title="[Yameii] New Saga - S01E01 [English Dub] [CR WEB-DL 720p] [8B2940C0] (Tsuyokute New Saga)">[Yameii] New Saga - S01E01 [English Dub] [CR WEB-DL 720p] [8B2940C0] (Tsuyokute New Saga)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994209.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:868c7d6063f07ccc7b1075d9874f80a8aa6c3385&amp;dn=%5BYameii%5D%20New%20Saga%20-%20S01E01%20%5BEnglish%20Dub%5D%20%5BCR%20WEB-DL%20720p%5D%20%5B8B2940C0%5D%20%28Tsuyokute%20New%20Saga%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">697.1 MiB</td>
+				<td class="text-center" data-timestamp="1752704297">2025-07-16 22:18</td>
+
+				<td class="text-center">66</td>
+				<td class="text-center">9</td>
+				<td class="text-center">277</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994208" title="[ToonsHub] New Saga S01E01 1080p CR WEB-DL AAC2.0 H.264 (Tsuyokute New Saga, Dual-Audio, Multi-Subs)">[ToonsHub] New Saga S01E01 1080p CR WEB-DL AAC2.0 H.264 (Tsuyokute New Saga, Dual-Audio, Multi-Subs)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994208.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:a23de25cdc2904360b4827c87bb28967873b511e&amp;dn=%5BToonsHub%5D%20New%20Saga%20S01E01%201080p%20CR%20WEB-DL%20AAC2.0%20H.264%20%28Tsuyokute%20New%20Saga%2C%20Dual-Audio%2C%20Multi-Subs%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">1.4 GiB</td>
+				<td class="text-center" data-timestamp="1752704020">2025-07-16 22:13</td>
+
+				<td class="text-center">26</td>
+				<td class="text-center">3</td>
+				<td class="text-center">98</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994207" title="New Saga S01E01 Ill Change My Fate 1080p CR WEB-DL DUAL AAC2.0 H 264-VARYG (Tsuyokute New Saga, Dual-Audio, Multi-Subs)">New Saga S01E01 Ill Change My Fate 1080p CR WEB-DL DUAL AAC2.0 H 264-VARYG (Tsuyokute New Saga, Dual-Audio, Multi-Subs)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994207.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:47b778bec286d3c30744ce39d84b79f9ea41626f&amp;dn=New%20Saga%20S01E01%20Ill%20Change%20My%20Fate%201080p%20CR%20WEB-DL%20DUAL%20AAC2.0%20H%20264-VARYG%20%28Tsuyokute%20New%20Saga%2C%20Dual-Audio%2C%20Multi-Subs%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">1.4 GiB</td>
+				<td class="text-center" data-timestamp="1752703990">2025-07-16 22:13</td>
+
+				<td class="text-center">148</td>
+				<td class="text-center">2</td>
+				<td class="text-center">482</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994205" title="The Rising of the Shield Hero S04E02 Official Welcome 1080p CR WEB-DL DUAL AAC2.0 H 264-VARYG (Tate no Yuusha no Nariagari, Dual-Audio, Multi-Subs)">The Rising of the Shield Hero S04E02 Official Welcome 1080p CR WEB-DL DUAL AAC2.0 H 264-VARYG (Tate no Yuusha no Nariagari, Dual-Audio, Multi-Subs)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994205.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:7ab2887b69da640c41bf1d9c745ac87f6b3e2882&amp;dn=The%20Rising%20of%20the%20Shield%20Hero%20S04E02%20Official%20Welcome%201080p%20CR%20WEB-DL%20DUAL%20AAC2.0%20H%20264-VARYG%20%28Tate%20no%20Yuusha%20no%20Nariagari%2C%20Dual-Audio%2C%20Multi-Subs%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">1.4 GiB</td>
+				<td class="text-center" data-timestamp="1752701532">2025-07-16 21:32</td>
+
+				<td class="text-center">261</td>
+				<td class="text-center">15</td>
+				<td class="text-center">905</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994204" title="[ToonsHub] Onmyo Kaiten Re Birth Verse S01E01 1080p CR WEB-DL AAC2.0 H.264 (Onmyo Kaiten Re:verse, Dual-Audio, Multi-Subs)">[ToonsHub] Onmyo Kaiten Re Birth Verse S01E01 1080p CR WEB-DL AAC2.0 H.264 (Onmyo Kaiten Re:verse, Dual-Audio, Multi-Subs)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994204.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:4feea2124861bb1d56353d89a02157d72c32fe61&amp;dn=%5BToonsHub%5D%20Onmyo%20Kaiten%20Re%20Birth%20Verse%20S01E01%201080p%20CR%20WEB-DL%20AAC2.0%20H.264%20%28Onmyo%20Kaiten%20Re%3Averse%2C%20Dual-Audio%2C%20Multi-Subs%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">1.3 GiB</td>
+				<td class="text-center" data-timestamp="1752701391">2025-07-16 21:29</td>
+
+				<td class="text-center">17</td>
+				<td class="text-center">1</td>
+				<td class="text-center">77</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994203" title="[Yameii] Reborn as a Vending Machine, I Now Wander the Dungeon - S02E01 [English Dub] [CR WEB-DL 1080p] [CF3F094B] (Jidouhanbaiki ni Umarekawatta Ore wa Meikyuu o Samayou Season 2 | S2)">[Yameii] Reborn as a Vending Machine, I Now Wander the Dungeon - S02E01 [English Dub] [CR WEB-DL 1080p] [CF3F094B] (Jidouhanbaiki ni Umarekawatta Ore wa Meikyuu o Samayou Season 2 | S2)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994203.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:cfad94f8cdaa5a07573f74360ebfc7890d358abf&amp;dn=%5BYameii%5D%20Reborn%20as%20a%20Vending%20Machine%2C%20I%20Now%20Wander%20the%20Dungeon%20-%20S02E01%20%5BEnglish%20Dub%5D%20%5BCR%20WEB-DL%201080p%5D%20%5BCF3F094B%5D%20%28Jidouhanbaiki%20ni%20Umarekawatta%20Ore%20wa%20Meikyuu%20o%20Samayou%20Season%202%20%7C%20S2%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">1.3 GiB</td>
+				<td class="text-center" data-timestamp="1752700918">2025-07-16 21:21</td>
+
+				<td class="text-center">93</td>
+				<td class="text-center">2</td>
+				<td class="text-center">355</td>
+			</tr>
+			<tr class="success">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994202" title="[Erai-raws] Onmyo Kaiten Re:Birth Verse - 03 [1080p CR WEBRip HEVC EAC3][MultiSub][0A062DA6]">[Erai-raws] Onmyo Kaiten Re:Birth Verse - 03 [1080p CR WEBRip HEVC EAC3][MultiSub][0A062DA6]</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994202.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:bd9ec4b0d712533cd9966b0b0c8938dc3be54d70&amp;dn=%5BErai-raws%5D%20Onmyo%20Kaiten%20Re%3ABirth%20Verse%20-%2003%20%5B1080p%20CR%20WEBRip%20HEVC%20EAC3%5D%5BMultiSub%5D%5B0A062DA6%5D&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">547.2 MiB</td>
+				<td class="text-center" data-timestamp="1752700909">2025-07-16 21:21</td>
+
+				<td class="text-center">107</td>
+				<td class="text-center">13</td>
+				<td class="text-center">531</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994201" title="[Yameii] Reborn as a Vending Machine, I Now Wander the Dungeon - S02E01 [English Dub] [CR WEB-DL 720p] [0B58298C] (Jidouhanbaiki ni Umarekawatta Ore wa Meikyuu o Samayou Season 2 | S2)">[Yameii] Reborn as a Vending Machine, I Now Wander the Dungeon - S02E01 [English Dub] [CR WEB-DL 720p] [0B58298C] (Jidouhanbaiki ni Umarekawatta Ore wa Meikyuu o Samayou Season 2 | S2)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994201.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:939e244fd291d9b0f0c2a495879141330aa8dabb&amp;dn=%5BYameii%5D%20Reborn%20as%20a%20Vending%20Machine%2C%20I%20Now%20Wander%20the%20Dungeon%20-%20S02E01%20%5BEnglish%20Dub%5D%20%5BCR%20WEB-DL%20720p%5D%20%5B0B58298C%5D%20%28Jidouhanbaiki%20ni%20Umarekawatta%20Ore%20wa%20Meikyuu%20o%20Samayou%20Season%202%20%7C%20S2%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">699.8 MiB</td>
+				<td class="text-center" data-timestamp="1752700873">2025-07-16 21:21</td>
+
+				<td class="text-center">58</td>
+				<td class="text-center">6</td>
+				<td class="text-center">260</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994200" title="[Yameii] The Rising of the Shield Hero - S04E02 [English Dub] [CR WEB-DL 1080p] [D66E670C] (Tate no Yuusha no Nariagari Season 4 | S4)">[Yameii] The Rising of the Shield Hero - S04E02 [English Dub] [CR WEB-DL 1080p] [D66E670C] (Tate no Yuusha no Nariagari Season 4 | S4)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994200.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:76c47ff371acf5a9d9db0578e2b25b124d4c3492&amp;dn=%5BYameii%5D%20The%20Rising%20of%20the%20Shield%20Hero%20-%20S04E02%20%5BEnglish%20Dub%5D%20%5BCR%20WEB-DL%201080p%5D%20%5BD66E670C%5D%20%28Tate%20no%20Yuusha%20no%20Nariagari%20Season%204%20%7C%20S4%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">1.3 GiB</td>
+				<td class="text-center" data-timestamp="1752700473">2025-07-16 21:14</td>
+
+				<td class="text-center">202</td>
+				<td class="text-center">10</td>
+				<td class="text-center">752</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994199" title="[Yameii] The Rising of the Shield Hero - S04E02 [English Dub] [CR WEB-DL 720p] [918025D8] (Tate no Yuusha no Nariagari Season 4 | S4)">[Yameii] The Rising of the Shield Hero - S04E02 [English Dub] [CR WEB-DL 720p] [918025D8] (Tate no Yuusha no Nariagari Season 4 | S4)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994199.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:dabc1d96bfa9d38d7526c055de83b69e2dc4abfb&amp;dn=%5BYameii%5D%20The%20Rising%20of%20the%20Shield%20Hero%20-%20S04E02%20%5BEnglish%20Dub%5D%20%5BCR%20WEB-DL%20720p%5D%20%5B918025D8%5D%20%28Tate%20no%20Yuusha%20no%20Nariagari%20Season%204%20%7C%20S4%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">697.8 MiB</td>
+				<td class="text-center" data-timestamp="1752700456">2025-07-16 21:14</td>
+
+				<td class="text-center">90</td>
+				<td class="text-center">12</td>
+				<td class="text-center">428</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994198" title="[ToonsHub] The Rising of the Shield Hero S04E02 1080p CR WEB-DL AAC2.0 H.264 (Tate no Yuusha no Nariagari, Dual-Audio, Multi-Subs)">[ToonsHub] The Rising of the Shield Hero S04E02 1080p CR WEB-DL AAC2.0 H.264 (Tate no Yuusha no Nariagari, Dual-Audio, Multi-Subs)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994198.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:1947e94b1e3c9775079e9110b3cb5a280c6251c1&amp;dn=%5BToonsHub%5D%20The%20Rising%20of%20the%20Shield%20Hero%20S04E02%201080p%20CR%20WEB-DL%20AAC2.0%20H.264%20%28Tate%20no%20Yuusha%20no%20Nariagari%2C%20Dual-Audio%2C%20Multi-Subs%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">1.4 GiB</td>
+				<td class="text-center" data-timestamp="1752700368">2025-07-16 21:12</td>
+
+				<td class="text-center">149</td>
+				<td class="text-center">8</td>
+				<td class="text-center">459</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994191" title="[Valhalla-Society] 9-nine- Ruler&#39;s Crown S01E03 1080p AMZN WEB-DL DDP2.0 H.264">[Valhalla-Society] 9-nine- Ruler&#39;s Crown S01E03 1080p AMZN WEB-DL DDP2.0 H.264</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994191.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:838e648203217c940ba537df52dad45c8a98620f&amp;dn=%5BValhalla-Society%5D%209-nine-%20Ruler%27s%20Crown%20S01E03%201080p%20AMZN%20WEB-DL%20DDP2.0%20H.264&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">968.3 MiB</td>
+				<td class="text-center" data-timestamp="1752698668">2025-07-16 20:44</td>
+
+				<td class="text-center">29</td>
+				<td class="text-center">5</td>
+				<td class="text-center">163</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994190" title="[Valhalla-Society] 9-nine- Ruler&#39;s Crown S01E02 1080p AMZN WEB-DL DDP2.0 H.264">[Valhalla-Society] 9-nine- Ruler&#39;s Crown S01E02 1080p AMZN WEB-DL DDP2.0 H.264</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994190.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:f21c77a4f685b32b2410e7cb6cf4021c209cbec8&amp;dn=%5BValhalla-Society%5D%209-nine-%20Ruler%27s%20Crown%20S01E02%201080p%20AMZN%20WEB-DL%20DDP2.0%20H.264&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">983.3 MiB</td>
+				<td class="text-center" data-timestamp="1752698644">2025-07-16 20:44</td>
+
+				<td class="text-center">37</td>
+				<td class="text-center">4</td>
+				<td class="text-center">201</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994189" title="[Valhalla-Society] 9-nine- Ruler&#39;s Crown S01E01 1080p AMZN WEB-DL DDP2.0 H.264">[Valhalla-Society] 9-nine- Ruler&#39;s Crown S01E01 1080p AMZN WEB-DL DDP2.0 H.264</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994189.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:2c54599bf41a2189b2fac3d853df68894e82cc22&amp;dn=%5BValhalla-Society%5D%209-nine-%20Ruler%27s%20Crown%20S01E01%201080p%20AMZN%20WEB-DL%20DDP2.0%20H.264&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">942.1 MiB</td>
+				<td class="text-center" data-timestamp="1752698598">2025-07-16 20:43</td>
+
+				<td class="text-center">15</td>
+				<td class="text-center">6</td>
+				<td class="text-center">112</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994188" title="[Yameii] Onmyo Kaiten Re Birth Verse - S01E01 [English Dub] [CR WEB-DL 720p] [DF355EE4] (Onmyou Kaiten Re:Verse | Onmyo Kaiten Re:Birth Verse)">[Yameii] Onmyo Kaiten Re Birth Verse - S01E01 [English Dub] [CR WEB-DL 720p] [DF355EE4] (Onmyou Kaiten Re:Verse | Onmyo Kaiten Re:Birth Verse)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994188.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:b56a883edc4324ee6aa996b15b9f4ed0440f5faf&amp;dn=%5BYameii%5D%20Onmyo%20Kaiten%20Re%20Birth%20Verse%20-%20S01E01%20%5BEnglish%20Dub%5D%20%5BCR%20WEB-DL%20720p%5D%20%5BDF355EE4%5D%20%28Onmyou%20Kaiten%20Re%3AVerse%20%7C%20Onmyo%20Kaiten%20Re%3ABirth%20Verse%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">676.6 MiB</td>
+				<td class="text-center" data-timestamp="1752698561">2025-07-16 20:42</td>
+
+				<td class="text-center">45</td>
+				<td class="text-center">4</td>
+				<td class="text-center">247</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994187" title="[Yameii] Onmyo Kaiten Re Birth Verse - S01E01 [English Dub] [CR WEB-DL 1080p] [F475AA65] (Onmyou Kaiten Re:Verse | Onmyo Kaiten Re:Birth Verse)">[Yameii] Onmyo Kaiten Re Birth Verse - S01E01 [English Dub] [CR WEB-DL 1080p] [F475AA65] (Onmyou Kaiten Re:Verse | Onmyo Kaiten Re:Birth Verse)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994187.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:aacf9009ba4a1e4bb8558cb3b2110fd52a4fa181&amp;dn=%5BYameii%5D%20Onmyo%20Kaiten%20Re%20Birth%20Verse%20-%20S01E01%20%5BEnglish%20Dub%5D%20%5BCR%20WEB-DL%201080p%5D%20%5BF475AA65%5D%20%28Onmyou%20Kaiten%20Re%3AVerse%20%7C%20Onmyo%20Kaiten%20Re%3ABirth%20Verse%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">1.3 GiB</td>
+				<td class="text-center" data-timestamp="1752698558">2025-07-16 20:42</td>
+
+				<td class="text-center">64</td>
+				<td class="text-center">8</td>
+				<td class="text-center">287</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994186" title="[DKB] Tsuyokute New Saga - S01E03 [1080p][HEVC x265 10bit][Multi-Subs][weekly]">[DKB] Tsuyokute New Saga - S01E03 [1080p][HEVC x265 10bit][Multi-Subs][weekly]</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994186.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:3a609704a33680d8694fc4ce611b06c6fc0808b5&amp;dn=%5BDKB%5D%20Tsuyokute%20New%20Saga%20-%20S01E03%20%5B1080p%5D%5BHEVC%20x265%2010bit%5D%5BMulti-Subs%5D%5Bweekly%5D&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">338.9 MiB</td>
+				<td class="text-center" data-timestamp="1752698376">2025-07-16 20:39</td>
+
+				<td class="text-center">61</td>
+				<td class="text-center">2</td>
+				<td class="text-center">275</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994185" title="Onmyo Kaiten Re Birth Verse S01E01 1080p CR WEB-DL DUAL AAC2.0 H 264-VARYG (Onmyo Kaiten Re:verse, Dual-Audio, Multi-Subs)">Onmyo Kaiten Re Birth Verse S01E01 1080p CR WEB-DL DUAL AAC2.0 H 264-VARYG (Onmyo Kaiten Re:verse, Dual-Audio, Multi-Subs)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994185.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:a5d2d01c74dc0909e1b2ed8e4984ef6602ab2bb3&amp;dn=Onmyo%20Kaiten%20Re%20Birth%20Verse%20S01E01%201080p%20CR%20WEB-DL%20DUAL%20AAC2.0%20H%20264-VARYG%20%28Onmyo%20Kaiten%20Re%3Averse%2C%20Dual-Audio%2C%20Multi-Subs%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">1.4 GiB</td>
+				<td class="text-center" data-timestamp="1752698335">2025-07-16 20:38</td>
+
+				<td class="text-center">85</td>
+				<td class="text-center">4</td>
+				<td class="text-center">306</td>
+			</tr>
+			<tr class="success">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994183" title="[Erai-raws] Tsuyokute New Saga - 03 [1080p CR WEBRip HEVC EAC3][MultiSub][F528FCDB]">[Erai-raws] Tsuyokute New Saga - 03 [1080p CR WEBRip HEVC EAC3][MultiSub][F528FCDB]</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994183.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:d0fa7d5b691f7eae5b690481ccc6312d4cb4a1e7&amp;dn=%5BErai-raws%5D%20Tsuyokute%20New%20Saga%20-%2003%20%5B1080p%20CR%20WEBRip%20HEVC%20EAC3%5D%5BMultiSub%5D%5BF528FCDB%5D&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">472.7 MiB</td>
+				<td class="text-center" data-timestamp="1752697171">2025-07-16 20:19</td>
+
+				<td class="text-center">160</td>
+				<td class="text-center">17</td>
+				<td class="text-center">886</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994181" title="Hell Teacher Jigoku Sensei Nube S01E03 1080p DSNP WEB-DL DDP2.0 H 264-VARYG (Jigoku Sensei Nube (2025), Multi-Subs)">Hell Teacher Jigoku Sensei Nube S01E03 1080p DSNP WEB-DL DDP2.0 H 264-VARYG (Jigoku Sensei Nube (2025), Multi-Subs)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994181.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:bedf67cd25ef72750e6284a5817818cb575e0af6&amp;dn=Hell%20Teacher%20Jigoku%20Sensei%20Nube%20S01E03%201080p%20DSNP%20WEB-DL%20DDP2.0%20H%20264-VARYG%20%28Jigoku%20Sensei%20Nube%20%282025%29%2C%20Multi-Subs%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">696.5 MiB</td>
+				<td class="text-center" data-timestamp="1752696855">2025-07-16 20:14</td>
+
+				<td class="text-center">58</td>
+				<td class="text-center">3</td>
+				<td class="text-center">301</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994179" title="Hell Teacher Jigoku Sensei Nube S01E02 1080p DSNP WEB-DL DDP2.0 H 264-VARYG (Jigoku Sensei Nube (2025), Multi-Subs)">Hell Teacher Jigoku Sensei Nube S01E02 1080p DSNP WEB-DL DDP2.0 H 264-VARYG (Jigoku Sensei Nube (2025), Multi-Subs)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994179.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:18530770a4e0e86640ca91e6b0c433b8bc78264e&amp;dn=Hell%20Teacher%20Jigoku%20Sensei%20Nube%20S01E02%201080p%20DSNP%20WEB-DL%20DDP2.0%20H%20264-VARYG%20%28Jigoku%20Sensei%20Nube%20%282025%29%2C%20Multi-Subs%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">721.8 MiB</td>
+				<td class="text-center" data-timestamp="1752696833">2025-07-16 20:13</td>
+
+				<td class="text-center">57</td>
+				<td class="text-center">3</td>
+				<td class="text-center">280</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994178" title="Hell Teacher Jigoku Sensei Nube S01E01 1080p DSNP WEB-DL DDP2.0 H 264-VARYG (Jigoku Sensei Nube (2025), Multi-Subs)">Hell Teacher Jigoku Sensei Nube S01E01 1080p DSNP WEB-DL DDP2.0 H 264-VARYG (Jigoku Sensei Nube (2025), Multi-Subs)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994178.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:6f5d4e41d07d9a81d8d9dd5198a94896b592ada1&amp;dn=Hell%20Teacher%20Jigoku%20Sensei%20Nube%20S01E01%201080p%20DSNP%20WEB-DL%20DDP2.0%20H%20264-VARYG%20%28Jigoku%20Sensei%20Nube%20%282025%29%2C%20Multi-Subs%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">719.4 MiB</td>
+				<td class="text-center" data-timestamp="1752696808">2025-07-16 20:13</td>
+
+				<td class="text-center">69</td>
+				<td class="text-center">6</td>
+				<td class="text-center">294</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994174" title="[DKB] Mikadono Sanshimai wa Angai, Choroi. - S01E03 [1080p][HEVC x265 10bit][weekly]">[DKB] Mikadono Sanshimai wa Angai, Choroi. - S01E03 [1080p][HEVC x265 10bit][weekly]</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994174.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:79fcb6f42388613ef9d249c12994ed935f0b5df5&amp;dn=%5BDKB%5D%20Mikadono%20Sanshimai%20wa%20Angai%2C%20Choroi.%20-%20S01E03%20%5B1080p%5D%5BHEVC%20x265%2010bit%5D%5Bweekly%5D&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">506.3 MiB</td>
+				<td class="text-center" data-timestamp="1752694292">2025-07-16 19:31</td>
+
+				<td class="text-center">50</td>
+				<td class="text-center">2</td>
+				<td class="text-center">253</td>
+			</tr>
+			<tr class="success">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994173" title="[Erai-raws] Mikadono Sanshimai wa Angai Choroi - 03 [1080p CR WEBRip HEVC EAC3][MultiSub][E82E4FB4]">[Erai-raws] Mikadono Sanshimai wa Angai Choroi - 03 [1080p CR WEBRip HEVC EAC3][MultiSub][E82E4FB4]</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994173.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:3f6eee4207b9209e111a0213d06a46b768b36c4a&amp;dn=%5BErai-raws%5D%20Mikadono%20Sanshimai%20wa%20Angai%20Choroi%20-%2003%20%5B1080p%20CR%20WEBRip%20HEVC%20EAC3%5D%5BMultiSub%5D%5BE82E4FB4%5D&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">707.9 MiB</td>
+				<td class="text-center" data-timestamp="1752693901">2025-07-16 19:25</td>
+
+				<td class="text-center">122</td>
+				<td class="text-center">4</td>
+				<td class="text-center">716</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994172" title="[ToonsHub] BULLET-BULLET S01E01-08 1080p HS WEB-DL AAC2.0 H.264 (BULLET/BULLET, Multi-Subs) [BATCH]">[ToonsHub] BULLET-BULLET S01E01-08 1080p HS WEB-DL AAC2.0 H.264 (BULLET/BULLET, Multi-Subs) [BATCH]</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994172.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:d723e0c41cb411e35def2a01fc7c8664ed6abe63&amp;dn=%5BToonsHub%5D%20BULLET-BULLET%20S01E01-08%201080p%20HS%20WEB-DL%20AAC2.0%20H.264%20%28BULLET%2FBULLET%2C%20Multi-Subs%29%20%5BBATCH%5D&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">4.8 GiB</td>
+				<td class="text-center" data-timestamp="1752693791">2025-07-16 19:23</td>
+
+				<td class="text-center">40</td>
+				<td class="text-center">8</td>
+				<td class="text-center">148</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994171" title="[ToonsHub] BULLET-BULLET S01E01-08 1080p DSNP WEB-DL DUAL AAC2.0 H.264 (BULLET/BULLET, Dual-Audio, Multi-Subs) [BATCH]">[ToonsHub] BULLET-BULLET S01E01-08 1080p DSNP WEB-DL DUAL AAC2.0 H.264 (BULLET/BULLET, Dual-Audio, Multi-Subs) [BATCH]</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994171.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:53d1abe7fb11af8c03f032081682c1986712c446&amp;dn=%5BToonsHub%5D%20BULLET-BULLET%20S01E01-08%201080p%20DSNP%20WEB-DL%20DUAL%20AAC2.0%20H.264%20%28BULLET%2FBULLET%2C%20Dual-Audio%2C%20Multi-Subs%29%20%5BBATCH%5D&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">6.7 GiB</td>
+				<td class="text-center" data-timestamp="1752693614">2025-07-16 19:20</td>
+
+				<td class="text-center">68</td>
+				<td class="text-center">13</td>
+				<td class="text-center">286</td>
+			</tr>
+			<tr class="danger">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994168#comments" class="comments" title="1 comment">
+						<i class="fa fa-comments-o"></i>1</a>
+					<a href="/view/1994168" title="[ASW] Tsuyokute New Saga - 03 [1080p HEVC x265 10Bit][AAC]">[ASW] Tsuyokute New Saga - 03 [1080p HEVC x265 10Bit][AAC]</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994168.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:e0dce30871087fb93edc0aa6e3c4b3fb9132ad09&amp;dn=%5BASW%5D%20Tsuyokute%20New%20Saga%20-%2003%20%5B1080p%20HEVC%20x265%2010Bit%5D%5BAAC%5D&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">271.9 MiB</td>
+				<td class="text-center" data-timestamp="1752693444">2025-07-16 19:17</td>
+
+				<td class="text-center">320</td>
+				<td class="text-center">18</td>
+				<td class="text-center">2004</td>
+			</tr>
+			<tr class="danger">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994163" title="[DKB] New Panty &amp; Stocking with Garterbelt - S01E02 [1080p][HEVC x265 10bit][Dual-Audio][Multi-Subs][weekly]">[DKB] New Panty &amp; Stocking with Garterbelt - S01E02 [1080p][HEVC x265 10bit][Dual-Audio][Multi-Subs][weekly]</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994163.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:7d327eb11e3c148ae345c86f671c69d370df21e1&amp;dn=%5BDKB%5D%20New%20Panty%20%26%20Stocking%20with%20Garterbelt%20-%20S01E02%20%5B1080p%5D%5BHEVC%20x265%2010bit%5D%5BDual-Audio%5D%5BMulti-Subs%5D%5Bweekly%5D&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">550.1 MiB</td>
+				<td class="text-center" data-timestamp="1752693370">2025-07-16 19:16</td>
+
+				<td class="text-center">212</td>
+				<td class="text-center">11</td>
+				<td class="text-center">1127</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994158" title="Reborn as a Vending Machine I Now Wander the Dungeon S02E01 1080p CR WEB-DL DUAL AAC2.0 H 264-VARYG (Jidou Hanbaiki ni Umarekawatta Ore wa Meikyuu wo Samayou, Dual-Audio, Multi-Subs)">Reborn as a Vending Machine I Now Wander the Dungeon S02E01 1080p CR WEB-DL DUAL AAC2.0 H 264-VARYG (Jidou Hanbaiki ni Umarekawatta Ore wa Meikyuu wo Samayou, Dual-Audio, Multi-Subs)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994158.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:a87a262f039cc4f727d6921ce5c5fa43645158ad&amp;dn=Reborn%20as%20a%20Vending%20Machine%20I%20Now%20Wander%20the%20Dungeon%20S02E01%201080p%20CR%20WEB-DL%20DUAL%20AAC2.0%20H%20264-VARYG%20%28Jidou%20Hanbaiki%20ni%20Umarekawatta%20Ore%20wa%20Meikyuu%20wo%20Samayou%2C%20Dual-Audio%2C%20Multi-Subs%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">1.4 GiB</td>
+				<td class="text-center" data-timestamp="1752692909">2025-07-16 19:08</td>
+
+				<td class="text-center">189</td>
+				<td class="text-center">3</td>
+				<td class="text-center">775</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994157" title="[ToonsHub] Reborn as a Vending Machine I Now Wander the Dungeon S02E01 1080p CR WEB-DL AAC2.0 H.264 (Jidou Hanbaiki ni Umarekawatta Ore wa Meikyuu wo Samayou, Dual-Audio, Multi-Subs)">[ToonsHub] Reborn as a Vending Machine I Now Wander the Dungeon S02E01 1080p CR WEB-DL AAC2.0 H.264 (Jidou Hanbaiki ni Umarekawatta Ore wa Meikyuu wo Samayou, Dual-Audio, Multi-Subs)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994157.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:481c6f943ab90ad0ffb9351af598f7b3f1a4767d&amp;dn=%5BToonsHub%5D%20Reborn%20as%20a%20Vending%20Machine%20I%20Now%20Wander%20the%20Dungeon%20S02E01%201080p%20CR%20WEB-DL%20AAC2.0%20H.264%20%28Jidou%20Hanbaiki%20ni%20Umarekawatta%20Ore%20wa%20Meikyuu%20wo%20Samayou%2C%20Dual-Audio%2C%20Multi-Subs%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">1.4 GiB</td>
+				<td class="text-center" data-timestamp="1752692846">2025-07-16 19:07</td>
+
+				<td class="text-center">25</td>
+				<td class="text-center">4</td>
+				<td class="text-center">133</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994156" title="[DKB] Tensei shitara Dainana Ouji Datta node, Kimama ni Majutsu wo Kiwamemasu - S02E02 [1080p][HEVC x265 10bit][Multi-Subs][weekly]">[DKB] Tensei shitara Dainana Ouji Datta node, Kimama ni Majutsu wo Kiwamemasu - S02E02 [1080p][HEVC x265 10bit][Multi-Subs][weekly]</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994156.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:7a577f25b5e0a35c927d4c5899c0d406e048c188&amp;dn=%5BDKB%5D%20Tensei%20shitara%20Dainana%20Ouji%20Datta%20node%2C%20Kimama%20ni%20Majutsu%20wo%20Kiwamemasu%20-%20S02E02%20%5B1080p%5D%5BHEVC%20x265%2010bit%5D%5BMulti-Subs%5D%5Bweekly%5D&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">491.0 MiB</td>
+				<td class="text-center" data-timestamp="1752692688">2025-07-16 19:04</td>
+
+				<td class="text-center">105</td>
+				<td class="text-center">3</td>
+				<td class="text-center">475</td>
+			</tr>
+			<tr class="danger">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994155" title="[ASW] Onmyo Kaiten Re Birth Verse - 03 [1080p HEVC x265 10Bit][AAC]">[ASW] Onmyo Kaiten Re Birth Verse - 03 [1080p HEVC x265 10Bit][AAC]</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994155.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:6cafdbc31806eb6bce10d79525221782a4c4a5bd&amp;dn=%5BASW%5D%20Onmyo%20Kaiten%20Re%20Birth%20Verse%20-%2003%20%5B1080p%20HEVC%20x265%2010Bit%5D%5BAAC%5D&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">452.9 MiB</td>
+				<td class="text-center" data-timestamp="1752692129">2025-07-16 18:55</td>
+
+				<td class="text-center">217</td>
+				<td class="text-center">8</td>
+				<td class="text-center">1425</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994154#comments" class="comments" title="3 comments">
+						<i class="fa fa-comments-o"></i>3</a>
+					<a href="/view/1994154" title="[KawaSubs] The Fragrant Flower Blooms With Dignity - S01E02v2 [NF 1080p AVC AAC] [Eng-Sub] | Kaoru Hana wa Rin to Saku (v2)">[KawaSubs] The Fragrant Flower Blooms With Dignity - S01E02v2 [NF 1080p AVC AAC] [Eng-Sub] | Kaoru Hana wa Rin to Saku (v2)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994154.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:3e472417e2952e746cbb491a04bef47c933c426f&amp;dn=%5BKawaSubs%5D%20The%20Fragrant%20Flower%20Blooms%20With%20Dignity%20-%20S01E02v2%20%5BNF%201080p%20AVC%20AAC%5D%20%5BEng-Sub%5D%20%7C%20Kaoru%20Hana%20wa%20Rin%20to%20Saku%20%28v2%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">986.0 MiB</td>
+				<td class="text-center" data-timestamp="1752692107">2025-07-16 18:55</td>
+
+				<td class="text-center">276</td>
+				<td class="text-center">6</td>
+				<td class="text-center">1013</td>
+			</tr>
+			<tr class="danger">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994153" title="[Judas] Tsuyokute New Saga (New Saga) - S01E03 [1080p][HEVC x265 10bit][Multi-Subs] (Weekly)">[Judas] Tsuyokute New Saga (New Saga) - S01E03 [1080p][HEVC x265 10bit][Multi-Subs] (Weekly)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994153.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:1b0e0780db42dc5ffbe78519be1b63dea25dc68c&amp;dn=%5BJudas%5D%20Tsuyokute%20New%20Saga%20%28New%20Saga%29%20-%20S01E03%20%5B1080p%5D%5BHEVC%20x265%2010bit%5D%5BMulti-Subs%5D%20%28Weekly%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">267.6 MiB</td>
+				<td class="text-center" data-timestamp="1752691704">2025-07-16 18:48</td>
+
+				<td class="text-center">130</td>
+				<td class="text-center">6</td>
+				<td class="text-center">812</td>
+			</tr>
+			<tr class="danger">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994151" title="[ASW] Mikadono Sanshimai wa Angai, Choroi. - 03 [1080p HEVC x265 10Bit][AAC]">[ASW] Mikadono Sanshimai wa Angai, Choroi. - 03 [1080p HEVC x265 10Bit][AAC]</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994151.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:5b8bb7cfac36bb23eac488e4b9ade30232581c2f&amp;dn=%5BASW%5D%20Mikadono%20Sanshimai%20wa%20Angai%2C%20Choroi.%20-%2003%20%5B1080p%20HEVC%20x265%2010Bit%5D%5BAAC%5D&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">425.3 MiB</td>
+				<td class="text-center" data-timestamp="1752691211">2025-07-16 18:40</td>
+
+				<td class="text-center">243</td>
+				<td class="text-center">11</td>
+				<td class="text-center">1616</td>
+			</tr>
+			<tr class="success">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994147" title="[Erai-raws] Tensei Shitara Dai Nana Ouji Datta no de, Kimama ni Majutsu o Kiwamemasu 2nd Season - 02 [1080p CR WEBRip HEVC EAC3][MultiSub][1A68E0C3]">[Erai-raws] Tensei Shitara Dai Nana Ouji Datta no de, Kimama ni Majutsu o Kiwamemasu 2nd Season - 02 [1080p CR WEBRip HEVC EAC3][MultiSub][1A68E0C3]</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994147.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:0a60f3580959c205d7c27f028bb95aa65e776246&amp;dn=%5BErai-raws%5D%20Tensei%20Shitara%20Dai%20Nana%20Ouji%20Datta%20no%20de%2C%20Kimama%20ni%20Majutsu%20o%20Kiwamemasu%202nd%20Season%20-%2002%20%5B1080p%20CR%20WEBRip%20HEVC%20EAC3%5D%5BMultiSub%5D%5B1A68E0C3%5D&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">700.4 MiB</td>
+				<td class="text-center" data-timestamp="1752690316">2025-07-16 18:25</td>
+
+				<td class="text-center">186</td>
+				<td class="text-center">7</td>
+				<td class="text-center">1084</td>
+			</tr>
+			<tr class="success">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994143" title="[Erai-raws] Tsuyokute New Saga - 03 [480p CR WEB-DL AVC AAC][MultiSub][9708B0BE]">[Erai-raws] Tsuyokute New Saga - 03 [480p CR WEB-DL AVC AAC][MultiSub][9708B0BE]</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994143.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:d62215206bba6759718aa0cd6280ca29729d5d34&amp;dn=%5BErai-raws%5D%20Tsuyokute%20New%20Saga%20-%2003%20%5B480p%20CR%20WEB-DL%20AVC%20AAC%5D%5BMultiSub%5D%5B9708B0BE%5D&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">203.9 MiB</td>
+				<td class="text-center" data-timestamp="1752689040">2025-07-16 18:04</td>
+
+				<td class="text-center">46</td>
+				<td class="text-center">2</td>
+				<td class="text-center">274</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994141" title="New Saga S01E03 Application of the Contract 1080p CR WEB-DL AAC2.0 H 264-VARYG (Tsuyokute New Saga, Multi-Subs)">New Saga S01E03 Application of the Contract 1080p CR WEB-DL AAC2.0 H 264-VARYG (Tsuyokute New Saga, Multi-Subs)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994141.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:5e3f4c0f4a882235ed346385ab267329a8176852&amp;dn=New%20Saga%20S01E03%20Application%20of%20the%20Contract%201080p%20CR%20WEB-DL%20AAC2.0%20H%20264-VARYG%20%28Tsuyokute%20New%20Saga%2C%20Multi-Subs%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">1.4 GiB</td>
+				<td class="text-center" data-timestamp="1752689004">2025-07-16 18:03</td>
+
+				<td class="text-center">77</td>
+				<td class="text-center">4</td>
+				<td class="text-center">331</td>
+			</tr>
+			<tr class="success">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994140" title="[Erai-raws] Tsuyokute New Saga - 03 [720p CR WEB-DL AVC AAC][MultiSub][38BA0B74]">[Erai-raws] Tsuyokute New Saga - 03 [720p CR WEB-DL AVC AAC][MultiSub][38BA0B74]</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994140.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:66b3579fcc6833649fac2414d3f7ee7b7cef52c7&amp;dn=%5BErai-raws%5D%20Tsuyokute%20New%20Saga%20-%2003%20%5B720p%20CR%20WEB-DL%20AVC%20AAC%5D%5BMultiSub%5D%5B38BA0B74%5D&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">357.9 MiB</td>
+				<td class="text-center" data-timestamp="1752689002">2025-07-16 18:03</td>
+
+				<td class="text-center">106</td>
+				<td class="text-center">2</td>
+				<td class="text-center">742</td>
+			</tr>
+			<tr class="success">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994138#comments" class="comments" title="1 comment">
+						<i class="fa fa-comments-o"></i>1</a>
+					<a href="/view/1994138" title="[Erai-raws] Tsuyokute New Saga - 03 [1080p CR WEB-DL AVC AAC][MultiSub][47751CE3]">[Erai-raws] Tsuyokute New Saga - 03 [1080p CR WEB-DL AVC AAC][MultiSub][47751CE3]</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994138.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:f64bc2e80e96c846b88ff57596a27bd974f83b61&amp;dn=%5BErai-raws%5D%20Tsuyokute%20New%20Saga%20-%2003%20%5B1080p%20CR%20WEB-DL%20AVC%20AAC%5D%5BMultiSub%5D%5B47751CE3%5D&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">1.4 GiB</td>
+				<td class="text-center" data-timestamp="1752688990">2025-07-16 18:03</td>
+
+				<td class="text-center">344</td>
+				<td class="text-center">11</td>
+				<td class="text-center">1744</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994137" title="[ToonsHub] New Saga S01E03 1080p CR WEB-DL AAC2.0 H.264 (Tsuyokute New Saga, Multi-Subs)">[ToonsHub] New Saga S01E03 1080p CR WEB-DL AAC2.0 H.264 (Tsuyokute New Saga, Multi-Subs)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994137.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:62e3a24947f2508b93fad064f7edec7e6189cb78&amp;dn=%5BToonsHub%5D%20New%20Saga%20S01E03%201080p%20CR%20WEB-DL%20AAC2.0%20H.264%20%28Tsuyokute%20New%20Saga%2C%20Multi-Subs%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">1.3 GiB</td>
+				<td class="text-center" data-timestamp="1752688980">2025-07-16 18:03</td>
+
+				<td class="text-center">17</td>
+				<td class="text-center">1</td>
+				<td class="text-center">78</td>
+			</tr>
+			<tr class="success">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994136" title="[SubsPlease] Tsuyokute New Saga - 03 (1080p) [016A1F33].mkv">[SubsPlease] Tsuyokute New Saga - 03 (1080p) [016A1F33].mkv</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994136.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:1ce91889e046dd5fb44a6ab12cc254380ef10a03&amp;dn=%5BSubsPlease%5D%20Tsuyokute%20New%20Saga%20-%2003%20%281080p%29%20%5B016A1F33%5D.mkv&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">1.3 GiB</td>
+				<td class="text-center" data-timestamp="1752688938">2025-07-16 18:02</td>
+
+				<td class="text-center">1111</td>
+				<td class="text-center">32</td>
+				<td class="text-center">6881</td>
+			</tr>
+			<tr class="success">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994135" title="[SubsPlease] Tsuyokute New Saga - 03 (720p) [34398D6A].mkv">[SubsPlease] Tsuyokute New Saga - 03 (720p) [34398D6A].mkv</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994135.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:32ada755c0e178d62f4ec406cd94c6385d612a61&amp;dn=%5BSubsPlease%5D%20Tsuyokute%20New%20Saga%20-%2003%20%28720p%29%20%5B34398D6A%5D.mkv&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">701.5 MiB</td>
+				<td class="text-center" data-timestamp="1752688917">2025-07-16 18:01</td>
+
+				<td class="text-center">553</td>
+				<td class="text-center">29</td>
+				<td class="text-center">3886</td>
+			</tr>
+			<tr class="success">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994134" title="[SubsPlease] Tsuyokute New Saga - 03 (480p) [A241CDC0].mkv">[SubsPlease] Tsuyokute New Saga - 03 (480p) [A241CDC0].mkv</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994134.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:8da417039140648e1bcc543d3c7866ad9c92ed21&amp;dn=%5BSubsPlease%5D%20Tsuyokute%20New%20Saga%20-%2003%20%28480p%29%20%5BA241CDC0%5D.mkv&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">364.7 MiB</td>
+				<td class="text-center" data-timestamp="1752688890">2025-07-16 18:01</td>
+
+				<td class="text-center">231</td>
+				<td class="text-center">17</td>
+				<td class="text-center">1654</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994132" title="[DKB] Jidou Hanbaiki ni Umarekawatta Ore wa Meikyuu wo Samayou - S02E03 [1080p][HEVC x265 10bit][Multi-Subs][weekly]">[DKB] Jidou Hanbaiki ni Umarekawatta Ore wa Meikyuu wo Samayou - S02E03 [1080p][HEVC x265 10bit][Multi-Subs][weekly]</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994132.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:9b8b45769b703fbea62d15597b26cd48b95589ca&amp;dn=%5BDKB%5D%20Jidou%20Hanbaiki%20ni%20Umarekawatta%20Ore%20wa%20Meikyuu%20wo%20Samayou%20-%20S02E03%20%5B1080p%5D%5BHEVC%20x265%2010bit%5D%5BMulti-Subs%5D%5Bweekly%5D&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">443.9 MiB</td>
+				<td class="text-center" data-timestamp="1752688080">2025-07-16 17:48</td>
+
+				<td class="text-center">57</td>
+				<td class="text-center">5</td>
+				<td class="text-center">254</td>
+			</tr>
+			<tr class="success">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994130" title="[Erai-raws] Onmyo Kaiten Re:Birth Verse - 03 [480p CR WEB-DL AVC AAC][MultiSub][5EF74778]">[Erai-raws] Onmyo Kaiten Re:Birth Verse - 03 [480p CR WEB-DL AVC AAC][MultiSub][5EF74778]</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994130.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:2eea21299274e1898e775559ad268b8a4a3baeda&amp;dn=%5BErai-raws%5D%20Onmyo%20Kaiten%20Re%3ABirth%20Verse%20-%2003%20%5B480p%20CR%20WEB-DL%20AVC%20AAC%5D%5BMultiSub%5D%5B5EF74778%5D&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">264.8 MiB</td>
+				<td class="text-center" data-timestamp="1752687911">2025-07-16 17:45</td>
+
+				<td class="text-center">28</td>
+				<td class="text-center">2</td>
+				<td class="text-center">216</td>
+			</tr>
+			<tr class="success">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994129" title="[Erai-raws] Onmyo Kaiten Re:Birth Verse - 03 [720p CR WEB-DL AVC AAC][MultiSub][EDB8E38B]">[Erai-raws] Onmyo Kaiten Re:Birth Verse - 03 [720p CR WEB-DL AVC AAC][MultiSub][EDB8E38B]</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994129.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:2099958e176b60fe859f99b3dbbc01f240ecf65f&amp;dn=%5BErai-raws%5D%20Onmyo%20Kaiten%20Re%3ABirth%20Verse%20-%2003%20%5B720p%20CR%20WEB-DL%20AVC%20AAC%5D%5BMultiSub%5D%5BEDB8E38B%5D&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">487.6 MiB</td>
+				<td class="text-center" data-timestamp="1752687884">2025-07-16 17:44</td>
+
+				<td class="text-center">71</td>
+				<td class="text-center">3</td>
+				<td class="text-center">504</td>
+			</tr>
+			<tr class="success">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994128#comments" class="comments" title="1 comment">
+						<i class="fa fa-comments-o"></i>1</a>
+					<a href="/view/1994128" title="[Erai-raws] Onmyo Kaiten Re:Birth Verse - 03 [1080p CR WEB-DL AVC AAC][MultiSub][3FF1F8ED]">[Erai-raws] Onmyo Kaiten Re:Birth Verse - 03 [1080p CR WEB-DL AVC AAC][MultiSub][3FF1F8ED]</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994128.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:d536caf74ef6aa1eb9aa7d9b3a9843cd6c913582&amp;dn=%5BErai-raws%5D%20Onmyo%20Kaiten%20Re%3ABirth%20Verse%20-%2003%20%5B1080p%20CR%20WEB-DL%20AVC%20AAC%5D%5BMultiSub%5D%5B3FF1F8ED%5D&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">1.3 GiB</td>
+				<td class="text-center" data-timestamp="1752687870">2025-07-16 17:44</td>
+
+				<td class="text-center">127</td>
+				<td class="text-center">10</td>
+				<td class="text-center">862</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994127" title="[New-raws] Onmyou Kaiten ReBirth - 03 [1080p] [YT].mkv">[New-raws] Onmyou Kaiten ReBirth - 03 [1080p] [YT].mkv</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994127.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:95fb652f4b5688714b1f5f6ee5ba05267297b2b7&amp;dn=%5BNew-raws%5D%20Onmyou%20Kaiten%20ReBirth%20-%2003%20%5B1080p%5D%20%5BYT%5D.mkv&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">289.7 MiB</td>
+				<td class="text-center" data-timestamp="1752687822">2025-07-16 17:43</td>
+
+				<td class="text-center">18</td>
+				<td class="text-center">2</td>
+				<td class="text-center">134</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994126" title="[ToonsHub] Onmyo Kaiten Re Birth Verse S01E03 1080p CR WEB-DL AAC2.0 H.264 (Onmyo Kaiten Re:verse, Multi-Subs)">[ToonsHub] Onmyo Kaiten Re Birth Verse S01E03 1080p CR WEB-DL AAC2.0 H.264 (Onmyo Kaiten Re:verse, Multi-Subs)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994126.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:ec6ecd89eed97e3e76df39e923f715b6f22148ca&amp;dn=%5BToonsHub%5D%20Onmyo%20Kaiten%20Re%20Birth%20Verse%20S01E03%201080p%20CR%20WEB-DL%20AAC2.0%20H.264%20%28Onmyo%20Kaiten%20Re%3Averse%2C%20Multi-Subs%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">1.3 GiB</td>
+				<td class="text-center" data-timestamp="1752687479">2025-07-16 17:37</td>
+
+				<td class="text-center">8</td>
+				<td class="text-center">2</td>
+				<td class="text-center">61</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994125" title="[Gecko] With Vengeance, Sincerely, Your Broken Saintess - S01E02 (傷だらけ聖女より報復をこめて; Kizu darake Seijo yori Houfuku wo Komete) (2025) [YTB.WEB-DL 1080P AVC, Opus, MULTi][0E133C5E]">[Gecko] With Vengeance, Sincerely, Your Broken Saintess - S01E02 (傷だらけ聖女より報復をこめて; Kizu darake Seijo yori Houfuku wo Komete) (2025) [YTB.WEB-DL 1080P AVC, Opus, MULTi][0E133C5E]</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994125.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:31ac67dc216c5b4cc3aebb0cd720ea208299364e&amp;dn=%5BGecko%5D%20With%20Vengeance%2C%20Sincerely%2C%20Your%20Broken%20Saintess%20-%20S01E02%20%28%E5%82%B7%E3%81%A0%E3%82%89%E3%81%91%E8%81%96%E5%A5%B3%E3%82%88%E3%82%8A%E5%A0%B1%E5%BE%A9%E3%82%92%E3%81%93%E3%82%81%E3%81%A6%3B%20Kizu%20darake%20Seijo%20yori%20Houfuku%20wo%20Komete%29%20%282025%29%20%5BYTB.WEB-DL%201080P%20AVC%2C%20Opus%2C%20MULTi%5D%5B0E133C5E%5D&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">324.4 MiB</td>
+				<td class="text-center" data-timestamp="1752687330">2025-07-16 17:35</td>
+
+				<td class="text-center">40</td>
+				<td class="text-center">3</td>
+				<td class="text-center">244</td>
+			</tr>
+			<tr class="danger">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994122" title="[Judas] Tensei Shitara Dai Nana Ouji Datta no de, Kimamani Majutsu o Kiwamemasu (I Was Reincarnated as the 7th Prince So I Can Take My Time Perfecting My Magical Ability) - S02E02 [1080p][HEVC x265 10bit][Multi-Subs] (Weekly)">[Judas] Tensei Shitara Dai Nana Ouji Datta no de, Kimamani Majutsu o Kiwamemasu (I Was Reincarnated as the 7th Prince So I Can Take My Time Perfecting My Magical Ability) - S02E02 [1080p][HEVC x265 10bit][Multi-Subs] (Weekly)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994122.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:4207422c7264d47a4d229b53859669283a877fe0&amp;dn=%5BJudas%5D%20Tensei%20Shitara%20Dai%20Nana%20Ouji%20Datta%20no%20de%2C%20Kimamani%20Majutsu%20o%20Kiwamemasu%20%28I%20Was%20Reincarnated%20as%20the%207th%20Prince%20So%20I%20Can%20Take%20My%20Time%20Perfecting%20My%20Magical%20Ability%29%20-%20S02E02%20%5B1080p%5D%5BHEVC%20x265%2010bit%5D%5BMulti-Subs%5D%20%28Weekly%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">393.2 MiB</td>
+				<td class="text-center" data-timestamp="1752687265">2025-07-16 17:34</td>
+
+				<td class="text-center">173</td>
+				<td class="text-center">10</td>
+				<td class="text-center">1014</td>
+			</tr>
+			<tr class="success">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994121" title="[SubsPlease] Onmyo Kaiten Re Birth Verse - 03 (1080p) [84485F80].mkv">[SubsPlease] Onmyo Kaiten Re Birth Verse - 03 (1080p) [84485F80].mkv</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994121.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:982e1ad5a726602e4944e7eb1b5f64111568a627&amp;dn=%5BSubsPlease%5D%20Onmyo%20Kaiten%20Re%20Birth%20Verse%20-%2003%20%281080p%29%20%5B84485F80%5D.mkv&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">1.3 GiB</td>
+				<td class="text-center" data-timestamp="1752687139">2025-07-16 17:32</td>
+
+				<td class="text-center">579</td>
+				<td class="text-center">18</td>
+				<td class="text-center">3724</td>
+			</tr>
+			<tr class="success">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994120" title="[SubsPlease] Onmyo Kaiten Re Birth Verse - 03 (720p) [5BECDCE3].mkv">[SubsPlease] Onmyo Kaiten Re Birth Verse - 03 (720p) [5BECDCE3].mkv</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994120.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:8c2a03d7c62a7bc27900a04fc530c839849c2ba4&amp;dn=%5BSubsPlease%5D%20Onmyo%20Kaiten%20Re%20Birth%20Verse%20-%2003%20%28720p%29%20%5B5BECDCE3%5D.mkv&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">680.8 MiB</td>
+				<td class="text-center" data-timestamp="1752687115">2025-07-16 17:31</td>
+
+				<td class="text-center">308</td>
+				<td class="text-center">21</td>
+				<td class="text-center">2398</td>
+			</tr>
+			<tr class="success">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994119" title="[SubsPlease] Onmyo Kaiten Re Birth Verse - 03 (480p) [D119D2C7].mkv">[SubsPlease] Onmyo Kaiten Re Birth Verse - 03 (480p) [D119D2C7].mkv</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994119.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:5982d034e966f7186069c1d6fbe5cff2e428ce5e&amp;dn=%5BSubsPlease%5D%20Onmyo%20Kaiten%20Re%20Birth%20Verse%20-%2003%20%28480p%29%20%5BD119D2C7%5D.mkv&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">354.6 MiB</td>
+				<td class="text-center" data-timestamp="1752687095">2025-07-16 17:31</td>
+
+				<td class="text-center">141</td>
+				<td class="text-center">6</td>
+				<td class="text-center">1043</td>
+			</tr>
+			<tr class="success">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994118" title="[SubsPlease] Mikadono Sanshimai wa Angai, Choroi. - 03 (1080p) [7C2052D1].mkv">[SubsPlease] Mikadono Sanshimai wa Angai, Choroi. - 03 (1080p) [7C2052D1].mkv</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994118.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:46cd61017399432bb16b365e7792eda4c5d66e6e&amp;dn=%5BSubsPlease%5D%20Mikadono%20Sanshimai%20wa%20Angai%2C%20Choroi.%20-%2003%20%281080p%29%20%5B7C2052D1%5D.mkv&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">1.3 GiB</td>
+				<td class="text-center" data-timestamp="1752687066">2025-07-16 17:31</td>
+
+				<td class="text-center">612</td>
+				<td class="text-center">21</td>
+				<td class="text-center">3884</td>
+			</tr>
+			<tr class="danger">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994117" title="[ASW] Dainanaoji - 14 [1080p HEVC x265 10Bit][AAC]">[ASW] Dainanaoji - 14 [1080p HEVC x265 10Bit][AAC]</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994117.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:7ead0768de02fb3efedb791dcdec5481b6186694&amp;dn=%5BASW%5D%20Dainanaoji%20-%2014%20%5B1080p%20HEVC%20x265%2010Bit%5D%5BAAC%5D&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">386.4 MiB</td>
+				<td class="text-center" data-timestamp="1752686955">2025-07-16 17:29</td>
+
+				<td class="text-center">361</td>
+				<td class="text-center">15</td>
+				<td class="text-center">2293</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994116" title="Onmyo Kaiten Re Birth Verse S01E03 1080p CR WEB-DL AAC2.0 H 264-VARYG (Onmyo Kaiten Re:verse, Multi-Subs)">Onmyo Kaiten Re Birth Verse S01E03 1080p CR WEB-DL AAC2.0 H 264-VARYG (Onmyo Kaiten Re:verse, Multi-Subs)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994116.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:6742eb11b9cba524fd674216a48ddb772bd022c5&amp;dn=Onmyo%20Kaiten%20Re%20Birth%20Verse%20S01E03%201080p%20CR%20WEB-DL%20AAC2.0%20H%20264-VARYG%20%28Onmyo%20Kaiten%20Re%3Averse%2C%20Multi-Subs%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">1.3 GiB</td>
+				<td class="text-center" data-timestamp="1752686955">2025-07-16 17:29</td>
+
+				<td class="text-center">129</td>
+				<td class="text-center">4</td>
+				<td class="text-center">490</td>
+			</tr>
+			<tr class="success">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994113" title="[SubsPlease] Mikadono Sanshimai wa Angai, Choroi. - 03 (720p) [F55D1BBD].mkv">[SubsPlease] Mikadono Sanshimai wa Angai, Choroi. - 03 (720p) [F55D1BBD].mkv</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994113.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:9ac5dbfbf2e4e56fe63163a6262043eec42e02c8&amp;dn=%5BSubsPlease%5D%20Mikadono%20Sanshimai%20wa%20Angai%2C%20Choroi.%20-%2003%20%28720p%29%20%5BF55D1BBD%5D.mkv&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">703.1 MiB</td>
+				<td class="text-center" data-timestamp="1752686777">2025-07-16 17:26</td>
+
+				<td class="text-center">288</td>
+				<td class="text-center">13</td>
+				<td class="text-center">2286</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994112#comments" class="comments" title="1 comment">
+						<i class="fa fa-comments-o"></i>1</a>
+					<a href="/view/1994112" title="With Vengeance Sincerely Your Broken Saintess S01E02 1080p AMZN WEB-DL DDP2.0 H 264-VARYG (Kizu darake Seijo yori Houfuku wo Komete, Multi-Subs)">With Vengeance Sincerely Your Broken Saintess S01E02 1080p AMZN WEB-DL DDP2.0 H 264-VARYG (Kizu darake Seijo yori Houfuku wo Komete, Multi-Subs)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994112.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:e1586d637269dab7ab0a530f7993200e4b6dc4fc&amp;dn=With%20Vengeance%20Sincerely%20Your%20Broken%20Saintess%20S01E02%201080p%20AMZN%20WEB-DL%20DDP2.0%20H%20264-VARYG%20%28Kizu%20darake%20Seijo%20yori%20Houfuku%20wo%20Komete%2C%20Multi-Subs%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">715.1 MiB</td>
+				<td class="text-center" data-timestamp="1752686620">2025-07-16 17:23</td>
+
+				<td class="text-center">102</td>
+				<td class="text-center">7</td>
+				<td class="text-center">406</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994111" title="Sword of the Demon Hunter S01E07 1080p HIDI WEB-DL DUAL AAC2.0 H 264-VARYG (Kijin Gentoushou, Dual-Audio)">Sword of the Demon Hunter S01E07 1080p HIDI WEB-DL DUAL AAC2.0 H 264-VARYG (Kijin Gentoushou, Dual-Audio)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994111.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:cec0b69b0f5652fe08960621c5199f82781cde4f&amp;dn=Sword%20of%20the%20Demon%20Hunter%20S01E07%201080p%20HIDI%20WEB-DL%20DUAL%20AAC2.0%20H%20264-VARYG%20%28Kijin%20Gentoushou%2C%20Dual-Audio%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">943.4 MiB</td>
+				<td class="text-center" data-timestamp="1752686289">2025-07-16 17:18</td>
+
+				<td class="text-center">141</td>
+				<td class="text-center">5</td>
+				<td class="text-center">614</td>
+			</tr>
+			<tr class="default">
+				<td>
+					<a href="/?c=1_2" title="Anime - English-translated">
+						<img src="/static/img/icons/nyaa/1_2.png" alt="Anime - English-translated" class="category-icon">
+					</a>
+				</td>
+				<td colspan="2">
+					<a href="/view/1994108" title="Flower and Asura S01E01 Hana and Mizuki 1080p HIDI WEB-DL DUAL AAC2.0 H 264-VARYG (Hana wa Saku, Shura no Gotoku, Dual-Audio)">Flower and Asura S01E01 Hana and Mizuki 1080p HIDI WEB-DL DUAL AAC2.0 H 264-VARYG (Hana wa Saku, Shura no Gotoku, Dual-Audio)</a>
+				</td>
+				<td class="text-center">
+					<a href="/download/1994108.torrent"><i class="fa fa-fw fa-download"></i></a>
+					<a href="magnet:?xt=urn:btih:33ceb7b155be98080fe00f1e43bbc70493d59633&amp;dn=Flower%20and%20Asura%20S01E01%20Hana%20and%20Mizuki%201080p%20HIDI%20WEB-DL%20DUAL%20AAC2.0%20H%20264-VARYG%20%28Hana%20wa%20Saku%2C%20Shura%20no%20Gotoku%2C%20Dual-Audio%29&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"><i class="fa fa-fw fa-magnet"></i></a>
+				</td>
+				<td class="text-center">919.5 MiB</td>
+				<td class="text-center" data-timestamp="1752685996">2025-07-16 17:13</td>
+
+				<td class="text-center">47</td>
+				<td class="text-center">3</td>
+				<td class="text-center">284</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+
+<div class="center">
+	<nav>
+  <ul class="pagination">
+    <li class="disabled"><a href="#">&laquo;</a></li>
+        <li class="active"><a href="#">1 <span class="sr-only">(current)</span></a></li>
+        <li><a href="/?c=1_2&amp;f=0&amp;p=2">2</a></li>
+        <li><a href="/?c=1_2&amp;f=0&amp;p=3">3</a></li>
+        <li><a href="/?c=1_2&amp;f=0&amp;p=4">4</a></li>
+        <li><a href="/?c=1_2&amp;f=0&amp;p=5">5</a></li>
+        <li><a href="/?c=1_2&amp;f=0&amp;p=6">6</a></li>
+
+    <li><a rel="next" href="/?c=1_2&amp;f=0&amp;p=2">&raquo;</a></li>
+</ul>
+</nav>
+
+</div>
+		</div> <!-- /container -->
+
+		<footer style="text-align: center;">
+			<p>Dark Mode: <a href="#" id="themeToggle">Toggle</a></p>
+		</footer>
+	</body>
+</html>

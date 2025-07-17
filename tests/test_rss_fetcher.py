@@ -93,7 +93,7 @@ def test_parse_entry_basic(rss_fetcher):
     entry.nyaa_downloads = "100"
 
     # Mock guessit
-    with patch("nyaastats.rss_fetcher.guessit.guessit") as mock_guessit:
+    with patch("nyaastats.guessit_utils.guessit.guessit") as mock_guessit:
         mock_guessit.return_value = {
             "title": "Test Anime",
             "season": 1,
@@ -149,7 +149,7 @@ def test_parse_entry_guessit_failure(rss_fetcher):
     entry.nyaa_downloads = "100"
 
     # Mock guessit to raise an exception
-    with patch("nyaastats.rss_fetcher.guessit.guessit") as mock_guessit:
+    with patch("nyaastats.guessit_utils.guessit.guessit") as mock_guessit:
         mock_guessit.side_effect = Exception("Guessit error")
 
         torrent_data, guessit_data = rss_fetcher.parse_entry(entry)
@@ -185,7 +185,7 @@ def test_parse_entry_missing_fields(rss_fetcher):
     # Mock guessit
     from unittest.mock import patch
 
-    with patch("nyaastats.rss_fetcher.guessit.guessit") as mock_guessit:
+    with patch("nyaastats.guessit_utils.guessit.guessit") as mock_guessit:
         mock_guessit.return_value = {}
 
         torrent_data, guessit_data = rss_fetcher.parse_entry(entry)
@@ -213,7 +213,7 @@ def test_process_feed(rss_fetcher, mock_rss_response):
     # Mock the client.get method directly
     with patch.object(rss_fetcher.client, "get", return_value=mock_response):
         # Mock guessit
-        with patch("nyaastats.rss_fetcher.guessit.guessit") as mock_guessit:
+        with patch("nyaastats.guessit_utils.guessit.guessit") as mock_guessit:
             mock_guessit.return_value = {
                 "title": "Test Anime",
                 "season": 1,
@@ -334,7 +334,7 @@ def test_parse_entry_with_pathlib_objects(rss_fetcher):
     mock_path.__fspath__ = Mock(return_value="/path/to/file.mkv")
 
     # Mock guessit with pathlib objects
-    with patch("nyaastats.rss_fetcher.guessit.guessit") as mock_guessit:
+    with patch("nyaastats.guessit_utils.guessit.guessit") as mock_guessit:
         mock_guessit.return_value = {
             "title": "Test Anime",
             "container": mock_path,  # This should be converted to string
