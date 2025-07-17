@@ -21,10 +21,7 @@ uv run pytest tests/ --cov=nyaastats --cov-report=term-missing
 
 ### Linting and Formatting
 ```bash
-# Check code style
-uv run ruff check .
-
-# Auto-fix code style issues
+# Check code style and auto-fix code style issues
 uv run ruff check --fix .
 
 # Format code

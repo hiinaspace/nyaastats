@@ -2,7 +2,7 @@ import json
 
 from whenever import Instant
 
-from nyaastats.models import GuessitData, StatsData, TorrentData
+from nyaastats.models import StatsData, TorrentData
 
 
 def test_database_init(temp_db):
@@ -32,19 +32,8 @@ def test_database_schema(temp_db):
             "trusted": "BOOLEAN",
             "remake": "BOOLEAN",
             "status": "TEXT",
-            "title": "TEXT",
-            "episode": "INTEGER",
-            "season": "INTEGER",
-            "year": "INTEGER",
-            "release_group": "TEXT",
-            "screen_size": "TEXT",
-            "video_codec": "TEXT",
-            "audio_codec": "TEXT",
-            "source": "TEXT",
-            "container": "TEXT",
-            "language": "TEXT",
-            "subtitles": "TEXT",
-            "other": "TEXT",
+            "created_at": "TEXT",
+            "guessit_data": "TEXT",
         }
 
         for col, col_type in expected_columns.items():
@@ -54,6 +43,20 @@ def test_database_schema(temp_db):
 
 def test_insert_torrent(temp_db):
     """Test inserting a torrent."""
+    guessit_data = {
+        "title": "Anime",
+        "episode": 1,
+        "screen_size": "1080p",
+        "container": "mkv",
+        "release_group": "Test",
+        "video_codec": "H.264",
+        "audio_codec": "AAC",
+        "source": "BluRay",
+        "language": "en",
+        "subtitles": ["en", "jp"],
+        "custom_field": "custom_value",
+    }
+
     torrent_data = TorrentData(
         infohash="abcdef1234567890abcdef1234567890abcdef12",
         filename="[Test] Anime Episode 01 [1080p].mkv",
@@ -65,23 +68,10 @@ def test_insert_torrent(temp_db):
         seeders=10,
         leechers=2,
         downloads=100,
+        guessit_data=guessit_data,
     )
 
-    guessit_data = GuessitData(
-        title="Anime",
-        episode=1,
-        screen_size="1080p",
-        container="mkv",
-        release_group="Test",
-        video_codec="H.264",
-        audio_codec="AAC",
-        source="BluRay",
-        language="en",
-        subtitles=["en", "jp"],
-        **{"custom_field": "custom_value"},  # This will go into "other"
-    )
-
-    temp_db.insert_torrent(torrent_data, guessit_data)
+    temp_db.insert_torrent(torrent_data)
 
     # Verify torrent was inserted
     with temp_db.get_conn() as conn:
@@ -97,17 +87,16 @@ def test_insert_torrent(temp_db):
         assert row["nyaa_id"] == torrent_data.nyaa_id
         assert row["trusted"] == torrent_data.trusted
         assert row["remake"] == torrent_data.remake
-        assert row["title"] == guessit_data.title
-        assert row["episode"] == guessit_data.episode
-        assert row["screen_size"] == guessit_data.screen_size
-        assert row["container"] == guessit_data.container
-        assert row["release_group"] == guessit_data.release_group
-        assert row["video_codec"] == guessit_data.video_codec
-        assert row["audio_codec"] == guessit_data.audio_codec
-        assert row["source"] == guessit_data.source
-        assert row["language"] == guessit_data.language
-        assert json.loads(row["subtitles"]) == guessit_data.subtitles
-        assert json.loads(row["other"]) == {"custom_field": "custom_value"}
+
+        # Check that guessit data was stored as JSON
+        stored_guessit = json.loads(row["guessit_data"])
+        assert stored_guessit["title"] == "Anime"
+        assert stored_guessit["episode"] == 1
+        assert stored_guessit["custom_field"] == "custom_value"
+        assert stored_guessit["screen_size"] == "1080p"
+        assert stored_guessit["container"] == "mkv"
+        assert stored_guessit["release_group"] == "Test"
+        assert stored_guessit["subtitles"] == ["en", "jp"]
 
         # Verify initial stats were inserted
         cursor = conn.execute(
@@ -154,9 +143,10 @@ def test_mark_torrent_status(temp_db):
         seeders=10,
         leechers=2,
         downloads=100,
+        guessit_data=None,
     )
 
-    temp_db.insert_torrent(torrent_data, GuessitData())
+    temp_db.insert_torrent(torrent_data)
 
     # Mark as dead
     temp_db.mark_torrent_status(torrent_data.infohash, "dead")
@@ -191,9 +181,10 @@ def test_get_torrent_exists(temp_db):
         seeders=10,
         leechers=2,
         downloads=100,
+        guessit_data=None,
     )
 
-    temp_db.insert_torrent(torrent_data, GuessitData())
+    temp_db.insert_torrent(torrent_data)
 
     # Should exist now
     assert temp_db.get_torrent_exists(infohash)
@@ -260,7 +251,7 @@ def test_indexes_exist(temp_db):
 
 def test_insert_duplicate_torrent(temp_db):
     """Test inserting duplicate torrent (should be ignored)."""
-    torrent_data = TorrentData(
+    torrent_data_1 = TorrentData(
         infohash="abcdef1234567890abcdef1234567890abcdef12",
         filename="[Test] Anime Episode 01 [1080p].mkv",
         pubdate=Instant.from_utc(2023, 1, 1, 12, 0, 0),
@@ -271,28 +262,45 @@ def test_insert_duplicate_torrent(temp_db):
         seeders=10,
         leechers=2,
         downloads=100,
+        guessit_data={"title": "First"},
+    )
+
+    torrent_data_2 = TorrentData(
+        infohash="abcdef1234567890abcdef1234567890abcdef12",
+        filename="[Test] Anime Episode 01 [1080p].mkv",
+        pubdate=Instant.from_utc(2023, 1, 1, 12, 0, 0),
+        size_bytes=1000000000,
+        nyaa_id=12345,
+        trusted=True,
+        remake=False,
+        seeders=10,
+        leechers=2,
+        downloads=100,
+        guessit_data={"title": "Second"},
     )
 
     # Insert first time
-    temp_db.insert_torrent(torrent_data, GuessitData(title="First"))
+    temp_db.insert_torrent(torrent_data_1)
 
     # Insert duplicate (should be ignored)
-    temp_db.insert_torrent(torrent_data, GuessitData(title="Second"))
+    temp_db.insert_torrent(torrent_data_2)
 
     # Check only one record exists
     with temp_db.get_conn() as conn:
         cursor = conn.execute(
             "SELECT COUNT(*) as count FROM torrents WHERE infohash = ?",
-            (torrent_data.infohash,),
+            (torrent_data_1.infohash,),
         )
         count = cursor.fetchone()["count"]
 
         assert count == 1
 
-        # Check the title is still from first insert
+        # Check the guessit data is still from first insert
         cursor = conn.execute(
-            "SELECT title FROM torrents WHERE infohash = ?", (torrent_data.infohash,)
+            "SELECT guessit_data FROM torrents WHERE infohash = ?",
+            (torrent_data_1.infohash,),
         )
         row = cursor.fetchone()
 
-        assert row["title"] == "First"
+        stored_guessit = json.loads(row["guessit_data"])
+        assert stored_guessit["title"] == "First"

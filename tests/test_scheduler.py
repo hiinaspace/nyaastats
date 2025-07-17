@@ -1,6 +1,6 @@
 from whenever import Instant
 
-from nyaastats.models import GuessitData, StatsData, TorrentData
+from nyaastats.models import StatsData, TorrentData
 
 
 def test_get_due_torrents_never_scraped(scheduler):
@@ -17,8 +17,9 @@ def test_get_due_torrents_never_scraped(scheduler):
         seeders=5,
         leechers=1,
         downloads=50,
+        guessit_data=None,
     )
-    scheduler.db.insert_torrent(torrent_data, GuessitData())
+    scheduler.db.insert_torrent(torrent_data)
 
     # Remove the initial RSS stats to simulate never scraped
     with scheduler.db.get_conn() as conn:
@@ -43,8 +44,9 @@ def test_get_due_torrents_recent_hourly(scheduler):
         seeders=5,
         leechers=1,
         downloads=50,
+        guessit_data=None,
     )
-    scheduler.db.insert_torrent(torrent_data, GuessitData())
+    scheduler.db.insert_torrent(torrent_data)
 
     # Delete the initial RSS stat and insert stats from 2 hours ago
     with scheduler.db.get_conn() as conn:
@@ -76,8 +78,9 @@ def test_get_due_torrents_recent_not_due(scheduler):
         seeders=5,
         leechers=1,
         downloads=50,
+        guessit_data=None,
     )
-    scheduler.db.insert_torrent(torrent_data, GuessitData())
+    scheduler.db.insert_torrent(torrent_data)
 
     # Insert stats from 30 minutes ago (should not be due for hourly scraping)
     scheduler.db.insert_stats(
@@ -104,8 +107,9 @@ def test_get_due_torrents_four_hour_schedule(scheduler):
         seeders=5,
         leechers=1,
         downloads=50,
+        guessit_data=None,
     )
-    scheduler.db.insert_torrent(torrent_data, GuessitData())
+    scheduler.db.insert_torrent(torrent_data)
 
     # Delete the initial RSS stat and insert stats from 5 hours ago
     with scheduler.db.get_conn() as conn:
@@ -137,8 +141,9 @@ def test_get_due_torrents_daily_schedule(scheduler):
         seeders=5,
         leechers=1,
         downloads=50,
+        guessit_data=None,
     )
-    scheduler.db.insert_torrent(torrent_data, GuessitData())
+    scheduler.db.insert_torrent(torrent_data)
 
     # Delete the initial RSS stat and insert stats from 2 days ago
     with scheduler.db.get_conn() as conn:
@@ -170,8 +175,9 @@ def test_get_due_torrents_weekly_schedule(scheduler):
         seeders=5,
         leechers=1,
         downloads=50,
+        guessit_data=None,
     )
-    scheduler.db.insert_torrent(torrent_data, GuessitData())
+    scheduler.db.insert_torrent(torrent_data)
 
     # Delete the initial RSS stat and insert stats from 8 days ago
     with scheduler.db.get_conn() as conn:
@@ -203,8 +209,9 @@ def test_get_due_torrents_never_schedule(scheduler):
         seeders=5,
         leechers=1,
         downloads=50,
+        guessit_data=None,
     )
-    scheduler.db.insert_torrent(torrent_data, GuessitData())
+    scheduler.db.insert_torrent(torrent_data)
 
     # Insert stats from 10 days ago (should not be due - too old)
     scheduler.db.insert_stats(
@@ -231,8 +238,9 @@ def test_get_due_torrents_inactive_status(scheduler):
         seeders=5,
         leechers=1,
         downloads=50,
+        guessit_data=None,
     )
-    scheduler.db.insert_torrent(torrent_data, GuessitData())
+    scheduler.db.insert_torrent(torrent_data)
     scheduler.db.mark_torrent_status(torrent_data.infohash, "dead")
 
     due_torrents = scheduler.get_due_torrents()
@@ -259,7 +267,7 @@ def test_get_due_torrents_batch_size(scheduler):
             leechers=1,
             downloads=50,
         )
-        scheduler.db.insert_torrent(torrent_data, GuessitData())
+        scheduler.db.insert_torrent(torrent_data)
 
         # Remove initial stats to make them all due
         with scheduler.db.get_conn() as conn:
@@ -299,7 +307,7 @@ def test_get_metrics(scheduler):
             leechers=1,
             downloads=50,
         )
-        scheduler.db.insert_torrent(torrent_data, GuessitData())
+        scheduler.db.insert_torrent(torrent_data)
 
         if status != "active":
             scheduler.db.mark_torrent_status(infohash, status)
@@ -338,8 +346,9 @@ def test_get_torrent_scrape_schedule(scheduler):
         seeders=5,
         leechers=1,
         downloads=50,
+        guessit_data=None,
     )
-    scheduler.db.insert_torrent(torrent_data, GuessitData())
+    scheduler.db.insert_torrent(torrent_data)
 
     # Remove any initial stats created by insert_torrent and insert our own
     with scheduler.db.get_conn() as conn:
@@ -407,7 +416,7 @@ def test_get_schedule_summary(scheduler):
             leechers=1,
             downloads=50,
         )
-        scheduler.db.insert_torrent(torrent_data, GuessitData())
+        scheduler.db.insert_torrent(torrent_data)
 
         # Insert a scrape stat so they're not in 'never_scraped'
         scheduler.db.insert_stats(

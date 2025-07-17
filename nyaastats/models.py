@@ -14,27 +14,6 @@ class StatsData(BaseModel):
     downloads: int
 
 
-class GuessitData(BaseModel):
-    """Guessit metadata for a torrent."""
-
-    model_config = ConfigDict(extra="allow")
-
-    title: str | None = None
-    alternative_title: str | None = None
-    episode: int | None = None
-    season: int | None = None
-    year: int | None = None
-    release_group: str | None = None
-    screen_size: str | None = None
-    video_codec: str | None = None
-    audio_codec: str | None = None
-    source: str | None = None
-    container: str | None = None
-    language: str | None = None
-    subtitles: list[str] | None = None
-    # Additional fields are allowed due to extra="allow"
-
-
 class TorrentData(BaseModel):
     """Torrent data structure."""
 
@@ -50,3 +29,4 @@ class TorrentData(BaseModel):
     seeders: int
     leechers: int
     downloads: int
+    guessit_data: dict | None = None

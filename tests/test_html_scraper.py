@@ -4,7 +4,7 @@ import pytest
 from whenever import Instant
 
 from nyaastats.html_scraper import HtmlScraper
-from nyaastats.models import GuessitData, TorrentData
+from nyaastats.models import TorrentData
 
 
 @pytest.fixture
@@ -30,23 +30,23 @@ def test_parse_html_page(html_scraper, example_html):
 
     # Check first result structure
     first_result = results[0]
-    assert len(first_result) == 2
-    torrent_data, guessit_data = first_result
-
-    assert isinstance(torrent_data, TorrentData)
-    assert isinstance(guessit_data, GuessitData)
+    assert isinstance(first_result, TorrentData)
 
     # Check torrent data fields
-    assert torrent_data.infohash
-    assert torrent_data.filename
-    assert isinstance(torrent_data.pubdate, Instant)
-    assert torrent_data.size_bytes > 0
-    assert torrent_data.nyaa_id is not None
-    assert isinstance(torrent_data.trusted, bool)
-    assert isinstance(torrent_data.remake, bool)
-    assert torrent_data.seeders >= 0
-    assert torrent_data.leechers >= 0
-    assert torrent_data.downloads >= 0
+    assert first_result.infohash
+    assert first_result.filename
+    assert isinstance(first_result.pubdate, Instant)
+    assert first_result.size_bytes > 0
+    assert first_result.nyaa_id is not None
+    assert isinstance(first_result.trusted, bool)
+    assert isinstance(first_result.remake, bool)
+    assert first_result.seeders >= 0
+    assert first_result.leechers >= 0
+    assert first_result.downloads >= 0
+
+    # Check guessit data is present and properly serialized
+    assert first_result.guessit_data is not None
+    assert isinstance(first_result.guessit_data, dict)
 
 
 def test_parse_specific_torrent(html_scraper, example_html):
@@ -57,8 +57,8 @@ def test_parse_specific_torrent(html_scraper, example_html):
     # Looking for the first torrent in the example HTML
     torrent_data = None
     for result in results:
-        if result[0].nyaa_id == 1994292:  # First torrent ID from example
-            torrent_data = result[0]
+        if result.nyaa_id == 1994292:  # First torrent ID from example
+            torrent_data = result
             break
 
     assert torrent_data is not None
@@ -188,7 +188,7 @@ def test_parse_table_row_trusted_remake_status(html_scraper, example_html):
     results = html_scraper.parse_html_page(example_html)
 
     # Should have a mix of trusted/remake statuses
-    statuses = [(r[0].trusted, r[0].remake) for r in results]
+    statuses = [(r.trusted, r.remake) for r in results]
 
     # Check that we have at least one trusted torrent (success class)
     assert any(trusted for trusted, remake in statuses)

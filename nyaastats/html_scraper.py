@@ -1,19 +1,17 @@
+import json
 import logging
 import re
 from collections.abc import Callable
-from typing import TYPE_CHECKING
 from urllib.parse import parse_qs, urlparse
 
+import guessit
 import httpx
 from bs4 import BeautifulSoup
+from guessit.jsonutils import GuessitEncoder
 from whenever import Instant
 
 from .database import Database
-from .guessit_utils import parse_guessit_safe
 from .models import TorrentData
-
-if TYPE_CHECKING:
-    from .models import GuessitData
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +49,7 @@ class HtmlScraper:
             logger.error(f"Failed to fetch page {page}: {e}")
             raise
 
-    def parse_html_page(self, html: str) -> list[tuple[TorrentData, "GuessitData"]]:
+    def parse_html_page(self, html: str) -> list[TorrentData]:
         """Parse HTML page and extract torrent data."""
         soup = BeautifulSoup(html, "lxml")
 
@@ -79,7 +77,7 @@ class HtmlScraper:
 
         return results
 
-    def _parse_table_row(self, row) -> tuple[TorrentData, "GuessitData"] | None:
+    def _parse_table_row(self, row) -> TorrentData | None:
         """Parse a single table row to extract torrent data."""
         cells = row.find_all("td")
         if len(cells) < 8:
@@ -138,6 +136,20 @@ class HtmlScraper:
             trusted = "success" in row.get("class", [])
             remake = "danger" in row.get("class", [])
 
+            # Extract metadata with guessit
+            guessit_data = None
+            if filename:
+                try:
+                    guessit_result = guessit.guessit(filename)
+                    guessit_data = json.loads(
+                        json.dumps(
+                            guessit_result, cls=GuessitEncoder, ensure_ascii=False
+                        )
+                    )
+                except Exception as e:
+                    logger.warning(f"Guessit parsing failed for '{filename}': {e}")
+                    guessit_data = None
+
             # Create TorrentData
             torrent_data = TorrentData(
                 infohash=infohash,
@@ -150,12 +162,10 @@ class HtmlScraper:
                 seeders=seeders,
                 leechers=leechers,
                 downloads=downloads,
+                guessit_data=guessit_data,
             )
 
-            # Parse metadata with guessit using shared utility
-            guessit_data = parse_guessit_safe(filename)
-
-            return torrent_data, guessit_data
+            return torrent_data
 
         except Exception as e:
             logger.warning(f"Failed to parse row data: {e}")
@@ -218,7 +228,7 @@ class HtmlScraper:
 
         processed_count = 0
 
-        for torrent_data, guessit_data in torrents:
+        for torrent_data in torrents:
             try:
                 # Check if torrent already exists
                 if self.db.get_torrent_exists(torrent_data.infohash):
@@ -228,7 +238,7 @@ class HtmlScraper:
                     continue
 
                 # Insert torrent
-                self.db.insert_torrent(torrent_data, guessit_data)
+                self.db.insert_torrent(torrent_data)
                 processed_count += 1
 
                 logger.debug(f"Processed torrent: {torrent_data.filename}")

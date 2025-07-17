@@ -2,7 +2,7 @@ from unittest.mock import Mock, patch
 
 from whenever import Instant
 
-from nyaastats.models import GuessitData, StatsData, TorrentData
+from nyaastats.models import StatsData, TorrentData
 
 
 def test_scrape_batch_success(tracker_scraper):
@@ -219,8 +219,9 @@ def test_update_stats_marks_dead(tracker_scraper):
         seeders=5,
         leechers=1,
         downloads=50,
+        guessit_data=None,
     )
-    tracker_scraper.db.insert_torrent(torrent_data, GuessitData())
+    tracker_scraper.db.insert_torrent(torrent_data)
 
     # Remove the initial RSS stats and insert 2 previous zero stats
     zero_stats = StatsData(seeders=0, leechers=0, downloads=0)

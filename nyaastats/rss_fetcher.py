@@ -1,18 +1,16 @@
+import json
 import logging
 from collections.abc import Callable
-from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 import feedparser
+import guessit
 import httpx
+from guessit.jsonutils import GuessitEncoder
 from whenever import Instant
 
 from .database import Database
-from .guessit_utils import parse_guessit_safe
 from .models import TorrentData
-
-if TYPE_CHECKING:
-    from .models import GuessitData
 
 logger = logging.getLogger(__name__)
 
@@ -44,10 +42,8 @@ class RSSFetcher:
             logger.error(f"Failed to fetch RSS feed: {e}")
             raise
 
-    def parse_entry(
-        self, entry: feedparser.FeedParserDict
-    ) -> tuple[TorrentData, "GuessitData"]:
-        """Parse RSS entry into torrent data and guessit metadata."""
+    def parse_entry(self, entry: feedparser.FeedParserDict) -> TorrentData:
+        """Parse RSS entry into torrent data with guessit metadata."""
         # Extract nyaa-specific fields from namespaced elements
         infohash = getattr(entry, "nyaa_infohash", "")
         if not infohash:
@@ -97,9 +93,22 @@ class RSSFetcher:
         else:
             pubdate = self.now_func()
 
+        # Extract metadata with guessit
+        filename = getattr(entry, "title", "")
+        guessit_data = None
+        if filename:
+            try:
+                guessit_result = guessit.guessit(filename)
+                guessit_data = json.loads(
+                    json.dumps(guessit_result, cls=GuessitEncoder, ensure_ascii=False)
+                )
+            except Exception as e:
+                logger.warning(f"Guessit parsing failed for '{filename}': {e}")
+                guessit_data = None
+
         torrent_data = TorrentData(
             infohash=infohash.lower(),
-            filename=getattr(entry, "title", ""),
+            filename=filename,
             pubdate=pubdate,
             size_bytes=size_bytes,
             nyaa_id=nyaa_id,
@@ -108,16 +117,14 @@ class RSSFetcher:
             seeders=int(getattr(entry, "nyaa_seeders", "0")),
             leechers=int(getattr(entry, "nyaa_leechers", "0")),
             downloads=int(getattr(entry, "nyaa_downloads", "0")),
+            guessit_data=guessit_data,
         )
 
-        # Extract metadata with guessit using shared utility
-        guessit_data = parse_guessit_safe(torrent_data.filename)
-
         # Mark as failed in database if guessit parsing failed and torrent exists
-        if not guessit_data.title and self.db.get_torrent_exists(torrent_data.infohash):
+        if not guessit_data and self.db.get_torrent_exists(torrent_data.infohash):
             self.db.mark_torrent_status(torrent_data.infohash, "guessit_failed")
 
-        return torrent_data, guessit_data
+        return torrent_data
 
     def _parse_size(self, size_str: str) -> int:
         """Convert size string to bytes."""
@@ -155,7 +162,7 @@ class RSSFetcher:
         processed = 0
         for entry in feed.entries:
             try:
-                torrent_data, guessit_data = self.parse_entry(entry)
+                torrent_data = self.parse_entry(entry)
 
                 # Skip if we don't have essential data
                 if not torrent_data.infohash or not torrent_data.filename:
@@ -164,7 +171,7 @@ class RSSFetcher:
                     )
                     continue
 
-                self.db.insert_torrent(torrent_data, guessit_data)
+                self.db.insert_torrent(torrent_data)
                 processed += 1
             except Exception as e:
                 logger.error(

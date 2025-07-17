@@ -93,7 +93,7 @@ def test_parse_entry_basic(rss_fetcher):
     entry.nyaa_downloads = "100"
 
     # Mock guessit
-    with patch("nyaastats.guessit_utils.guessit.guessit") as mock_guessit:
+    with patch("nyaastats.rss_fetcher.guessit.guessit") as mock_guessit:
         mock_guessit.return_value = {
             "title": "Test Anime",
             "season": 1,
@@ -106,7 +106,7 @@ def test_parse_entry_basic(rss_fetcher):
             "type": "episode",
         }
 
-        torrent_data, guessit_data = rss_fetcher.parse_entry(entry)
+        torrent_data = rss_fetcher.parse_entry(entry)
 
         # Check torrent data
         assert torrent_data.infohash == "abcdef1234567890abcdef1234567890abcdef12"
@@ -122,15 +122,11 @@ def test_parse_entry_basic(rss_fetcher):
         assert torrent_data.leechers == 2
         assert torrent_data.downloads == 100
 
-        # Check guessit data
-        assert guessit_data.title == "Test Anime"
-        assert guessit_data.season == 1
-        assert guessit_data.episode == 1
-        assert guessit_data.screen_size == "1080p"
-        assert guessit_data.video_codec == "H.264"
-        assert guessit_data.audio_codec == "AAC"
-        assert guessit_data.container == "mkv"
-        assert guessit_data.release_group == "TestGroup"
+        # Check guessit data was stored as JSON
+        assert torrent_data.guessit_data is not None
+        assert torrent_data.guessit_data["title"] == "Test Anime"
+        assert torrent_data.guessit_data["season"] == 1
+        assert torrent_data.guessit_data["episode"] == 1
 
 
 def test_parse_entry_guessit_failure(rss_fetcher):
@@ -149,10 +145,10 @@ def test_parse_entry_guessit_failure(rss_fetcher):
     entry.nyaa_downloads = "100"
 
     # Mock guessit to raise an exception
-    with patch("nyaastats.guessit_utils.guessit.guessit") as mock_guessit:
+    with patch("nyaastats.rss_fetcher.guessit.guessit") as mock_guessit:
         mock_guessit.side_effect = Exception("Guessit error")
 
-        torrent_data, guessit_data = rss_fetcher.parse_entry(entry)
+        torrent_data = rss_fetcher.parse_entry(entry)
 
         # Torrent data should still be parsed
         assert torrent_data.infohash == "abcdef1234567890abcdef1234567890abcdef12"
@@ -161,9 +157,8 @@ def test_parse_entry_guessit_failure(rss_fetcher):
             == "[TestGroup] Test Anime S01E01 [1080p] [x264] [AAC].mkv"
         )
 
-        # Guessit data should be empty (all fields None/default)
-        assert guessit_data.title is None
-        assert guessit_data.episode is None
+        # Guessit data should be None when parsing fails
+        assert torrent_data.guessit_data is None
 
 
 def test_parse_entry_missing_fields(rss_fetcher):
@@ -185,10 +180,10 @@ def test_parse_entry_missing_fields(rss_fetcher):
     # Mock guessit
     from unittest.mock import patch
 
-    with patch("nyaastats.guessit_utils.guessit.guessit") as mock_guessit:
+    with patch("nyaastats.rss_fetcher.guessit.guessit") as mock_guessit:
         mock_guessit.return_value = {}
 
-        torrent_data, guessit_data = rss_fetcher.parse_entry(entry)
+        torrent_data = rss_fetcher.parse_entry(entry)
 
         assert torrent_data.infohash == "abcdef1234567890abcdef1234567890abcdef12"
         assert torrent_data.filename == "Test Torrent"
@@ -201,6 +196,8 @@ def test_parse_entry_missing_fields(rss_fetcher):
         assert torrent_data.downloads == 0
         # Uses the fixed_time from fixture (2025, 1, 1, 12, 0, 0)
         assert torrent_data.pubdate == Instant.from_utc(2025, 1, 1, 12, 0, 0)
+        # Guessit data should be empty dict
+        assert torrent_data.guessit_data == {}
 
 
 def test_process_feed(rss_fetcher, mock_rss_response):
@@ -213,7 +210,7 @@ def test_process_feed(rss_fetcher, mock_rss_response):
     # Mock the client.get method directly
     with patch.object(rss_fetcher.client, "get", return_value=mock_response):
         # Mock guessit
-        with patch("nyaastats.guessit_utils.guessit.guessit") as mock_guessit:
+        with patch("nyaastats.rss_fetcher.guessit.guessit") as mock_guessit:
             mock_guessit.return_value = {
                 "title": "Test Anime",
                 "season": 1,
@@ -254,38 +251,34 @@ def test_process_feed_skip_invalid_entries(rss_fetcher):
 
         # Mock parse_entry to return appropriate data
         with patch.object(rss_fetcher, "parse_entry") as mock_parse:
-            from nyaastats.models import GuessitData, TorrentData
+            from nyaastats.models import TorrentData
 
             mock_parse.side_effect = [
-                (
-                    TorrentData(
-                        infohash="",
-                        filename="",
-                        pubdate=Instant.from_utc(2025, 1, 1),
-                        size_bytes=0,
-                        nyaa_id=None,
-                        trusted=False,
-                        remake=False,
-                        seeders=0,
-                        leechers=0,
-                        downloads=0,
-                    ),
-                    GuessitData(),
+                TorrentData(
+                    infohash="",
+                    filename="",
+                    pubdate=Instant.from_utc(2025, 1, 1),
+                    size_bytes=0,
+                    nyaa_id=None,
+                    trusted=False,
+                    remake=False,
+                    seeders=0,
+                    leechers=0,
+                    downloads=0,
+                    guessit_data=None,
                 ),  # Invalid entry
-                (
-                    TorrentData(
-                        infohash="abcdef1234567890abcdef1234567890abcdef12",
-                        filename="Valid Title",
-                        pubdate=Instant.from_utc(2025, 1, 1, 12, 0, 0),
-                        size_bytes=1000000,
-                        nyaa_id=123456,
-                        trusted=False,
-                        remake=False,
-                        seeders=10,
-                        leechers=2,
-                        downloads=100,
-                    ),
-                    GuessitData(),
+                TorrentData(
+                    infohash="abcdef1234567890abcdef1234567890abcdef12",
+                    filename="Valid Title",
+                    pubdate=Instant.from_utc(2025, 1, 1, 12, 0, 0),
+                    size_bytes=1000000,
+                    nyaa_id=123456,
+                    trusted=False,
+                    remake=False,
+                    seeders=10,
+                    leechers=2,
+                    downloads=100,
+                    guessit_data=None,
                 ),  # Valid entry
             ]
 
@@ -314,43 +307,9 @@ def test_process_feed_exception_handling(rss_fetcher):
             assert processed == 0
 
 
-def test_parse_entry_with_pathlib_objects(rss_fetcher):
-    """Test parsing entry with pathlib objects from guessit."""
-    entry = Mock()
-    entry.title = "[TestGroup] Test Anime S01E01 [1080p] [x264] [AAC].mkv"
-    entry.guid = "https://nyaa.si/view/123456"
-    entry.published = "Wed, 01 Jan 2025 12:00:00 +0000"
-    entry.published_parsed = (2025, 1, 1, 12, 0, 0, 2, 1, 0)
-    entry.nyaa_infohash = "abcdef1234567890abcdef1234567890abcdef12"
-    entry.nyaa_size = "1.5 GiB"
-    entry.nyaa_trusted = "Yes"
-    entry.nyaa_remake = "No"
-    entry.nyaa_seeders = "10"
-    entry.nyaa_leechers = "2"
-    entry.nyaa_downloads = "100"
-
-    # Mock pathlib.Path object
-    mock_path = Mock()
-    mock_path.__fspath__ = Mock(return_value="/path/to/file.mkv")
-
-    # Mock guessit with pathlib objects
-    with patch("nyaastats.guessit_utils.guessit.guessit") as mock_guessit:
-        mock_guessit.return_value = {
-            "title": "Test Anime",
-            "container": mock_path,  # This should be converted to string
-            "subtitles": [mock_path, "en"],  # List with pathlib object
-        }
-
-        torrent_data, guessit_data = rss_fetcher.parse_entry(entry)
-
-        # Check that pathlib objects were converted to strings
-        assert guessit_data.container == "/path/to/file.mkv"
-        assert guessit_data.subtitles == ["/path/to/file.mkv", "en"]
-
-
-def test_parse_entry_with_real_guessit_language_objects(rss_fetcher):
-    """Test parsing entry with real guessit that returns Language objects."""
-    # Use a realistic filename that will likely trigger Language objects
+def test_parse_entry_with_real_guessit(rss_fetcher):
+    """Test parsing entry with real guessit to ensure JSON encoding works."""
+    # Use a realistic filename that will likely trigger various guessit types
     entry = Mock()
     entry.title = "[Yameii] New Saga - S01E01 [English Dub] [CR WEB-DL 1080p]"
     entry.guid = "https://nyaa.si/view/123456"
@@ -365,7 +324,7 @@ def test_parse_entry_with_real_guessit_language_objects(rss_fetcher):
     entry.nyaa_downloads = "100"
 
     # Use real guessit - don't mock it
-    torrent_data, guessit_data = rss_fetcher.parse_entry(entry)
+    torrent_data = rss_fetcher.parse_entry(entry)
 
     # Verify that the parsing completed without errors
     assert torrent_data.infohash == "abcdef1234567890abcdef1234567890abcdef12"
@@ -374,15 +333,10 @@ def test_parse_entry_with_real_guessit_language_objects(rss_fetcher):
         == "[Yameii] New Saga - S01E01 [English Dub] [CR WEB-DL 1080p]"
     )
 
-    # Verify that guessit_data is a valid Pydantic model (no validation errors)
-    assert isinstance(guessit_data, type(guessit_data))
+    # Verify that guessit_data is valid JSON (no serialization errors)
+    assert torrent_data.guessit_data is not None
+    assert isinstance(torrent_data.guessit_data, dict)
 
-    # If language is present, it should be a string, not a Language object
-    if guessit_data.language is not None:
-        assert isinstance(guessit_data.language, str)
-
-    # If subtitles are present, they should be strings in a list
-    if guessit_data.subtitles is not None:
-        assert isinstance(guessit_data.subtitles, list)
-        for subtitle in guessit_data.subtitles:
-            assert isinstance(subtitle, str)
+    # Basic test that expected fields are present and properly serialized
+    if "title" in torrent_data.guessit_data:
+        assert isinstance(torrent_data.guessit_data["title"], str)

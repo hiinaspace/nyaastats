@@ -7,7 +7,7 @@ from typing import Any
 
 from whenever import Instant
 
-from .models import GuessitData, StatsData, TorrentData
+from .models import StatsData, TorrentData
 
 logger = logging.getLogger(__name__)
 
@@ -23,21 +23,8 @@ CREATE TABLE IF NOT EXISTS torrents (
     status TEXT DEFAULT 'active',
     created_at TEXT,
 
-    -- Guessit fields
-    title TEXT,
-    alternative_title TEXT,
-    episode INTEGER,
-    season INTEGER,
-    year INTEGER,
-    release_group TEXT,
-    screen_size TEXT,
-    video_codec TEXT,
-    audio_codec TEXT,
-    source TEXT,
-    container TEXT,
-    language TEXT,
-    subtitles TEXT,
-    other TEXT
+    -- Guessit data as JSON
+    guessit_data TEXT
 );
 
 CREATE TABLE IF NOT EXISTS stats (
@@ -117,23 +104,16 @@ class Database:
         sqlite3.register_adapter(Instant, adapt_instant)
         sqlite3.register_converter("TIMESTAMP", convert_instant)
 
-    def insert_torrent(
-        self, torrent_data: TorrentData, guessit_data: GuessitData
-    ) -> None:
+    def insert_torrent(self, torrent_data: TorrentData) -> None:
         """Insert a torrent with metadata and initial stats."""
         with self.get_conn() as conn:
-            # Convert guessit_data to dict for processing
-            guessit_dict = guessit_data.model_dump()
-
             # Insert torrent metadata
             conn.execute(
                 """
                 INSERT OR IGNORE INTO torrents (
                     infohash, filename, pubdate, size_bytes, nyaa_id,
-                    trusted, remake, title, episode, season, year,
-                    release_group, screen_size, video_codec, audio_codec,
-                    source, container, language, subtitles, other
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    trusted, remake, guessit_data
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     torrent_data.infohash,
@@ -143,40 +123,9 @@ class Database:
                     torrent_data.nyaa_id,
                     torrent_data.trusted,
                     torrent_data.remake,
-                    guessit_data.title,
-                    guessit_data.episode,
-                    guessit_data.season,
-                    guessit_data.year,
-                    guessit_data.release_group,
-                    guessit_data.screen_size,
-                    guessit_data.video_codec,
-                    guessit_data.audio_codec,
-                    guessit_data.source,
-                    guessit_data.container,
-                    guessit_data.language,
-                    json.dumps(guessit_data.subtitles or []),
-                    json.dumps(
-                        {
-                            k: v
-                            for k, v in guessit_dict.items()
-                            if k
-                            not in [
-                                "title",
-                                "alternative_title",
-                                "episode",
-                                "season",
-                                "year",
-                                "release_group",
-                                "screen_size",
-                                "video_codec",
-                                "audio_codec",
-                                "source",
-                                "container",
-                                "language",
-                                "subtitles",
-                            ]
-                        }
-                    ),
+                    json.dumps(torrent_data.guessit_data)
+                    if torrent_data.guessit_data
+                    else None,
                 ),
             )
 

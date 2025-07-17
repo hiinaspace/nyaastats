@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 import pytest
 from whenever import Instant
 
-from nyaastats.models import GuessitData, StatsData, TorrentData
+from nyaastats.models import StatsData, TorrentData
 from nyaastats.rss_fetcher import RSSFetcher
 from nyaastats.scheduler import Scheduler
 from nyaastats.tracker import TrackerScraper
@@ -58,6 +58,8 @@ def test_end_to_end_rss_processing(temp_db, example_rss_content):
             assert row["size_bytes"] == int(1.1 * 1024**3)
             assert not row["trusted"]
             assert not row["remake"]
+            # Check that guessit data was processed and stored as JSON
+            assert row["guessit_data"] is not None
             # With real guessit, we verify the data was processed without errors
             # but don't assume specific guessit results
 
@@ -123,7 +125,7 @@ def test_scheduler_integration(temp_db):
 
     # Mock the client.get method directly
     with patch.object(rss_fetcher.client, "get", return_value=mock_response):
-        with patch("nyaastats.guessit_utils.guessit.guessit") as mock_guessit:
+        with patch("nyaastats.rss_fetcher.guessit.guessit") as mock_guessit:
             mock_guessit.return_value = {"title": "Test Anime", "type": "episode"}
 
             # Process RSS
@@ -198,7 +200,7 @@ def test_tracker_integration(temp_db):
 
     # Mock the client.get method directly
     with patch.object(rss_fetcher.client, "get", return_value=mock_response):
-        with patch("nyaastats.guessit_utils.guessit.guessit") as mock_guessit:
+        with patch("nyaastats.rss_fetcher.guessit.guessit") as mock_guessit:
             mock_guessit.return_value = {"title": "Test Anime", "type": "episode"}
 
             processed = rss_fetcher.process_feed()
@@ -268,7 +270,7 @@ def test_dead_torrent_detection(temp_db):
         leechers=1,
         downloads=50,
     )
-    temp_db.insert_torrent(torrent_data, GuessitData())
+    temp_db.insert_torrent(torrent_data)
 
     # Setup tracker scraper
     import httpx
@@ -336,7 +338,7 @@ def test_guessit_failure_handling(temp_db):
     # Mock the client.get method directly
     with patch.object(rss_fetcher.client, "get", return_value=mock_response):
         # Mock guessit to raise an exception
-        with patch("nyaastats.guessit_utils.guessit.guessit") as mock_guessit:
+        with patch("nyaastats.rss_fetcher.guessit.guessit") as mock_guessit:
             mock_guessit.side_effect = Exception("Guessit parsing failed")
 
             # Process should still work despite guessit failure
@@ -348,7 +350,7 @@ def test_guessit_failure_handling(temp_db):
                 "failedbeef1234567890failedbeef1234567890"
             )
 
-            # Check that metadata fields are empty
+            # Check that guessit data is None when parsing fails
             with temp_db.get_conn() as conn:
                 cursor = conn.execute(
                     "SELECT * FROM torrents WHERE infohash = ?",
@@ -358,7 +360,4 @@ def test_guessit_failure_handling(temp_db):
 
                 assert row is not None
                 assert row["filename"] == "ThisFilenameWillCauseGuessitToFail"
-                assert row["title"] is None
-                assert row["episode"] is None
-                assert row["season"] is None
-                assert row["release_group"] is None
+                assert row["guessit_data"] is None

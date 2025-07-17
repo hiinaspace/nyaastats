@@ -40,23 +40,10 @@ CREATE TABLE torrents (
     trusted BOOLEAN,                    -- Trusted uploader flag
     remake BOOLEAN,                     -- Remake flag
     status TEXT DEFAULT 'active',       -- 'active', 'dead', 'guessit_failed'
-    created_at TEXT
+    created_at TEXT,
 
-    -- Guessit extracted fields (nullable)
-    title TEXT,
-    alternative_title TEXT,
-    episode INTEGER,
-    season INTEGER,
-    year INTEGER,
-    release_group TEXT,
-    screen_size TEXT,                   -- '1080p', '720p', etc
-    video_codec TEXT,                   -- 'x265', 'x264', etc
-    audio_codec TEXT,                   -- 'AAC', 'FLAC', etc
-    source TEXT,                        -- 'Web', 'BluRay', etc
-    container TEXT,                     -- 'mkv', 'mp4', etc
-    language TEXT,
-    subtitles TEXT,                     -- JSON array of subtitle languages
-    other TEXT                          -- JSON object for other guessit fields
+    -- Guessit metadata stored as JSON
+    guessit_data TEXT                   -- JSON object containing all guessit fields
 );
 ```
 
@@ -75,6 +62,31 @@ CREATE TABLE stats (
 
 CREATE INDEX idx_stats_infohash ON stats(infohash);
 CREATE INDEX idx_stats_timestamp ON stats(timestamp);
+```
+
+### Guessit Data Storage
+
+The `guessit_data` column stores the complete output of guessit parsing as JSON. This approach:
+- Leverages guessit's native JSON encoder (`GuessitEncoder`) to handle complex data types
+- Eliminates validation errors from Language objects, episode lists, and other guessit types
+- Provides flexibility to store any guessit output without schema changes
+- Simplifies the codebase by removing custom type conversion logic
+
+Example guessit_data JSON:
+```json
+{
+  "title": "Test Anime",
+  "season": 1,
+  "episode": 1,
+  "screen_size": "1080p",
+  "video_codec": "H.264",
+  "audio_codec": "AAC",
+  "container": "mkv",
+  "release_group": "TestGroup",
+  "language": "en",
+  "subtitles": ["en", "jp"],
+  "type": "episode"
+}
 ```
 
 ### SQLite Configuration
