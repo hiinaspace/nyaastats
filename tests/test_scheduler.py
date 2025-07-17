@@ -124,29 +124,29 @@ def test_get_due_torrents_daily_schedule(scheduler):
     base_time = datetime.utcnow()
 
     # Insert a torrent published 20 days ago
-    torrent_data = {
-        "infohash": "abcdef1234567890abcdef1234567890abcdef12",
-        "filename": "test.mkv",
-        "pubdate": base_time - timedelta(days=20),
-        "size_bytes": 1000000,
-        "nyaa_id": 12345,
-        "trusted": False,
-        "remake": False,
-        "seeders": 5,
-        "leechers": 1,
-        "downloads": 50,
-    }
-    scheduler.db.insert_torrent(torrent_data, {})
+    torrent_data = TorrentData(
+        infohash="abcdef1234567890abcdef1234567890abcdef12",
+        filename="test.mkv",
+        pubdate=base_time - timedelta(days=20),
+        size_bytes=1000000,
+        nyaa_id=12345,
+        trusted=False,
+        remake=False,
+        seeders=5,
+        leechers=1,
+        downloads=50,
+    )
+    scheduler.db.insert_torrent(torrent_data, GuessitData())
 
     # Insert stats from 2 days ago (should be due for daily scraping)
     scheduler.db.insert_stats(
-        torrent_data["infohash"],
-        {"seeders": 5, "leechers": 1, "downloads": 50},
+        torrent_data.infohash,
+        StatsData(seeders=5, leechers=1, downloads=50),
         base_time - timedelta(days=2),
     )
 
     due_torrents = scheduler.get_due_torrents()
-    assert torrent_data["infohash"] in due_torrents
+    assert torrent_data.infohash in due_torrents
 
 
 def test_get_due_torrents_weekly_schedule(scheduler):
@@ -154,29 +154,29 @@ def test_get_due_torrents_weekly_schedule(scheduler):
     base_time = datetime.utcnow()
 
     # Insert a torrent published 120 days ago
-    torrent_data = {
-        "infohash": "abcdef1234567890abcdef1234567890abcdef12",
-        "filename": "test.mkv",
-        "pubdate": base_time - timedelta(days=120),
-        "size_bytes": 1000000,
-        "nyaa_id": 12345,
-        "trusted": False,
-        "remake": False,
-        "seeders": 5,
-        "leechers": 1,
-        "downloads": 50,
-    }
-    scheduler.db.insert_torrent(torrent_data, {})
+    torrent_data = TorrentData(
+        infohash="abcdef1234567890abcdef1234567890abcdef12",
+        filename="test.mkv",
+        pubdate=base_time - timedelta(days=120),
+        size_bytes=1000000,
+        nyaa_id=12345,
+        trusted=False,
+        remake=False,
+        seeders=5,
+        leechers=1,
+        downloads=50,
+    )
+    scheduler.db.insert_torrent(torrent_data, GuessitData())
 
     # Insert stats from 8 days ago (should be due for weekly scraping)
     scheduler.db.insert_stats(
-        torrent_data["infohash"],
-        {"seeders": 5, "leechers": 1, "downloads": 50},
+        torrent_data.infohash,
+        StatsData(seeders=5, leechers=1, downloads=50),
         base_time - timedelta(days=8),
     )
 
     due_torrents = scheduler.get_due_torrents()
-    assert torrent_data["infohash"] in due_torrents
+    assert torrent_data.infohash in due_torrents
 
 
 def test_get_due_torrents_never_schedule(scheduler):
@@ -184,29 +184,29 @@ def test_get_due_torrents_never_schedule(scheduler):
     base_time = datetime.utcnow()
 
     # Insert a torrent published 200 days ago
-    torrent_data = {
-        "infohash": "abcdef1234567890abcdef1234567890abcdef12",
-        "filename": "test.mkv",
-        "pubdate": base_time - timedelta(days=200),
-        "size_bytes": 1000000,
-        "nyaa_id": 12345,
-        "trusted": False,
-        "remake": False,
-        "seeders": 5,
-        "leechers": 1,
-        "downloads": 50,
-    }
-    scheduler.db.insert_torrent(torrent_data, {})
+    torrent_data = TorrentData(
+        infohash="abcdef1234567890abcdef1234567890abcdef12",
+        filename="test.mkv",
+        pubdate=base_time - timedelta(days=200),
+        size_bytes=1000000,
+        nyaa_id=12345,
+        trusted=False,
+        remake=False,
+        seeders=5,
+        leechers=1,
+        downloads=50,
+    )
+    scheduler.db.insert_torrent(torrent_data, GuessitData())
 
     # Insert stats from 10 days ago (should not be due - too old)
     scheduler.db.insert_stats(
-        torrent_data["infohash"],
-        {"seeders": 5, "leechers": 1, "downloads": 50},
+        torrent_data.infohash,
+        StatsData(seeders=5, leechers=1, downloads=50),
         base_time - timedelta(days=10),
     )
 
     due_torrents = scheduler.get_due_torrents()
-    assert torrent_data["infohash"] not in due_torrents
+    assert torrent_data.infohash not in due_torrents
 
 
 def test_get_due_torrents_inactive_status(scheduler):
@@ -214,23 +214,23 @@ def test_get_due_torrents_inactive_status(scheduler):
     base_time = datetime.utcnow()
 
     # Insert a torrent and mark it as dead
-    torrent_data = {
-        "infohash": "abcdef1234567890abcdef1234567890abcdef12",
-        "filename": "test.mkv",
-        "pubdate": base_time - timedelta(hours=1),
-        "size_bytes": 1000000,
-        "nyaa_id": 12345,
-        "trusted": False,
-        "remake": False,
-        "seeders": 5,
-        "leechers": 1,
-        "downloads": 50,
-    }
-    scheduler.db.insert_torrent(torrent_data, {})
-    scheduler.db.mark_torrent_status(torrent_data["infohash"], "dead")
+    torrent_data = TorrentData(
+        infohash="abcdef1234567890abcdef1234567890abcdef12",
+        filename="test.mkv",
+        pubdate=base_time - timedelta(hours=1),
+        size_bytes=1000000,
+        nyaa_id=12345,
+        trusted=False,
+        remake=False,
+        seeders=5,
+        leechers=1,
+        downloads=50,
+    )
+    scheduler.db.insert_torrent(torrent_data, GuessitData())
+    scheduler.db.mark_torrent_status(torrent_data.infohash, "dead")
 
     due_torrents = scheduler.get_due_torrents()
-    assert torrent_data["infohash"] not in due_torrents
+    assert torrent_data.infohash not in due_torrents
 
 
 def test_get_due_torrents_batch_size(scheduler):
@@ -243,19 +243,19 @@ def test_get_due_torrents_batch_size(scheduler):
         infohash = f"abcdef1234567890abcdef1234567890abcdef{i:02d}"
         infohashes.append(infohash)
 
-        torrent_data = {
-            "infohash": infohash,
-            "filename": f"test{i}.mkv",
-            "pubdate": base_time - timedelta(hours=1),
-            "size_bytes": 1000000,
-            "nyaa_id": 12345 + i,
-            "trusted": False,
-            "remake": False,
-            "seeders": 5,
-            "leechers": 1,
-            "downloads": 50,
-        }
-        scheduler.db.insert_torrent(torrent_data, {})
+        torrent_data = TorrentData(
+            infohash=infohash,
+            filename=f"test{i}.mkv",
+            pubdate=base_time - timedelta(hours=1),
+            size_bytes=1000000,
+            nyaa_id=12345 + i,
+            trusted=False,
+            remake=False,
+            seeders=5,
+            leechers=1,
+            downloads=50,
+        )
+        scheduler.db.insert_torrent(torrent_data, GuessitData())
 
         # Remove initial stats to make them all due
         with scheduler.db.get_conn() as conn:
@@ -285,19 +285,19 @@ def test_get_metrics(scheduler):
     ]
 
     for infohash, status in torrents:
-        torrent_data = {
-            "infohash": infohash,
-            "filename": "test.mkv",
-            "pubdate": base_time - timedelta(hours=1),
-            "size_bytes": 1000000,
-            "nyaa_id": 12345,
-            "trusted": False,
-            "remake": False,
-            "seeders": 5,
-            "leechers": 1,
-            "downloads": 50,
-        }
-        scheduler.db.insert_torrent(torrent_data, {})
+        torrent_data = TorrentData(
+            infohash=infohash,
+            filename="test.mkv",
+            pubdate=base_time - timedelta(hours=1),
+            size_bytes=1000000,
+            nyaa_id=12345,
+            trusted=False,
+            remake=False,
+            seeders=5,
+            leechers=1,
+            downloads=50,
+        )
+        scheduler.db.insert_torrent(torrent_data, GuessitData())
 
         if status != "active":
             scheduler.db.mark_torrent_status(infohash, status)
@@ -305,7 +305,7 @@ def test_get_metrics(scheduler):
     # Insert some stats
     scheduler.db.insert_stats(
         "abcdef1234567890abcdef1234567890abcdef12",
-        {"seeders": 5, "leechers": 1, "downloads": 50},
+        StatsData(seeders=5, leechers=1, downloads=50),
         base_time,
     )
 
@@ -325,31 +325,31 @@ def test_get_torrent_scrape_schedule(scheduler):
     base_time = datetime.utcnow()
 
     # Insert a torrent in hourly schedule
-    torrent_data = {
-        "infohash": "abcdef1234567890abcdef1234567890abcdef12",
-        "filename": "test.mkv",
-        "pubdate": base_time - timedelta(hours=1),
-        "size_bytes": 1000000,
-        "nyaa_id": 12345,
-        "trusted": False,
-        "remake": False,
-        "seeders": 5,
-        "leechers": 1,
-        "downloads": 50,
-    }
-    scheduler.db.insert_torrent(torrent_data, {})
+    torrent_data = TorrentData(
+        infohash="abcdef1234567890abcdef1234567890abcdef12",
+        filename="test.mkv",
+        pubdate=base_time - timedelta(hours=1),
+        size_bytes=1000000,
+        nyaa_id=12345,
+        trusted=False,
+        remake=False,
+        seeders=5,
+        leechers=1,
+        downloads=50,
+    )
+    scheduler.db.insert_torrent(torrent_data, GuessitData())
 
     # Insert stats from 2 hours ago
     scheduler.db.insert_stats(
-        torrent_data["infohash"],
-        {"seeders": 5, "leechers": 1, "downloads": 50},
+        torrent_data.infohash,
+        StatsData(seeders=5, leechers=1, downloads=50),
         base_time - timedelta(hours=2),
     )
 
-    schedule_info = scheduler.get_torrent_scrape_schedule(torrent_data["infohash"])
+    schedule_info = scheduler.get_torrent_scrape_schedule(torrent_data.infohash)
 
     assert schedule_info is not None
-    assert schedule_info["infohash"] == torrent_data["infohash"]
+    assert schedule_info["infohash"] == torrent_data.infohash
     assert schedule_info["status"] == "active"
     assert schedule_info["schedule_type"] == "hourly"
     assert schedule_info["is_due"] == 1  # Should be due
@@ -390,24 +390,24 @@ def test_get_schedule_summary(scheduler):
     ]
 
     for infohash, pubdate in torrents:
-        torrent_data = {
-            "infohash": infohash,
-            "filename": "test.mkv",
-            "pubdate": pubdate,
-            "size_bytes": 1000000,
-            "nyaa_id": 12345,
-            "trusted": False,
-            "remake": False,
-            "seeders": 5,
-            "leechers": 1,
-            "downloads": 50,
-        }
-        scheduler.db.insert_torrent(torrent_data, {})
+        torrent_data = TorrentData(
+            infohash=infohash,
+            filename="test.mkv",
+            pubdate=pubdate,
+            size_bytes=1000000,
+            nyaa_id=12345,
+            trusted=False,
+            remake=False,
+            seeders=5,
+            leechers=1,
+            downloads=50,
+        )
+        scheduler.db.insert_torrent(torrent_data, GuessitData())
 
         # Insert a scrape stat so they're not in 'never_scraped'
         scheduler.db.insert_stats(
             infohash,
-            {"seeders": 5, "leechers": 1, "downloads": 50},
+            StatsData(seeders=5, leechers=1, downloads=50),
             base_time - timedelta(hours=1),
         )
 

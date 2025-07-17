@@ -14,10 +14,10 @@ logger = logging.getLogger(__name__)
 
 class RSSFetcher:
     def __init__(
-        self, 
-        db: Database, 
+        self,
+        db: Database,
         client: httpx.Client,
-        feed_url: str = "https://nyaa.si/?page=rss&c=1_2&f=0"
+        feed_url: str = "https://nyaa.si/?page=rss&c=1_2&f=0",
     ):
         self.db = db
         self.feed_url = feed_url
@@ -68,7 +68,19 @@ class RSSFetcher:
             try:
                 # Use feedparser's built-in date parsing
                 if hasattr(entry, "published_parsed") and entry.published_parsed:
-                    pubdate = datetime(*entry.published_parsed[:6])
+                    # published_parsed is a time.struct_time with at least 6 elements
+                    parsed_time = entry.published_parsed
+                    if len(parsed_time) >= 6:
+                        pubdate = datetime(
+                            parsed_time[0],
+                            parsed_time[1],
+                            parsed_time[2],
+                            parsed_time[3],
+                            parsed_time[4],
+                            parsed_time[5],
+                        )
+                    else:
+                        pubdate = datetime.utcnow()
                 else:
                     # Fallback to manual parsing - feedparser should handle this
                     pubdate = datetime.utcnow()
@@ -173,4 +185,3 @@ class RSSFetcher:
 
         logger.info(f"Processed {processed} torrents from RSS feed")
         return processed
-

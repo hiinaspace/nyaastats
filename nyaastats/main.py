@@ -25,7 +25,7 @@ class NyaaTracker:
 
     def __init__(self):
         self.db = Database(settings.db_path)
-        
+
         # Create HTTP clients with proper configuration
         self.rss_client = httpx.Client(
             timeout=30.0,
@@ -36,9 +36,11 @@ class NyaaTracker:
             timeout=30.0,
             headers={"User-Agent": "nyaastats/1.0 Tracker Scraper"},
         )
-        
+
         self.rss_fetcher = RSSFetcher(self.db, self.rss_client, settings.rss_url)
-        self.tracker = TrackerScraper(self.db, self.tracker_client, settings.tracker_url)
+        self.tracker = TrackerScraper(
+            self.db, self.tracker_client, settings.tracker_url
+        )
         self.scheduler = Scheduler(self.db, settings.scrape_batch_size)
         self.running = True
 

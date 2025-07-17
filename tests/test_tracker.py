@@ -274,8 +274,6 @@ def test_update_batch_stats(tracker_scraper):
         )
 
 
-
-
 def test_scrape_batch_url_encoding(tracker_scraper):
     """Test that infohashes are properly URL encoded."""
     infohashes = ["abcdef1234567890abcdef1234567890abcdef12"]

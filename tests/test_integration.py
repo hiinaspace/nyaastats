@@ -22,6 +22,7 @@ def test_end_to_end_rss_processing(temp_db, example_rss_content):
     """Test complete RSS processing pipeline."""
     # Setup RSS fetcher
     import httpx
+
     rss_fetcher = RSSFetcher(temp_db, httpx.Client())
 
     # Mock HTTP response
@@ -139,6 +140,7 @@ def test_scheduler_integration(temp_db):
 
     # Setup components
     import httpx
+
     rss_fetcher = RSSFetcher(temp_db, httpx.Client())
     scheduler = Scheduler(temp_db)
 
@@ -212,6 +214,7 @@ def test_tracker_integration(temp_db):
 
     # Setup components
     import httpx
+
     rss_fetcher = RSSFetcher(temp_db, httpx.Client())
     tracker_scraper = TrackerScraper(temp_db, httpx.Client())
     scheduler = Scheduler(temp_db)
@@ -280,7 +283,7 @@ def test_tracker_integration(temp_db):
 def test_dead_torrent_detection(temp_db):
     """Test dead torrent detection workflow."""
     from datetime import datetime
-    
+
     # Insert a torrent manually
     torrent_data = TorrentData(
         infohash="deadbeef1234567890deadbeef1234567890dead",
@@ -298,6 +301,7 @@ def test_dead_torrent_detection(temp_db):
 
     # Setup tracker scraper
     import httpx
+
     tracker_scraper = TrackerScraper(temp_db, httpx.Client())
 
     # Simulate 3 consecutive zero responses
@@ -350,6 +354,7 @@ def test_guessit_failure_handling(temp_db):
 </rss>"""
 
     import httpx
+
     rss_fetcher = RSSFetcher(temp_db, httpx.Client())
 
     mock_response = Mock()

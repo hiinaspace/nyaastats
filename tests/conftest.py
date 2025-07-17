@@ -1,5 +1,5 @@
-import pytest
 import httpx
+import pytest
 
 from nyaastats.database import Database
 from nyaastats.rss_fetcher import RSSFetcher

@@ -77,7 +77,7 @@ def test_insert_torrent(temp_db):
         source="BluRay",
         language="en",
         subtitles=["en", "jp"],
-        custom_field="custom_value",  # This will go into "other"
+        **{"custom_field": "custom_value"},  # This will go into "other"
     )
 
     temp_db.insert_torrent(torrent_data, guessit_data)

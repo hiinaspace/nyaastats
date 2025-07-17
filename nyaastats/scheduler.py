@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 from .database import Database
 
@@ -120,7 +121,7 @@ class Scheduler:
 
             return metrics
 
-    def get_torrent_scrape_schedule(self, infohash: str) -> dict[str, any] | None:
+    def get_torrent_scrape_schedule(self, infohash: str) -> dict[str, Any] | None:
         """Get scrape schedule information for a specific torrent."""
         with self.db.get_conn() as conn:
             cursor = conn.execute(

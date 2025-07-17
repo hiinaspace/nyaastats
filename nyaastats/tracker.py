@@ -13,10 +13,10 @@ logger = logging.getLogger(__name__)
 
 class TrackerScraper:
     def __init__(
-        self, 
-        db: Database, 
+        self,
+        db: Database,
         client: httpx.Client,
-        tracker_url: str = "http://nyaa.tracker.wf:7777/scrape"
+        tracker_url: str = "http://nyaa.tracker.wf:7777/scrape",
     ):
         self.db = db
         self.tracker_url = tracker_url
@@ -55,7 +55,8 @@ class TrackerScraper:
             data = bencodepy.decode(response.content)
 
             results = {}
-            files = data.get(b"files", {})
+            # bencodepy.decode returns a dict, so this is safe
+            files = data.get(b"files", {}) if isinstance(data, dict) else {}
 
             for info_hash_bytes, stats in files.items():
                 infohash = info_hash_bytes.hex()
@@ -109,4 +110,3 @@ class TrackerScraper:
         """Update stats for a batch of torrents."""
         for infohash, stats in results.items():
             self.update_stats(infohash, stats)
-

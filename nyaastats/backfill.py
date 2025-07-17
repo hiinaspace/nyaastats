@@ -19,14 +19,14 @@ logger = logging.getLogger(__name__)
 def backfill(max_pages: int = 100) -> None:
     """Perform historical backfill from RSS feed."""
     db = Database(settings.db_path)
-    
+
     # Create HTTP client with proper configuration
     client = httpx.Client(
         timeout=30.0,
         headers={"User-Agent": "nyaastats/1.0 Backfill Tool"},
         follow_redirects=True,
     )
-    
+
     fetcher = RSSFetcher(db, client, settings.rss_url)
 
     logger.info(f"Starting backfill for up to {max_pages} pages")

@@ -33,6 +33,7 @@ def mock_rss_response():
 def test_parse_size():
     """Test size parsing functionality."""
     import httpx
+
     fetcher = RSSFetcher(Mock(), httpx.Client())
 
     # Test various size formats
@@ -108,28 +109,28 @@ def test_parse_entry_basic(rss_fetcher):
         torrent_data, guessit_data = rss_fetcher.parse_entry(entry)
 
         # Check torrent data
-        assert torrent_data["infohash"] == "abcdef1234567890abcdef1234567890abcdef12"
+        assert torrent_data.infohash == "abcdef1234567890abcdef1234567890abcdef12"
         assert (
-            torrent_data["filename"]
+            torrent_data.filename
             == "[TestGroup] Test Anime S01E01 [1080p] [x264] [AAC].mkv"
         )
-        assert torrent_data["size_bytes"] == int(1.5 * 1024**3)
-        assert torrent_data["nyaa_id"] == 123456
-        assert torrent_data["trusted"]
-        assert not torrent_data["remake"]
-        assert torrent_data["seeders"] == 10
-        assert torrent_data["leechers"] == 2
-        assert torrent_data["downloads"] == 100
+        assert torrent_data.size_bytes == int(1.5 * 1024**3)
+        assert torrent_data.nyaa_id == 123456
+        assert torrent_data.trusted
+        assert not torrent_data.remake
+        assert torrent_data.seeders == 10
+        assert torrent_data.leechers == 2
+        assert torrent_data.downloads == 100
 
         # Check guessit data
-        assert guessit_data["title"] == "Test Anime"
-        assert guessit_data["season"] == 1
-        assert guessit_data["episode"] == 1
-        assert guessit_data["resolution"] == "1080p"
-        assert guessit_data["video_codec"] == "H.264"
-        assert guessit_data["audio_codec"] == "AAC"
-        assert guessit_data["container"] == "mkv"
-        assert guessit_data["release_group"] == "TestGroup"
+        assert guessit_data.title == "Test Anime"
+        assert guessit_data.season == 1
+        assert guessit_data.episode == 1
+        assert guessit_data.resolution == "1080p"
+        assert guessit_data.video_codec == "H.264"
+        assert guessit_data.audio_codec == "AAC"
+        assert guessit_data.container == "mkv"
+        assert guessit_data.release_group == "TestGroup"
 
 
 def test_parse_entry_guessit_failure(rss_fetcher):
@@ -154,14 +155,15 @@ def test_parse_entry_guessit_failure(rss_fetcher):
         torrent_data, guessit_data = rss_fetcher.parse_entry(entry)
 
         # Torrent data should still be parsed
-        assert torrent_data["infohash"] == "abcdef1234567890abcdef1234567890abcdef12"
+        assert torrent_data.infohash == "abcdef1234567890abcdef1234567890abcdef12"
         assert (
-            torrent_data["filename"]
+            torrent_data.filename
             == "[TestGroup] Test Anime S01E01 [1080p] [x264] [AAC].mkv"
         )
 
-        # Guessit data should be empty
-        assert guessit_data == {}
+        # Guessit data should be empty (all fields None/default)
+        assert guessit_data.title is None
+        assert guessit_data.episode is None
 
 
 def test_parse_entry_missing_fields(rss_fetcher):
@@ -189,18 +191,16 @@ def test_parse_entry_missing_fields(rss_fetcher):
 
             torrent_data, guessit_data = rss_fetcher.parse_entry(entry)
 
-            assert (
-                torrent_data["infohash"] == "abcdef1234567890abcdef1234567890abcdef12"
-            )
-            assert torrent_data["filename"] == "Test Torrent"
-            assert torrent_data["size_bytes"] == 0
-            assert torrent_data["nyaa_id"] is None
-            assert not torrent_data["trusted"]
-            assert torrent_data["remake"]
-            assert torrent_data["seeders"] == 0
-            assert torrent_data["leechers"] == 0
-            assert torrent_data["downloads"] == 0
-            assert torrent_data["pubdate"] == datetime(2025, 1, 1, 12, 0, 0)
+            assert torrent_data.infohash == "abcdef1234567890abcdef1234567890abcdef12"
+            assert torrent_data.filename == "Test Torrent"
+            assert torrent_data.size_bytes == 0
+            assert torrent_data.nyaa_id is None
+            assert not torrent_data.trusted
+            assert torrent_data.remake
+            assert torrent_data.seeders == 0
+            assert torrent_data.leechers == 0
+            assert torrent_data.downloads == 0
+            assert torrent_data.pubdate == datetime(2025, 1, 1, 12, 0, 0)
 
 
 def test_process_feed(rss_fetcher, mock_rss_response):
@@ -254,22 +254,38 @@ def test_process_feed_skip_invalid_entries(rss_fetcher):
 
         # Mock parse_entry to return appropriate data
         with patch.object(rss_fetcher, "parse_entry") as mock_parse:
+            from nyaastats.models import GuessitData, TorrentData
+
             mock_parse.side_effect = [
-                ({"infohash": "", "filename": ""}, {}),  # Invalid entry
                 (
-                    {
-                        "infohash": "abcdef1234567890abcdef1234567890abcdef12",
-                        "filename": "Valid Title",
-                        "pubdate": datetime(2025, 1, 1, 12, 0, 0),
-                        "size_bytes": 1000000,
-                        "nyaa_id": 123456,
-                        "trusted": False,
-                        "remake": False,
-                        "seeders": 10,
-                        "leechers": 2,
-                        "downloads": 100,
-                    },
-                    {},
+                    TorrentData(
+                        infohash="",
+                        filename="",
+                        pubdate=datetime(2025, 1, 1),
+                        size_bytes=0,
+                        nyaa_id=None,
+                        trusted=False,
+                        remake=False,
+                        seeders=0,
+                        leechers=0,
+                        downloads=0,
+                    ),
+                    GuessitData(),
+                ),  # Invalid entry
+                (
+                    TorrentData(
+                        infohash="abcdef1234567890abcdef1234567890abcdef12",
+                        filename="Valid Title",
+                        pubdate=datetime(2025, 1, 1, 12, 0, 0),
+                        size_bytes=1000000,
+                        nyaa_id=123456,
+                        trusted=False,
+                        remake=False,
+                        seeders=10,
+                        leechers=2,
+                        downloads=100,
+                    ),
+                    GuessitData(),
                 ),  # Valid entry
             ]
 
@@ -296,8 +312,6 @@ def test_process_feed_exception_handling(rss_fetcher):
 
             # Should handle exception and return 0
             assert processed == 0
-
-
 
 
 def test_parse_entry_with_pathlib_objects(rss_fetcher):
@@ -330,5 +344,5 @@ def test_parse_entry_with_pathlib_objects(rss_fetcher):
         torrent_data, guessit_data = rss_fetcher.parse_entry(entry)
 
         # Check that pathlib objects were converted to strings
-        assert guessit_data["container"] == "/path/to/file.mkv"
-        assert guessit_data["subtitles"] == ["/path/to/file.mkv", "en"]
+        assert guessit_data.container == "/path/to/file.mkv"
+        assert guessit_data.subtitles == ["/path/to/file.mkv", "en"]
