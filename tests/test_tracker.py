@@ -222,10 +222,14 @@ def test_update_stats_marks_dead(tracker_scraper):
     )
     tracker_scraper.db.insert_torrent(torrent_data, GuessitData())
 
-    # Insert 2 previous zero stats
+    # Remove the initial RSS stats and insert 2 previous zero stats
     zero_stats = StatsData(seeders=0, leechers=0, downloads=0)
+    with tracker_scraper.db.get_conn() as conn:
+        conn.execute("DELETE FROM stats WHERE infohash = ?", (infohash,))
+        conn.commit()
+
     for i in range(2):
-        timestamp = Instant.from_utc(2025, 1, 1, 12, i, 0)
+        timestamp = Instant.from_utc(2025, 1, 1, 11, i, 0)  # Use different hour to avoid conflict
         tracker_scraper.db.insert_stats(infohash, zero_stats, timestamp)
 
     # Update with another zero stat (should mark as dead)

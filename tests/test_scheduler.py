@@ -46,6 +46,11 @@ def test_get_due_torrents_recent_hourly(scheduler):
     )
     scheduler.db.insert_torrent(torrent_data, GuessitData())
 
+    # Delete the initial RSS stat and insert stats from 2 hours ago
+    with scheduler.db.get_conn() as conn:
+        conn.execute("DELETE FROM stats WHERE infohash = ?", (torrent_data.infohash,))
+        conn.commit()
+
     # Insert stats from 2 hours ago (should be due for hourly scraping)
     scheduler.db.insert_stats(
         torrent_data.infohash,
@@ -102,6 +107,11 @@ def test_get_due_torrents_four_hour_schedule(scheduler):
     )
     scheduler.db.insert_torrent(torrent_data, GuessitData())
 
+    # Delete the initial RSS stat and insert stats from 5 hours ago
+    with scheduler.db.get_conn() as conn:
+        conn.execute("DELETE FROM stats WHERE infohash = ?", (torrent_data.infohash,))
+        conn.commit()
+
     # Insert stats from 5 hours ago (should be due for 4-hour scraping)
     scheduler.db.insert_stats(
         torrent_data.infohash,
@@ -130,6 +140,11 @@ def test_get_due_torrents_daily_schedule(scheduler):
     )
     scheduler.db.insert_torrent(torrent_data, GuessitData())
 
+    # Delete the initial RSS stat and insert stats from 2 days ago
+    with scheduler.db.get_conn() as conn:
+        conn.execute("DELETE FROM stats WHERE infohash = ?", (torrent_data.infohash,))
+        conn.commit()
+
     # Insert stats from 2 days ago (should be due for daily scraping)
     scheduler.db.insert_stats(
         torrent_data.infohash,
@@ -157,6 +172,11 @@ def test_get_due_torrents_weekly_schedule(scheduler):
         downloads=50,
     )
     scheduler.db.insert_torrent(torrent_data, GuessitData())
+
+    # Delete the initial RSS stat and insert stats from 8 days ago
+    with scheduler.db.get_conn() as conn:
+        conn.execute("DELETE FROM stats WHERE infohash = ?", (torrent_data.infohash,))
+        conn.commit()
 
     # Insert stats from 8 days ago (should be due for weekly scraping)
     scheduler.db.insert_stats(
@@ -304,15 +324,13 @@ def test_get_metrics(scheduler):
 
 def test_get_torrent_scrape_schedule(scheduler):
     """Test getting scrape schedule for a specific torrent."""
-    # Use recent dates relative to real current time for this test
-    # since scheduler uses SQL 'now()' function
-    now = Instant.now()
+    # Use the same fixed time as the scheduler
 
-    # Insert a torrent in hourly schedule (1 hour ago from real now)
+    # Insert a torrent in hourly schedule (1 hour ago from fixed time)
     torrent_data = TorrentData(
         infohash="abcdef1234567890abcdef1234567890abcdef12",
         filename="test.mkv",
-        pubdate=now.add(hours=-1),  # 1 hour ago from real time
+        pubdate=Instant.from_utc(2025, 1, 1, 11, 0, 0),  # 1 hour ago
         size_bytes=1000000,
         nyaa_id=12345,
         trusted=False,
@@ -332,7 +350,7 @@ def test_get_torrent_scrape_schedule(scheduler):
     scheduler.db.insert_stats(
         torrent_data.infohash,
         StatsData(seeders=5, leechers=1, downloads=50),
-        now.add(hours=-1, minutes=-30),  # 1.5 hours ago from real time
+        Instant.from_utc(2025, 1, 1, 10, 30, 0),  # 1.5 hours ago from fixed time
     )
 
     schedule_info = scheduler.get_torrent_scrape_schedule(torrent_data.infohash)

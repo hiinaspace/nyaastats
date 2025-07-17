@@ -105,10 +105,25 @@ class Database:
         """Register adapters and converters for custom types."""
         # Register Instant adapter and converter
         def adapt_instant(instant: Instant) -> str:
+            # Use common ISO format that SQLite can understand and we can parse
             return instant.format_common_iso()
 
         def convert_instant(s: bytes) -> Instant:
-            return Instant.parse_common_iso(s.decode())
+            timestamp_str = s.decode()
+            # Handle different timestamp formats that SQLite might produce
+            try:
+                # Try common ISO format first (what we store)
+                return Instant.parse_common_iso(timestamp_str)
+            except ValueError:
+                # Handle SQLite's default CURRENT_TIMESTAMP format (YYYY-MM-DD HH:MM:SS)
+                if len(timestamp_str) == 19 and timestamp_str[4] == '-' and timestamp_str[7] == '-':
+                    # Parse YYYY-MM-DD HH:MM:SS format
+                    date_part, time_part = timestamp_str.split(' ')
+                    year, month, day = map(int, date_part.split('-'))
+                    hour, minute, second = map(int, time_part.split(':'))
+                    return Instant.from_utc(year, month, day, hour, minute, second)
+                else:
+                    raise ValueError(f"Cannot parse timestamp format: {timestamp_str}") from None
 
         # Register with sqlite3
         sqlite3.register_adapter(Instant, adapt_instant)

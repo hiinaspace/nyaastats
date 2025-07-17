@@ -40,6 +40,6 @@ def tracker_scraper(temp_db, mock_client, fixed_time):
 
 
 @pytest.fixture
-def scheduler(temp_db):
+def scheduler(temp_db, fixed_time):
     """Create scheduler instance."""
-    return Scheduler(temp_db, batch_size=10)
+    return Scheduler(temp_db, batch_size=10, now_func=lambda: fixed_time)

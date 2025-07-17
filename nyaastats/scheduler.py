@@ -1,5 +1,8 @@
 import logging
+from collections.abc import Callable
 from typing import Any
+
+from whenever import Instant
 
 from .database import Database
 
@@ -7,12 +10,21 @@ logger = logging.getLogger(__name__)
 
 
 class Scheduler:
-    def __init__(self, db: Database, batch_size: int = 40):
+    def __init__(
+        self,
+        db: Database,
+        batch_size: int = 40,
+        now_func: Callable[[], Instant] = Instant.now,
+    ):
         self.db = db
         self.batch_size = batch_size
+        self.now_func = now_func
 
     def get_due_torrents(self) -> list[str]:
         """Get torrents that are due for scraping based on time-decay algorithm."""
+        now = self.now_func()
+        now_julian = now.timestamp() / 86400.0 + 2440587.5  # Convert to julian day
+
         with self.db.get_conn() as conn:
             cursor = conn.execute(
                 """
@@ -28,28 +40,31 @@ class Scheduler:
                     s.last_scrape IS NULL
                     OR
                     CASE
-                      WHEN (julianday('now') - julianday(t.pubdate)) <= 2 THEN
-                        (julianday('now') - julianday(s.last_scrape)) * 24 >= 1
-                      WHEN (julianday('now') - julianday(t.pubdate)) <= 7 THEN
-                        (julianday('now') - julianday(s.last_scrape)) * 24 >= 4
-                      WHEN (julianday('now') - julianday(t.pubdate)) <= 30 THEN
-                        (julianday('now') - julianday(s.last_scrape)) >= 1
-                      WHEN (julianday('now') - julianday(t.pubdate)) <= 180 THEN
-                        (julianday('now') - julianday(s.last_scrape)) >= 7
+                      WHEN (:now - julianday(t.pubdate)) <= 2 THEN
+                        (:now - julianday(s.last_scrape)) * 24 >= 1
+                      WHEN (:now - julianday(t.pubdate)) <= 7 THEN
+                        (:now - julianday(s.last_scrape)) * 24 >= 4
+                      WHEN (:now - julianday(t.pubdate)) <= 30 THEN
+                        (:now - julianday(s.last_scrape)) >= 1
+                      WHEN (:now - julianday(t.pubdate)) <= 180 THEN
+                        (:now - julianday(s.last_scrape)) >= 7
                       ELSE
                         FALSE
                     END
                   )
                 ORDER BY s.last_scrape ASC NULLS FIRST
-                LIMIT ?
+                LIMIT :batch_size
                 """,
-                (self.batch_size,),
+                {"now": now_julian, "batch_size": self.batch_size},
             )
 
             return [row["infohash"] for row in cursor.fetchall()]
 
     def get_metrics(self) -> dict[str, int]:
         """Get current system metrics."""
+        now = self.now_func()
+        now_julian = now.timestamp() / 86400.0 + 2440587.5  # Convert to julian day
+
         with self.db.get_conn() as conn:
             metrics = {}
 
@@ -90,19 +105,20 @@ class Scheduler:
                     s.last_scrape IS NULL
                     OR
                     CASE
-                      WHEN (julianday('now') - julianday(t.pubdate)) <= 2 THEN
-                        (julianday('now') - julianday(s.last_scrape)) * 24 >= 1
-                      WHEN (julianday('now') - julianday(t.pubdate)) <= 7 THEN
-                        (julianday('now') - julianday(s.last_scrape)) * 24 >= 4
-                      WHEN (julianday('now') - julianday(t.pubdate)) <= 30 THEN
-                        (julianday('now') - julianday(s.last_scrape)) >= 1
-                      WHEN (julianday('now') - julianday(t.pubdate)) <= 180 THEN
-                        (julianday('now') - julianday(s.last_scrape)) >= 7
+                      WHEN (:now - julianday(t.pubdate)) <= 2 THEN
+                        (:now - julianday(s.last_scrape)) * 24 >= 1
+                      WHEN (:now - julianday(t.pubdate)) <= 7 THEN
+                        (:now - julianday(s.last_scrape)) * 24 >= 4
+                      WHEN (:now - julianday(t.pubdate)) <= 30 THEN
+                        (:now - julianday(s.last_scrape)) >= 1
+                      WHEN (:now - julianday(t.pubdate)) <= 180 THEN
+                        (:now - julianday(s.last_scrape)) >= 7
                       ELSE
                         FALSE
                     END
                   )
-                """
+                """,
+                {"now": now_julian},
             )
             metrics["queue_depth"] = cursor.fetchone()["count"]
 
@@ -114,8 +130,9 @@ class Scheduler:
             cursor = conn.execute(
                 """
                 SELECT COUNT(*) as count FROM stats
-                WHERE julianday('now') - julianday(timestamp) <= 1
-                """
+                WHERE :now - julianday(timestamp) <= 1
+                """,
+                {"now": now_julian},
             )
             metrics["stats_recent"] = cursor.fetchone()["count"]
 
@@ -123,6 +140,9 @@ class Scheduler:
 
     def get_torrent_scrape_schedule(self, infohash: str) -> dict[str, Any] | None:
         """Get scrape schedule information for a specific torrent."""
+        now = self.now_func()
+        now_julian = now.timestamp() / 86400.0 + 2440587.5  # Convert to julian day
+
         with self.db.get_conn() as conn:
             cursor = conn.execute(
                 """
@@ -131,25 +151,25 @@ class Scheduler:
                     t.pubdate,
                     t.status,
                     s.last_scrape,
-                    julianday('now') - julianday(t.pubdate) as age_days,
+                    :now - julianday(t.pubdate) as age_days,
                     CASE
                         WHEN s.last_scrape IS NULL THEN 'never_scraped'
-                        WHEN (julianday('now') - julianday(t.pubdate)) <= 2 THEN 'hourly'
-                        WHEN (julianday('now') - julianday(t.pubdate)) <= 7 THEN 'every_4_hours'
-                        WHEN (julianday('now') - julianday(t.pubdate)) <= 30 THEN 'daily'
-                        WHEN (julianday('now') - julianday(t.pubdate)) <= 180 THEN 'weekly'
+                        WHEN (:now - julianday(t.pubdate)) <= 2 THEN 'hourly'
+                        WHEN (:now - julianday(t.pubdate)) <= 7 THEN 'every_4_hours'
+                        WHEN (:now - julianday(t.pubdate)) <= 30 THEN 'daily'
+                        WHEN (:now - julianday(t.pubdate)) <= 180 THEN 'weekly'
                         ELSE 'never'
                     END as schedule_type,
                     CASE
                         WHEN s.last_scrape IS NULL THEN 1
-                        WHEN (julianday('now') - julianday(t.pubdate)) <= 2 THEN
-                            (julianday('now') - julianday(s.last_scrape)) * 24 >= 1
-                        WHEN (julianday('now') - julianday(t.pubdate)) <= 7 THEN
-                            (julianday('now') - julianday(s.last_scrape)) * 24 >= 4
-                        WHEN (julianday('now') - julianday(t.pubdate)) <= 30 THEN
-                            (julianday('now') - julianday(s.last_scrape)) >= 1
-                        WHEN (julianday('now') - julianday(t.pubdate)) <= 180 THEN
-                            (julianday('now') - julianday(s.last_scrape)) >= 7
+                        WHEN (:now - julianday(t.pubdate)) <= 2 THEN
+                            (:now - julianday(s.last_scrape)) * 24 >= 1
+                        WHEN (:now - julianday(t.pubdate)) <= 7 THEN
+                            (:now - julianday(s.last_scrape)) * 24 >= 4
+                        WHEN (:now - julianday(t.pubdate)) <= 30 THEN
+                            (:now - julianday(s.last_scrape)) >= 1
+                        WHEN (:now - julianday(t.pubdate)) <= 180 THEN
+                            (:now - julianday(s.last_scrape)) >= 7
                         ELSE
                             0
                     END as is_due
@@ -159,9 +179,9 @@ class Scheduler:
                     FROM stats
                     GROUP BY infohash
                 ) s ON t.infohash = s.infohash
-                WHERE t.infohash = ?
+                WHERE t.infohash = :infohash
                 """,
-                (infohash,),
+                {"now": now_julian, "infohash": infohash},
             )
 
             row = cursor.fetchone()
@@ -171,6 +191,9 @@ class Scheduler:
 
     def get_schedule_summary(self) -> dict[str, int]:
         """Get summary of torrents by schedule type."""
+        now = self.now_func()
+        now_julian = now.timestamp() / 86400.0 + 2440587.5  # Convert to julian day
+
         with self.db.get_conn() as conn:
             cursor = conn.execute(
                 """
@@ -178,10 +201,10 @@ class Scheduler:
                     CASE
                         WHEN t.status != 'active' THEN t.status
                         WHEN s.last_scrape IS NULL THEN 'never_scraped'
-                        WHEN (julianday('now') - julianday(t.pubdate)) <= 2 THEN 'hourly'
-                        WHEN (julianday('now') - julianday(t.pubdate)) <= 7 THEN 'every_4_hours'
-                        WHEN (julianday('now') - julianday(t.pubdate)) <= 30 THEN 'daily'
-                        WHEN (julianday('now') - julianday(t.pubdate)) <= 180 THEN 'weekly'
+                        WHEN (:now - julianday(t.pubdate)) <= 2 THEN 'hourly'
+                        WHEN (:now - julianday(t.pubdate)) <= 7 THEN 'every_4_hours'
+                        WHEN (:now - julianday(t.pubdate)) <= 30 THEN 'daily'
+                        WHEN (:now - julianday(t.pubdate)) <= 180 THEN 'weekly'
                         ELSE 'never'
                     END as schedule_type,
                     COUNT(*) as count
@@ -192,7 +215,8 @@ class Scheduler:
                     GROUP BY infohash
                 ) s ON t.infohash = s.infohash
                 GROUP BY schedule_type
-                """
+                """,
+                {"now": now_julian},
             )
 
             return {row["schedule_type"]: row["count"] for row in cursor.fetchall()}

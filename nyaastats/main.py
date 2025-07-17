@@ -43,7 +43,7 @@ class NyaaTracker:
         self.tracker = TrackerScraper(
             self.db, self.tracker_client, settings.tracker_url, now_func
         )
-        self.scheduler = Scheduler(self.db, settings.scrape_batch_size)
+        self.scheduler = Scheduler(self.db, settings.scrape_batch_size, now_func)
         self.running = True
 
         # Track last RSS fetch
