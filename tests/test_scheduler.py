@@ -247,11 +247,11 @@ def test_get_due_torrents_inactive_status(scheduler):
     assert torrent_data.infohash not in due_torrents
 
 
-def test_get_due_torrents_batch_size(scheduler):
-    """Test that batch size is respected."""
-    # Insert more torrents than batch size
+def test_get_due_torrents_no_batch_limit(scheduler):
+    """Test that all due torrents are returned without batch size limitation."""
+    # Insert multiple torrents to verify no artificial limits
     infohashes = []
-    for i in range(15):  # More than batch_size of 10
+    for i in range(15):  # All should be returned
         infohash = f"abcdef1234567890abcdef1234567890abcdef{i:02d}"
         infohashes.append(infohash)
 
@@ -276,8 +276,8 @@ def test_get_due_torrents_batch_size(scheduler):
 
     due_torrents = scheduler.get_due_torrents()
 
-    # Should be limited to batch size
-    assert len(due_torrents) == 10
+    # Should return all due torrents without artificial batch limit
+    assert len(due_torrents) == 15
 
     # Should all be from our inserted torrents
     for infohash in due_torrents:

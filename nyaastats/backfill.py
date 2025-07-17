@@ -16,7 +16,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def backfill(max_pages: int = 100, custom_url: str | None = None, settings: Settings | None = None) -> None:
+def backfill(
+    max_pages: int = 100,
+    custom_url: str | None = None,
+    settings: Settings | None = None,
+) -> None:
     """Perform historical backfill from HTML browse pages."""
     if settings is None:
         settings = Settings()

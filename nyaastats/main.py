@@ -74,15 +74,48 @@ class NyaaTracker:
             )
 
             if due_torrents:
-                logger.info(f"Scraping {len(due_torrents)} torrents")
-                try:
-                    # Scrape in batches
-                    results = self.tracker.scrape_batch(due_torrents)
-                    # Update stats
-                    self.tracker.update_batch_stats(results)
-                    logger.info(f"Scrape completed for {len(results)} torrents")
-                except Exception as e:
-                    logger.error(f"Scraping failed: {e}")
+                total_torrents = len(due_torrents)
+                batch_size = self.settings.scrape_batch_size
+                logger.info(
+                    f"Scraping {total_torrents} torrents in batches of {batch_size}"
+                )
+
+                # Process torrents in batches
+                total_processed = 0
+                for i in range(0, total_torrents, batch_size):
+                    batch = due_torrents[i : i + batch_size]
+                    batch_num = (i // batch_size) + 1
+                    total_batches = (total_torrents + batch_size - 1) // batch_size
+
+                    logger.info(
+                        f"Processing batch {batch_num}/{total_batches} ({len(batch)} torrents)"
+                    )
+
+                    try:
+                        # Scrape current batch
+                        results = self.tracker.scrape_batch(batch)
+                        # Update stats
+                        self.tracker.update_batch_stats(results)
+                        total_processed += len(results)
+                        logger.info(
+                            f"Batch {batch_num} completed, processed {len(results)} torrents"
+                        )
+
+                        # Add delay between batches to be nice to the tracker
+                        if (
+                            i + batch_size < total_torrents
+                        ):  # Don't sleep after the last batch
+                            import time
+
+                            time.sleep(2)  # 2 second delay between batches
+
+                    except Exception as e:
+                        logger.error(f"Scraping failed for batch {batch_num}: {e}")
+                        continue  # Continue with next batch
+
+                logger.info(
+                    f"All batches completed. Total processed: {total_processed}/{total_torrents} torrents"
+                )
             else:
                 logger.info("No torrents due for scraping")
 

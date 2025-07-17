@@ -58,12 +58,10 @@ class Scheduler:
                     END
                   )
                 ORDER BY s.last_scrape ASC NULLS FIRST
-                LIMIT :batch_size
                 """,
                 {
                     "now": now_julian,
                     "window": window_days,
-                    "batch_size": self.batch_size,
                 },
             )
 
