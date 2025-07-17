@@ -202,7 +202,7 @@ class Database:
     ) -> None:
         """Insert statistics for a torrent."""
         if timestamp is None:
-            timestamp = self.now_func()
+            timestamp = self.now_func().round()
 
         with self.get_conn() as conn:
             conn.execute(

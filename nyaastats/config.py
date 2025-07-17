@@ -25,7 +25,7 @@ class Settings(BaseSettings):
         description="BitTorrent tracker scrape URL",
     )
     scrape_batch_size: int = Field(
-        default=40, description="Number of torrents to scrape in one batch"
+        default=20, description="Number of torrents to scrape in one batch"
     )
     scrape_interval_seconds: int = Field(
         default=60, description="Interval between scrape operations in seconds"

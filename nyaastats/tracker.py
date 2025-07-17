@@ -1,6 +1,5 @@
 import logging
 from collections.abc import Callable
-from urllib.parse import quote
 
 import bencodepy
 import httpx
@@ -35,9 +34,17 @@ class TrackerScraper:
         valid_infohashes = []
         for infohash in infohashes:
             try:
-                # Convert hex to bytes then URL encode
-                info_hash_bytes = bytes.fromhex(infohash)
-                encoded = quote(info_hash_bytes, safe="")
+                # Validate infohash format (must be a valid hex string)
+                # This also indirectly checks if it has an even number of characters
+                bytes.fromhex(infohash)
+
+                # Manual URI encoding: uppercase each hex octet and prepend with '%'
+                # Example: "abcdef01" becomes "%AB%CD%EF%01"
+                encoded = "".join(
+                    f"%{infohash[i : i + 2].upper()}"
+                    for i in range(0, len(infohash), 2)
+                )
+
                 params.append(f"info_hash={encoded}")
                 valid_infohashes.append(infohash)
             except ValueError as e:
@@ -86,7 +93,7 @@ class TrackerScraper:
 
     def update_stats(self, infohash: str, stats: StatsData) -> None:
         """Update stats for a single infohash."""
-        timestamp = self.now_func()
+        timestamp = self.now_func().round()
 
         # Insert the stats
         self.db.insert_stats(infohash, stats, timestamp)
