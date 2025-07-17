@@ -117,12 +117,23 @@ class NyaaTracker:
                 loop_duration = time.time() - loop_start
                 sleep_time = max(0, settings.scrape_interval_seconds - loop_duration)
 
+                # Sleep in small intervals to allow responsive signal handling
                 if sleep_time > 0:
-                    time.sleep(sleep_time)
+                    end_time = time.time() + sleep_time
+                    while time.time() < end_time and self.running:
+                        # Sleep in 0.1 second intervals to check self.running frequently
+                        remaining = min(0.1, end_time - time.time())
+                        if remaining > 0:
+                            time.sleep(remaining)
 
             except Exception as e:
                 logger.error(f"Error in main loop: {e}", exc_info=True)
-                time.sleep(settings.scrape_interval_seconds)  # Continue after error
+                # Sleep in small intervals after error to allow responsive signal handling
+                end_time = time.time() + settings.scrape_interval_seconds
+                while time.time() < end_time and self.running:
+                    remaining = min(0.1, end_time - time.time())
+                    if remaining > 0:
+                        time.sleep(remaining)
 
         logger.info("Shutting down daemon")
         self._cleanup()
@@ -168,10 +179,10 @@ def main() -> None:
         tracker.run()
     except KeyboardInterrupt:
         logger.info("Received keyboard interrupt, exiting...")
-        sys.exit(0)
     except Exception as e:
         logger.error(f"Fatal error: {e}", exc_info=True)
         sys.exit(1)
+    sys.exit(0)
 
 
 if __name__ == "__main__":
