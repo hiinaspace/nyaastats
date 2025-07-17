@@ -96,8 +96,26 @@ class HtmlScraper:
 
         try:
             # Extract name and nyaa_id from the view link
+            # Skip comment links and find the main torrent link
             name_cell = cells[1]
-            view_link = name_cell.find("a", href=re.compile(r"/view/\d+"))
+            view_link = None
+
+            # Find all links with /view/\d+ pattern
+            all_view_links = name_cell.find_all("a", href=re.compile(r"/view/\d+"))
+
+            # Filter out comment links (those with #comments or class="comments")
+            for link in all_view_links:
+                href = link.get("href", "")
+                classes = link.get("class", [])
+
+                # Skip if it's a comment link
+                if "#comments" in href or "comments" in classes:
+                    continue
+
+                # This is the main torrent link
+                view_link = link
+                break
+
             if not view_link:
                 logger.warning("No view link found in name cell")
                 return None

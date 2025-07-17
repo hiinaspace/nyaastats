@@ -57,13 +57,13 @@ def test_parse_specific_torrent(html_scraper, example_html):
     # Looking for the first torrent in the example HTML
     torrent_data = None
     for result in results:
-        if result.nyaa_id == 1994292:  # First torrent ID from example
+        if result.nyaa_id == 1993369:  # First torrent ID from example
             torrent_data = result
             break
 
     assert torrent_data is not None
-    assert "Bullet/Bullet" in torrent_data.filename
-    assert torrent_data.infohash == "81d19980b33b96ab49dae00e5d75539c7b300e85"
+    assert "Kijin Gentoushou" in torrent_data.filename
+    assert torrent_data.infohash == "2481b33774f420c0387fe6c7d52de66a05afaf12"
     assert torrent_data.trusted  # success class
     assert not torrent_data.remake
 
@@ -181,6 +181,24 @@ def test_process_page_existing_torrents(html_scraper, example_html):
 
     # Check that insert_torrent was not called
     assert not html_scraper.db.insert_torrent.called
+
+
+def test_parse_torrent_with_comments(html_scraper, example_html):
+    """Test parsing torrents that have comment counts."""
+    results = html_scraper.parse_html_page(example_html)
+
+    # Find a torrent with comments (we know 1993179 has 7 comments)
+    torrent_data = None
+    for result in results:
+        if result.nyaa_id == 1993179:
+            torrent_data = result
+            break
+
+    assert torrent_data is not None
+    # Should have the actual torrent filename, not "7 comments"
+    assert "[Some-Stuffs] City the Animation 01" in torrent_data.filename
+    assert torrent_data.filename != "7 comments"  # Should not be comment text
+    assert torrent_data.infohash  # Should have valid infohash
 
 
 def test_parse_table_row_trusted_remake_status(html_scraper, example_html):
