@@ -32,7 +32,6 @@ def test_database_schema(temp_db):
             "trusted": "BOOLEAN",
             "remake": "BOOLEAN",
             "status": "TEXT",
-            "created_at": "TEXT",
             "guessit_data": "TEXT",
         }
 

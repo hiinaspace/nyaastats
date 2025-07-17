@@ -40,7 +40,6 @@ CREATE TABLE torrents (
     trusted BOOLEAN,                    -- Trusted uploader flag
     remake BOOLEAN,                     -- Remake flag
     status TEXT DEFAULT 'active',       -- 'active', 'dead', 'guessit_failed'
-    created_at TEXT,
 
     -- Guessit metadata stored as JSON
     guessit_data TEXT                   -- JSON object containing all guessit fields

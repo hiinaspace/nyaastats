@@ -21,7 +21,6 @@ CREATE TABLE IF NOT EXISTS torrents (
     trusted BOOLEAN DEFAULT 0,
     remake BOOLEAN DEFAULT 0,
     status TEXT DEFAULT 'active',
-    created_at TEXT,
 
     -- Guessit data as JSON
     guessit_data TEXT
