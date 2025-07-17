@@ -29,6 +29,9 @@ uv run ruff check --fix .
 
 # Format code
 uv run ruff format .
+
+# run static typechecker (in beta, so may crash/have false positives)
+uvx ty check
 ```
 
 ### Running the Application
