@@ -11,7 +11,7 @@
 **Key Features**:
 - **Front page**: Compact weekly ranking bump chart with river width encoding download volume
 - **Per-show pages**: Daily download time series with episode breakdowns and cumulative stats
-- **MVP Scope**: Fall 2025 season only (first complete data season)
+- **MVP Scope**: Fall 2025 and Winter 2026 seasons (first complete data seasons)
 
 ## 2. System Architecture
 
@@ -81,7 +81,7 @@
 ### 3.2 ETL Processing Steps
 
 #### Step 1: AniList Query
-Query AniList GraphQL API for Fall 2025 anime (airing/aired between Oct-Dec 2025):
+Query AniList GraphQL API for Fall 2025 and Winter 2026 anime (example query for Fall 2025 shown below):
 
 ```graphql
 query {
@@ -122,7 +122,7 @@ Exclude torrents that complicate attribution:
 - **Batch torrents**: Skip if guessit returns `episode` as list/range (e.g., `[1, 2, 3]` or `"1-12"`)
 - **v2 torrents**: Check filename for "v2" patterns (BitTorrent v2 protocol causes double-counting)
 - **Failed parsing**: Skip torrents with `status = 'guessit_failed'`
-- **Date range**: Only process torrents with `pubdate >= 2025-10-01` (Fall season start)
+- **Date range**: Only process torrents with `pubdate >= 2025-10-01` (covers Fall 2025 and Winter 2026 seasons)
 
 #### Step 3: Fuzzy Matching (Torrent Title → AniList ID)
 
@@ -176,6 +176,8 @@ for infohash in matched_torrents:
         if delta > 0:  # Only positive deltas (downloads increase monotonically)
             yield (infohash, stats[i].timestamp, delta)
 ```
+
+**Implementation Note**: The pseudocode above shows the logical flow, but in practice most of the ETL can be implemented more efficiently using SQL queries directly in SQLite, or using DuckDB/Polars for higher-level dataframe operations. Window functions (e.g., `LAG()` for calculating deltas) and group-by aggregations will be faster and more concise than Python loops. At this data scale performance won't matter much, but SQL/DuckDB/Polars will result in cleaner code.
 
 **Aggregation**: Sum deltas across all torrents for same `(anilist_id, episode)` pair.
 
@@ -331,7 +333,7 @@ class WeeklyRanking:
 ### 5.2 Front Page (`/`)
 
 **Bump Chart Specification**:
-- **Y-axis (vertical)**: Time (calendar weeks, top = earliest, bottom = latest)
+- **Y-axis (vertical)**: Time (calendar weeks, top = latest, bottom = earliest)
 - **X-axis (horizontal)**: Rank (1 = leftmost/most prominent)
 - **Lines**: Show rank movement week-over-week, colored by show
 - **River width**: Line thickness scales linearly with download count
@@ -472,7 +474,7 @@ dependencies = [
 ### Phase 6: Deployment
 - [ ] CI/CD for ETL (weekly runs)
 - [ ] Static site deployment
-- [ ] Production testing with Fall 2025 data
+- [ ] Production testing with Fall 2025 and Winter 2026 data
 
 ## 9. Open Questions & Research Items
 
@@ -486,7 +488,7 @@ dependencies = [
    - Missing episode numbers
    - OVA labeling
 
-3. **Fuzzy Match Threshold**: What score (0-100) provides good precision/recall? Requires manual inspection of ~100 Fall 2025 shows.
+3. **Fuzzy Match Threshold**: What score (0-100) provides good precision/recall? Requires manual inspection of ~100 shows per season (Fall 2025, Winter 2026).
 
 4. **Post-Airing Cutoff**: How many weeks after final episode should data collection stop? 4 weeks? 6 weeks? Based on diminishing download activity.
 
@@ -506,7 +508,7 @@ dependencies = [
 
 - **ETL Success Rate**: >90% of torrents successfully matched to AniList IDs
 - **False Positive Rate**: <5% incorrect matches (manual inspection)
-- **Data Completeness**: All Fall 2025 shows with >1000 downloads represented
+- **Data Completeness**: All Fall 2025 and Winter 2026 shows with >1000 downloads represented
 - **Website Performance**: Front page loads in <2s, show pages in <1s (on good connection)
 - **Mobile Usability**: Bump chart readable on mobile viewport without horizontal scroll
 
