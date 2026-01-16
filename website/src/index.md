@@ -21,7 +21,7 @@ display(html`<p>${rankings.weeks.length} weeks of data</p>`);
 ```
 
 ```js
-// Prepare data for bump chart
+// Prepare data for bump chart with strokeWidth channel
 const bumpData = rankings.weeks.flatMap(week =>
   week.rankings.map(r => ({
     week: week.week,
@@ -29,35 +29,35 @@ const bumpData = rankings.weeks.flatMap(week =>
     rank: r.rank,
     downloads: r.downloads,
     title: r.title,
-    title_romaji: r.title_romaji
+    title_romaji: r.title_romaji,
+    // Pre-calculate stroke width for line thickness
+    strokeWidth: Math.sqrt(r.downloads) / 20
   }))
 );
 ```
 
 ```js
 // Bump chart visualization
-// TODO: Implement river-width bump chart
-// For now, show a simple line chart with rank over time
+// Proper bump chart: X-axis = time (weeks), Y-axis = rank (reversed, rank 1 at top)
 
 import * as Plot from "@observablehq/plot";
 
 display(Plot.plot({
   width: 1200,
   height: 800,
-  marginLeft: 200,
-  marginRight: 150,
+  marginLeft: 60,
+  marginRight: 200,
 
-  y: {
+  x: {
     label: "Week →",
-    reverse: false, // Latest at top per design doc
     domain: rankings.weeks.map(w => w.week),
     tickFormat: d => d
   },
 
-  x: {
+  y: {
     label: "Rank",
     domain: [1, 20],
-    reverse: false // Rank 1 at left
+    reverse: true // Rank 1 at top
   },
 
   color: {
@@ -69,18 +69,18 @@ display(Plot.plot({
   marks: [
     // Lines connecting ranks week-over-week
     Plot.line(bumpData, {
-      x: "rank",
-      y: "week",
+      x: "week",
+      y: "rank",
       stroke: "title",
-      strokeWidth: d => Math.sqrt(d.downloads) / 20, // Scale by downloads
+      strokeWidth: "strokeWidth", // Use pre-calculated strokeWidth channel
       curve: "catmull-rom",
       tip: true
     }),
 
     // Points at each week
     Plot.dot(bumpData, {
-      x: "rank",
-      y: "week",
+      x: "week",
+      y: "rank",
       fill: "title",
       r: 4,
       tip: {
@@ -93,8 +93,8 @@ display(Plot.plot({
       }
     }),
 
-    // Rank axis
-    Plot.ruleX([1, 5, 10, 15, 20], {stroke: "#333", strokeDasharray: "2,2"})
+    // Rank gridlines
+    Plot.ruleY([1, 5, 10, 15, 20], {stroke: "#333", strokeDasharray: "2,2"})
   ]
 }));
 ```

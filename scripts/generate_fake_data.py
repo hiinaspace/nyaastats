@@ -92,7 +92,15 @@ def generate_guessit_data(show_title: str, episode: int, group: str, resolution:
     # Split title into base title and season if present
     title_parts = show_title.rsplit(" S", 1)
     base_title = title_parts[0]
-    season = int(title_parts[1]) if len(title_parts) > 1 else 1
+
+    # Extract season number with error handling
+    season = 1
+    if len(title_parts) > 1:
+        try:
+            season = int(title_parts[1])
+        except (ValueError, TypeError):
+            # If season extraction fails, default to 1
+            season = 1
 
     return {
         "title": base_title,
@@ -250,14 +258,14 @@ def generate_show_data(
                     sample_interval_hours=24,
                 )
 
-                for timestamp, cumulative_downloads in download_curve:
-                    # Seeders and leechers decay over time too
-                    days_since_release = (timestamp - torrent_pubdate).in_seconds() / 86400
-                    seeders = max(5, int(500 * (0.95 ** days_since_release)) + random.randint(-10, 10))
-                    leechers = max(0, int(50 * (0.90 ** days_since_release)) + random.randint(-5, 5))
+                # Batch insert all stats for this torrent
+                with db.get_conn() as conn:
+                    for timestamp, cumulative_downloads in download_curve:
+                        # Seeders and leechers decay over time too
+                        days_since_release = (timestamp - torrent_pubdate).in_seconds() / 86400
+                        seeders = max(5, int(500 * (0.95 ** days_since_release)) + random.randint(-10, 10))
+                        leechers = max(0, int(50 * (0.90 ** days_since_release)) + random.randint(-5, 5))
 
-                    # Insert stats using the database method directly with SQL
-                    with db.get_conn() as conn:
                         conn.execute(
                             """
                             INSERT OR REPLACE INTO stats (infohash, timestamp, seeders, leechers, downloads)
@@ -265,7 +273,8 @@ def generate_show_data(
                             """,
                             (infohash, timestamp, seeders, leechers, cumulative_downloads),
                         )
-                        conn.commit()
+                    # Commit once per torrent instead of once per stat entry
+                    conn.commit()
 
 
 def generate_fake_database(db_path: str, verbose: bool = False, quick: bool = False):

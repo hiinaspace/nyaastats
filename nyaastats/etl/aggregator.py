@@ -91,32 +91,48 @@ class DownloadAggregator:
         # Parse guessit JSON and add episode/title columns
         import json
 
-        def extract_json_field(guessit_json: str, field: str):
+        def extract_title(guessit_json: str) -> str | None:
+            """Extract title from guessit JSON."""
             try:
                 data = json.loads(guessit_json)
-                return data.get(field)
-            except:
+                return data.get("title")
+            except Exception:
                 return None
 
-        df = df.with_columns(
-            [
-                pl.col("guessit_data")
-                .map_elements(lambda x: extract_json_field(x, "title"), return_dtype=pl.Utf8)
-                .alias("title"),
-                pl.col("guessit_data")
-                .map_elements(lambda x: extract_json_field(x, "episode"), return_dtype=pl.Int64)
-                .alias("episode"),
-            ]
-        )
+        def extract_episode(guessit_json: str) -> int | None:
+            """Extract episode number from guessit JSON.
 
-        # Filter out batch torrents (episode is list or null)
-        df = df.filter(
-            pl.col("episode").is_not_null()
-            & (pl.col("episode").cast(pl.Utf8).str.contains(r"^\d+$"))
-        )
+            Returns None for batch torrents (episode as list) or invalid data.
+            """
+            try:
+                data = json.loads(guessit_json)
+                episode = data.get("episode")
 
-        # Convert episode to integer
-        df = df.with_columns(pl.col("episode").cast(pl.Int32))
+                # Filter out batch torrents (episode as list)
+                if isinstance(episode, (list, tuple)):
+                    return None
+                elif episode is not None:
+                    # Convert to int if it's not already
+                    try:
+                        return int(episode)
+                    except (ValueError, TypeError):
+                        return None
+                return None
+            except Exception:
+                return None
+
+        # Extract title and episode from guessit JSON
+        df = df.with_columns([
+            pl.col("guessit_data")
+            .map_elements(extract_title, return_dtype=pl.Utf8)
+            .alias("title"),
+            pl.col("guessit_data")
+            .map_elements(extract_episode, return_dtype=pl.Int64)
+            .alias("episode"),
+        ])
+
+        # Filter out invalid episodes (nulls and batches already handled in parse_guessit)
+        df = df.filter(pl.col("episode").is_not_null())
 
         logger.info(f"After filtering batches: {len(df)} torrents")
 
@@ -335,11 +351,12 @@ class DownloadAggregator:
             DataFrame with weekly rankings
         """
         # Extract ISO week from date
+        # Use %G-%V for true ISO week (week 1 = first week with Thursday of new year)
         daily_stats = daily_stats.with_columns(
             [
                 pl.col("date")
                 .cast(pl.Datetime("us"))
-                .dt.strftime("%Y-W%W")
+                .dt.strftime("%G-W%V")
                 .alias("iso_week"),
             ]
         )
