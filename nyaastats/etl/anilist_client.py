@@ -37,12 +37,13 @@ class AniListClient:
         self.api_url = api_url
         self._transport = None
         self._client = None
+        self._session = None
 
     async def __aenter__(self):
         """Async context manager entry."""
         self._transport = AIOHTTPTransport(url=self.api_url)
-        self._client = Client(transport=self._transport, fetch_schema_from_transport=True)
-        await self._client.__aenter__()
+        self._client = Client(transport=self._transport, fetch_schema_from_transport=False)
+        self._session = await self._client.__aenter__()
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
@@ -107,7 +108,7 @@ class AniListClient:
                 "perPage": per_page,
             }
 
-            result = await self._client.execute(query, variable_values=variables)
+            result = await self._session.execute(query, variable_values=variables)
             page_data = result["Page"]
 
             # Parse shows from this page
