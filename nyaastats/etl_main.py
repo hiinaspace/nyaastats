@@ -8,8 +8,8 @@ from pathlib import Path
 
 import polars as pl
 
-from nyaastats.etl.anilist_client import fetch_all_seasons
 from nyaastats.etl.aggregator import DownloadAggregator
+from nyaastats.etl.anilist_client import fetch_all_seasons
 from nyaastats.etl.config import MVP_SEASONS
 from nyaastats.etl.exporter import DataExporter
 from nyaastats.etl.fuzzy_matcher import FuzzyMatcher
@@ -135,6 +135,7 @@ async def run_etl_pipeline(
 
         exporter.export_episode_stats(daily_stats)
         exporter.export_weekly_rankings(weekly_rankings)
+        exporter.export_shows_metadata(seasons_data, weekly_rankings)
         exporter.write_match_report(matched, unmatched)
 
         logger.info("\n" + "=" * 80)
@@ -143,7 +144,7 @@ async def run_etl_pipeline(
         logger.info(f"Outputs written to: {output_dir}")
         logger.info(f"  - episodes.parquet: {len(daily_stats)} rows")
         logger.info(f"  - rankings.json: {weekly_rankings['week'].n_unique()} weeks")
-        logger.info(f"  - match_report.txt: Match statistics")
+        logger.info("  - match_report.txt: Match statistics")
     finally:
         # Ensure database connection is always closed
         aggregator.close()
@@ -196,7 +197,7 @@ def main():
                 use_mock_anilist=args.mock_anilist,
             )
         )
-    except Exception as e:
+    except Exception:
         logger.exception("ETL pipeline failed with error:")
         sys.exit(1)
 

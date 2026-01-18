@@ -98,11 +98,13 @@ function renderTreemap(weekData, weekIndex) {
     .attr("offset", "100%")
     .attr("stop-color", "rgba(0,0,0,0.85)");
 
-  // Add rectangles
-  const leaf = svg.selectAll("g")
+  // Add rectangles (wrapped in links to show pages)
+  const leaf = svg.selectAll("a")
     .data(root.leaves())
-    .join("g")
-    .attr("transform", d => `translate(${d.x0},${d.y0})`);
+    .join("a")
+    .attr("href", d => `/show/${d.data.anilist_id}`)
+    .attr("transform", d => `translate(${d.x0},${d.y0})`)
+    .style("cursor", "pointer");
 
   // Define clip paths for cells
   leaf.append("clipPath")

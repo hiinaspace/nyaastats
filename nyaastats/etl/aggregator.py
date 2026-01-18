@@ -225,7 +225,10 @@ class DownloadAggregator:
         deltas_df: pl.DataFrame,
         shows: list[AniListShow],
     ) -> pl.DataFrame:
-        """Aggregate downloads by (anilist_id, episode, date).
+        """Aggregate downloads by (anilist_id, episode, time_bucket).
+
+        Uses hourly resolution for first 7 days, daily resolution after.
+        Time is aligned to each episode's first torrent timestamp.
 
         Args:
             torrents_df: Filtered torrents with metadata
@@ -233,7 +236,7 @@ class DownloadAggregator:
             shows: List of AniList shows for metadata
 
         Returns:
-            DataFrame with daily episode stats
+            DataFrame with episode stats at variable resolution
         """
         # Join torrents with deltas
         combined = deltas_df.join(
@@ -242,70 +245,84 @@ class DownloadAggregator:
             how="inner",
         )
 
-        # Extract date from timestamp (handle ISO format with timezone)
+        # Parse timestamp
         combined = combined.with_columns(
             [
                 pl.col("timestamp").str.to_datetime(format="%+", time_zone="UTC").alias("datetime"),
             ]
         )
 
-        combined = combined.with_columns(
-            [
-                pl.col("datetime").dt.date().alias("date"),
-            ]
-        )
-
-        # Aggregate by (anilist_id, episode, date)
-        daily_stats = (
-            combined.group_by(["anilist_id", "episode", "date"])
-            .agg(
-                [
-                    pl.col("downloads_delta").sum().alias("downloads_daily"),
-                ]
-            )
-            .sort(["anilist_id", "episode", "date"])
-        )
-
-        # Calculate cumulative downloads per episode
-        daily_stats = daily_stats.with_columns(
-            pl.col("downloads_daily")
-            .cum_sum()
-            .over(["anilist_id", "episode"])
-            .alias("downloads_cumulative")
-        )
-
-        # Calculate days since first torrent per episode
-        # First, find the first pubdate per episode
+        # Find the first torrent timestamp per episode
         first_torrent = (
             torrents_df.group_by(["anilist_id", "episode"])
             .agg(pl.col("pubdate").min().alias("first_torrent_timestamp"))
         )
 
-        daily_stats = daily_stats.join(
-            first_torrent, on=["anilist_id", "episode"], how="left"
+        # Parse first_torrent_timestamp
+        first_torrent = first_torrent.with_columns(
+            pl.col("first_torrent_timestamp")
+            .str.to_datetime(format="%+", time_zone="UTC")
+            .alias("first_datetime")
         )
 
-        # Parse first_torrent_timestamp and calculate days difference
-        daily_stats = daily_stats.with_columns(
-            [
-                pl.col("first_torrent_timestamp")
-                .str.to_datetime(format="%+", time_zone="UTC")
-                .alias("first_datetime"),
-            ]
+        combined = combined.join(
+            first_torrent.select(["anilist_id", "episode", "first_datetime"]),
+            on=["anilist_id", "episode"],
+            how="left"
         )
 
-        daily_stats = daily_stats.with_columns(
-            [
-                (
-                    (
-                        pl.col("date").cast(pl.Datetime("us", "UTC"))
-                        - pl.col("first_datetime")
-                    )
-                    .dt.total_seconds()
-                    / 86400
-                ).alias("days_since_first_torrent")
-            ]
+        # Calculate hours since first torrent (exact)
+        combined = combined.with_columns(
+            (
+                (pl.col("datetime") - pl.col("first_datetime"))
+                .dt.total_seconds()
+                / 3600
+            ).alias("hours_since_first_torrent")
         )
+
+        # Create time buckets: hourly for first 7 days (168 hours), daily after
+        combined = combined.with_columns(
+            pl.when(pl.col("hours_since_first_torrent") <= 168)
+            .then(pl.col("hours_since_first_torrent").floor())  # hourly bucket
+            .otherwise(
+                # After 7 days, use 24-hour buckets aligned to first torrent
+                168 + ((pl.col("hours_since_first_torrent") - 168) / 24).floor() * 24
+            )
+            .alias("time_bucket_hours")
+        )
+
+        # Aggregate by (anilist_id, episode, time_bucket)
+        stats = (
+            combined.group_by(["anilist_id", "episode", "time_bucket_hours", "first_datetime"])
+            .agg(
+                [
+                    pl.col("downloads_delta").sum().alias("downloads_period"),
+                    pl.col("datetime").min().alias("period_start"),
+                ]
+            )
+            .sort(["anilist_id", "episode", "time_bucket_hours"])
+        )
+
+        # Calculate cumulative downloads per episode
+        stats = stats.with_columns(
+            pl.col("downloads_period")
+            .cum_sum()
+            .over(["anilist_id", "episode"])
+            .alias("downloads_cumulative")
+        )
+
+        # Convert time_bucket_hours to days for output
+        stats = stats.with_columns(
+            (pl.col("time_bucket_hours") / 24).alias("days_since_first_torrent")
+        )
+
+        # Also keep the date for compatibility with weekly rankings
+        stats = stats.with_columns(
+            pl.col("period_start").dt.date().alias("date")
+        )
+
+        # Rename downloads_period to downloads_daily for compatibility
+        stats = stats.rename({"downloads_period": "downloads_daily"})
 
         # Add show titles and cover images
         show_lookup = {
@@ -325,7 +342,7 @@ class DownloadAggregator:
             "cover_image_color": None,
         }
 
-        daily_stats = daily_stats.with_columns(
+        stats = stats.with_columns(
             [
                 pl.col("anilist_id")
                 .map_elements(
@@ -355,11 +372,11 @@ class DownloadAggregator:
         )
 
         logger.info(
-            f"Aggregated {len(daily_stats)} daily episode stats "
-            f"for {daily_stats['anilist_id'].n_unique()} shows"
+            f"Aggregated {len(stats)} episode stats "
+            f"for {stats['anilist_id'].n_unique()} shows"
         )
 
-        return daily_stats
+        return stats
 
     def calculate_weekly_rankings(
         self, daily_stats: pl.DataFrame, shows: list[AniListShow]

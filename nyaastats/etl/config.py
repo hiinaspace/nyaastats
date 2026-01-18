@@ -1,6 +1,7 @@
 """Configuration for ETL pipeline."""
 
 from dataclasses import dataclass
+
 from whenever import Instant
 
 

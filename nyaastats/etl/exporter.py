@@ -24,15 +24,16 @@ class DataExporter:
     def export_episode_stats(
         self, daily_stats: pl.DataFrame, filename: str = "episodes.parquet"
     ):
-        """Export daily episode stats to Parquet.
+        """Export episode stats to Parquet.
 
         Args:
-            daily_stats: DataFrame with daily episode statistics
+            daily_stats: DataFrame with episode statistics (hourly for first 7 days)
             filename: Output filename
         """
         output_path = self.output_dir / filename
 
         # Select and order columns for output
+        # Sort by days_since_first_torrent since data is aligned to first torrent
         output_df = daily_stats.select(
             [
                 "anilist_id",
@@ -44,7 +45,7 @@ class DataExporter:
                 "title",
                 "title_english",
             ]
-        ).sort(["anilist_id", "episode", "date"])
+        ).sort(["anilist_id", "episode", "days_since_first_torrent"])
 
         # Write to Parquet
         output_df.write_parquet(output_path, compression="snappy")
@@ -79,8 +80,15 @@ class DataExporter:
 
             # Convert to list of dicts
             rankings_list = week_data.select(
-                ["anilist_id", "rank", "downloads", "title", "title_romaji",
-                 "cover_image_url", "cover_image_color"]
+                [
+                    "anilist_id",
+                    "rank",
+                    "downloads",
+                    "title",
+                    "title_romaji",
+                    "cover_image_url",
+                    "cover_image_color",
+                ]
             ).to_dicts()
 
             # Get week start date (Monday of ISO week)
@@ -152,3 +160,63 @@ class DataExporter:
                     f.write(f"  Infohash: {infohash[:16]}...\n\n")
 
         logger.info(f"Wrote match report to {output_path}")
+
+    def export_shows_metadata(
+        self,
+        seasons_data: dict[str, list],
+        weekly_rankings: pl.DataFrame,
+        filename: str = "shows.json",
+    ):
+        """Export show metadata grouped by season for sidebar navigation.
+
+        Args:
+            seasons_data: Dict mapping season name to list of AniListShow objects
+            weekly_rankings: DataFrame with weekly rankings (for current rank)
+            filename: Output filename
+        """
+        output_path = self.output_dir / filename
+
+        # Get the most recent week's rankings for current rank
+        latest_week = weekly_rankings["week"].max()
+        latest_rankings = weekly_rankings.filter(pl.col("week") == latest_week)
+
+        # Build rank lookup: anilist_id -> rank
+        rank_lookup = {
+            row["anilist_id"]: row["rank"]
+            for row in latest_rankings.iter_rows(named=True)
+        }
+
+        shows_by_season = {}
+
+        for season_name, shows in seasons_data.items():
+            season_shows = []
+            for show in shows:
+                # Only include shows that have rankings (i.e., have download data)
+                if show.id not in rank_lookup:
+                    continue
+
+                season_shows.append(
+                    {
+                        "id": show.id,
+                        "title": show.title_english or show.title_romaji,
+                        "title_romaji": show.title_romaji,
+                        "rank": rank_lookup.get(show.id),
+                        "cover_image_url": show.cover_image_url,
+                        "cover_image_color": show.cover_image_color,
+                    }
+                )
+
+            # Sort by rank
+            season_shows.sort(key=lambda x: x["rank"] if x["rank"] else 999)
+            shows_by_season[season_name] = season_shows
+
+        # Write to JSON
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(shows_by_season, f, indent=2, ensure_ascii=False)
+
+        total_shows = sum(len(shows) for shows in shows_by_season.values())
+        file_size = output_path.stat().st_size / 1024  # KB
+        logger.info(
+            f"Exported {total_shows} shows across {len(shows_by_season)} seasons "
+            f"to {output_path} ({file_size:.1f} KB)"
+        )
