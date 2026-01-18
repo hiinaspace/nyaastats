@@ -79,7 +79,8 @@ class DataExporter:
 
             # Convert to list of dicts
             rankings_list = week_data.select(
-                ["anilist_id", "rank", "downloads", "title", "title_romaji"]
+                ["anilist_id", "rank", "downloads", "title", "title_romaji",
+                 "cover_image_url", "cover_image_color"]
             ).to_dicts()
 
             # Get week start date (Monday of ISO week)

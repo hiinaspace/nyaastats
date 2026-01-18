@@ -23,6 +23,8 @@ class AniListShow:
     episodes: int | None
     status: str
     airing_schedule: list[tuple[int, int]]  # (episode, unix_timestamp)
+    cover_image_url: str | None  # Large size cover image
+    cover_image_color: str | None  # Dominant color hex
 
 
 class AniListClient:
@@ -86,6 +88,11 @@ class AniListClient:
                       airingAt
                     }
                   }
+                  coverImage {
+                    large
+                    medium
+                    color
+                  }
                 }
               }
             }
@@ -142,6 +149,7 @@ class AniListClient:
         """
         title = media["title"]
         airing_schedule = media.get("airingSchedule", {}).get("nodes", [])
+        cover_image = media.get("coverImage") or {}
 
         return AniListShow(
             id=media["id"],
@@ -153,6 +161,8 @@ class AniListClient:
             airing_schedule=[
                 (node["episode"], node["airingAt"]) for node in airing_schedule
             ],
+            cover_image_url=cover_image.get("large"),
+            cover_image_color=cover_image.get("color"),
         )
 
 

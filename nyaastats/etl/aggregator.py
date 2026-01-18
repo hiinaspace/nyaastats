@@ -2,10 +2,9 @@
 
 import logging
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from pathlib import Path
 
-import duckdb
 import polars as pl
 
 from .anilist_client import AniListShow
@@ -308,26 +307,50 @@ class DownloadAggregator:
             ]
         )
 
-        # Add show titles
+        # Add show titles and cover images
         show_lookup = {
-            show.id: (show.title_romaji, show.title_english or show.title_romaji)
+            show.id: {
+                "title_romaji": show.title_romaji,
+                "title_english": show.title_english or show.title_romaji,
+                "cover_image_url": show.cover_image_url,
+                "cover_image_color": show.cover_image_color,
+            }
             for show in shows
+        }
+
+        default_show = {
+            "title_romaji": "Unknown",
+            "title_english": "Unknown",
+            "cover_image_url": None,
+            "cover_image_color": None,
         }
 
         daily_stats = daily_stats.with_columns(
             [
                 pl.col("anilist_id")
                 .map_elements(
-                    lambda aid: show_lookup.get(aid, ("Unknown", "Unknown"))[0],
+                    lambda aid: show_lookup.get(aid, default_show)["title_romaji"],
                     return_dtype=pl.Utf8,
                 )
                 .alias("title"),
                 pl.col("anilist_id")
                 .map_elements(
-                    lambda aid: show_lookup.get(aid, ("Unknown", "Unknown"))[1],
+                    lambda aid: show_lookup.get(aid, default_show)["title_english"],
                     return_dtype=pl.Utf8,
                 )
                 .alias("title_english"),
+                pl.col("anilist_id")
+                .map_elements(
+                    lambda aid: show_lookup.get(aid, default_show)["cover_image_url"],
+                    return_dtype=pl.Utf8,
+                )
+                .alias("cover_image_url"),
+                pl.col("anilist_id")
+                .map_elements(
+                    lambda aid: show_lookup.get(aid, default_show)["cover_image_color"],
+                    return_dtype=pl.Utf8,
+                )
+                .alias("cover_image_color"),
             ]
         )
 
@@ -363,7 +386,10 @@ class DownloadAggregator:
 
         # Aggregate downloads by (anilist_id, iso_week)
         weekly_totals = (
-            daily_stats.group_by(["anilist_id", "iso_week", "title", "title_english"])
+            daily_stats.group_by([
+                "anilist_id", "iso_week", "title", "title_english",
+                "cover_image_url", "cover_image_color"
+            ])
             .agg([pl.col("downloads_daily").sum().alias("downloads")])
             .sort(["iso_week", "downloads"], descending=[False, True])
         )
@@ -388,6 +414,8 @@ class DownloadAggregator:
                 "downloads",
                 pl.col("title_english").alias("title"),
                 pl.col("title").alias("title_romaji"),
+                "cover_image_url",
+                "cover_image_color",
             ]
         )
 
