@@ -51,6 +51,7 @@ class DownloadAggregator:
         # Use Polars for direct SQLite reading instead of DuckDB
         # (DuckDB requires downloading extensions which may not work in all environments)
         import sqlite3
+
         self.sqlite_conn = sqlite3.connect(self.db_path)
 
     def load_and_filter_torrents(
@@ -121,14 +122,16 @@ class DownloadAggregator:
                 return None
 
         # Extract title and episode from guessit JSON
-        df = df.with_columns([
-            pl.col("guessit_data")
-            .map_elements(extract_title, return_dtype=pl.Utf8)
-            .alias("title"),
-            pl.col("guessit_data")
-            .map_elements(extract_episode, return_dtype=pl.Int64)
-            .alias("episode"),
-        ])
+        df = df.with_columns(
+            [
+                pl.col("guessit_data")
+                .map_elements(extract_title, return_dtype=pl.Utf8)
+                .alias("title"),
+                pl.col("guessit_data")
+                .map_elements(extract_episode, return_dtype=pl.Int64)
+                .alias("episode"),
+            ]
+        )
 
         # Filter out invalid episodes (nulls and batches already handled in parse_guessit)
         df = df.filter(pl.col("episode").is_not_null())
@@ -145,7 +148,9 @@ class DownloadAggregator:
         df = df.with_columns(
             pl.col("infohash")
             .map_elements(
-                lambda h: matched_torrents[h].anilist_id if h in matched_torrents else None,
+                lambda h: matched_torrents[h].anilist_id
+                if h in matched_torrents
+                else None,
                 return_dtype=pl.Int64,
             )
             .alias("anilist_id")
@@ -153,9 +158,7 @@ class DownloadAggregator:
 
         return df
 
-    def calculate_download_deltas(
-        self, torrents_df: pl.DataFrame
-    ) -> pl.DataFrame:
+    def calculate_download_deltas(self, torrents_df: pl.DataFrame) -> pl.DataFrame:
         """Calculate download deltas from stats time series.
 
         Uses Polars window functions for efficient computation.
@@ -185,20 +188,13 @@ class DownloadAggregator:
 
         if len(stats_df) == 0:
             logger.warning("No stats found for any torrents")
-            return pl.DataFrame({
-                "infohash": [],
-                "timestamp": [],
-                "downloads_delta": []
-            })
+            return pl.DataFrame(
+                {"infohash": [], "timestamp": [], "downloads_delta": []}
+            )
 
         # Calculate deltas using Polars window functions
         stats_df = stats_df.with_columns(
-            [
-                pl.col("downloads")
-                .shift(1)
-                .over("infohash")
-                .alias("prev_downloads")
-            ]
+            [pl.col("downloads").shift(1).over("infohash").alias("prev_downloads")]
         )
 
         # Calculate delta
@@ -215,7 +211,9 @@ class DownloadAggregator:
 
         deltas_df = stats_df.select(["infohash", "timestamp", "downloads_delta"])
 
-        logger.info(f"Calculated deltas for {deltas_df['infohash'].n_unique()} torrents")
+        logger.info(
+            f"Calculated deltas for {deltas_df['infohash'].n_unique()} torrents"
+        )
 
         return deltas_df
 
@@ -248,14 +246,15 @@ class DownloadAggregator:
         # Parse timestamp
         combined = combined.with_columns(
             [
-                pl.col("timestamp").str.to_datetime(format="%+", time_zone="UTC").alias("datetime"),
+                pl.col("timestamp")
+                .str.to_datetime(format="%+", time_zone="UTC")
+                .alias("datetime"),
             ]
         )
 
         # Find the first torrent timestamp per episode
-        first_torrent = (
-            torrents_df.group_by(["anilist_id", "episode"])
-            .agg(pl.col("pubdate").min().alias("first_torrent_timestamp"))
+        first_torrent = torrents_df.group_by(["anilist_id", "episode"]).agg(
+            pl.col("pubdate").min().alias("first_torrent_timestamp")
         )
 
         # Parse first_torrent_timestamp
@@ -268,14 +267,13 @@ class DownloadAggregator:
         combined = combined.join(
             first_torrent.select(["anilist_id", "episode", "first_datetime"]),
             on=["anilist_id", "episode"],
-            how="left"
+            how="left",
         )
 
         # Calculate hours since first torrent (exact)
         combined = combined.with_columns(
             (
-                (pl.col("datetime") - pl.col("first_datetime"))
-                .dt.total_seconds()
+                (pl.col("datetime") - pl.col("first_datetime")).dt.total_seconds()
                 / 3600
             ).alias("hours_since_first_torrent")
         )
@@ -293,7 +291,9 @@ class DownloadAggregator:
 
         # Aggregate by (anilist_id, episode, time_bucket)
         stats = (
-            combined.group_by(["anilist_id", "episode", "time_bucket_hours", "first_datetime"])
+            combined.group_by(
+                ["anilist_id", "episode", "time_bucket_hours", "first_datetime"]
+            )
             .agg(
                 [
                     pl.col("downloads_delta").sum().alias("downloads_period"),
@@ -317,9 +317,7 @@ class DownloadAggregator:
         )
 
         # Also keep the date for compatibility with weekly rankings
-        stats = stats.with_columns(
-            pl.col("period_start").dt.date().alias("date")
-        )
+        stats = stats.with_columns(pl.col("period_start").dt.date().alias("date"))
 
         # Rename downloads_period to downloads_daily for compatibility
         stats = stats.rename({"downloads_period": "downloads_daily"})
@@ -403,10 +401,16 @@ class DownloadAggregator:
 
         # Aggregate downloads by (anilist_id, iso_week)
         weekly_totals = (
-            daily_stats.group_by([
-                "anilist_id", "iso_week", "title", "title_english",
-                "cover_image_url", "cover_image_color"
-            ])
+            daily_stats.group_by(
+                [
+                    "anilist_id",
+                    "iso_week",
+                    "title",
+                    "title_english",
+                    "cover_image_url",
+                    "cover_image_color",
+                ]
+            )
             .agg([pl.col("downloads_daily").sum().alias("downloads")])
             .sort(["iso_week", "downloads"], descending=[False, True])
         )
@@ -438,5 +442,5 @@ class DownloadAggregator:
 
     def close(self):
         """Close database connection."""
-        if hasattr(self, 'sqlite_conn') and self.sqlite_conn:
+        if hasattr(self, "sqlite_conn") and self.sqlite_conn:
             self.sqlite_conn.close()

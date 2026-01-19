@@ -25,6 +25,8 @@ class AniListShow:
     airing_schedule: list[tuple[int, int]]  # (episode, unix_timestamp)
     cover_image_url: str | None  # Large size cover image
     cover_image_color: str | None  # Dominant color hex
+    start_date: tuple[int | None, int | None, int | None] | None  # (year, month, day)
+    format: str | None  # TV, TV_SHORT, MOVIE, OVA, etc.
 
 
 class AniListClient:
@@ -44,7 +46,9 @@ class AniListClient:
     async def __aenter__(self):
         """Async context manager entry."""
         self._transport = AIOHTTPTransport(url=self.api_url)
-        self._client = Client(transport=self._transport, fetch_schema_from_transport=False)
+        self._client = Client(
+            transport=self._transport, fetch_schema_from_transport=False
+        )
         self._session = await self._client.__aenter__()
         return self
 
@@ -82,6 +86,12 @@ class AniListClient:
                   synonyms
                   episodes
                   status
+                  format
+                  startDate {
+                    year
+                    month
+                    day
+                  }
                   airingSchedule {
                     nodes {
                       episode
@@ -104,9 +114,7 @@ class AniListClient:
         per_page = 50  # AniList default
 
         while True:
-            logger.info(
-                f"Fetching {season_config.name} anime, page {page}..."
-            )
+            logger.info(f"Fetching {season_config.name} anime, page {page}...")
 
             variables = {
                 "season": season_config.season,
@@ -133,9 +141,7 @@ class AniListClient:
             # Sleep briefly between pages to be respectful
             await asyncio.sleep(0.7)  # ~85 requests per minute
 
-        logger.info(
-            f"Fetched {len(shows)} shows for {season_config.name}"
-        )
+        logger.info(f"Fetched {len(shows)} shows for {season_config.name}")
         return shows
 
     def _parse_show(self, media: dict) -> AniListShow:
@@ -150,6 +156,16 @@ class AniListClient:
         title = media["title"]
         airing_schedule = media.get("airingSchedule", {}).get("nodes", [])
         cover_image = media.get("coverImage") or {}
+        start_date_raw = media.get("startDate") or {}
+
+        # Parse start date as tuple
+        start_date = None
+        if start_date_raw.get("year"):
+            start_date = (
+                start_date_raw.get("year"),
+                start_date_raw.get("month"),
+                start_date_raw.get("day"),
+            )
 
         return AniListShow(
             id=media["id"],
@@ -163,10 +179,14 @@ class AniListClient:
             ],
             cover_image_url=cover_image.get("large"),
             cover_image_color=cover_image.get("color"),
+            start_date=start_date,
+            format=media.get("format"),
         )
 
 
-async def fetch_all_seasons(seasons: list[SeasonConfig]) -> dict[str, list[AniListShow]]:
+async def fetch_all_seasons(
+    seasons: list[SeasonConfig],
+) -> dict[str, list[AniListShow]]:
     """Fetch anime for multiple seasons.
 
     Args:

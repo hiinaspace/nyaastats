@@ -8,10 +8,8 @@ the production database.
 
 import argparse
 import hashlib
-import json
 import random
 import sys
-from datetime import timedelta
 from pathlib import Path
 
 # Add parent directory to path to import nyaastats modules
@@ -21,7 +19,6 @@ from whenever import Instant
 
 from nyaastats.database import Database
 from nyaastats.models import TorrentData
-
 
 # Realistic anime titles for test data
 FALL_2025_SHOWS = [
@@ -75,19 +72,25 @@ def normalize_title_for_hash(title: str) -> str:
     return title.lower().replace(" ", "").replace(":", "")
 
 
-def generate_infohash(show_title: str, episode: int, group: str, resolution: str) -> str:
+def generate_infohash(
+    show_title: str, episode: int, group: str, resolution: str
+) -> str:
     """Generate a deterministic fake infohash."""
     content = f"{normalize_title_for_hash(show_title)}_{episode}_{group}_{resolution}"
     return hashlib.sha1(content.encode()).hexdigest()
 
 
-def generate_filename(show_title: str, episode: int, group: str, resolution: str) -> str:
+def generate_filename(
+    show_title: str, episode: int, group: str, resolution: str
+) -> str:
     """Generate a realistic torrent filename that guessit can parse."""
     # Format: [Group] Show Title - EP [Resolution].mkv
     return f"[{group}] {show_title} - {episode:02d} [{resolution}].mkv"
 
 
-def generate_guessit_data(show_title: str, episode: int, group: str, resolution: str) -> dict:
+def generate_guessit_data(
+    show_title: str, episode: int, group: str, resolution: str
+) -> dict:
     """Generate realistic guessit metadata."""
     # Split title into base title and season if present
     title_parts = show_title.rsplit(" S", 1)
@@ -150,7 +153,9 @@ def generate_download_curve(
 
         # Convert rate to downloads in this interval
         interval_downloads = int(downloads_rate * (sample_interval_hours / 24))
-        interval_downloads = max(0, int(random.gauss(interval_downloads, interval_downloads * 0.1)))
+        interval_downloads = max(
+            0, int(random.gauss(interval_downloads, interval_downloads * 0.1))
+        )
 
         cumulative_downloads += interval_downloads
         curve.append((current_time, cumulative_downloads))
@@ -187,7 +192,9 @@ def generate_show_data(
     else:
         # For ongoing shows, only generate episodes up to current date
         # Assume weekly airing (7 days between episodes)
-        weeks_since_start = (WINTER_2026_NOW - air_start_date).in_seconds() / (7 * 86400)
+        weeks_since_start = (WINTER_2026_NOW - air_start_date).in_seconds() / (
+            7 * 86400
+        )
         episodes_to_generate = min(num_episodes, int(weeks_since_start) + 1)
 
     # Generate torrents for each episode with multiple versions
@@ -212,7 +219,9 @@ def generate_show_data(
             for resolution in random.sample(RESOLUTIONS, k=num_resolutions):
                 infohash = generate_infohash(show_title, episode, group, resolution)
                 filename = generate_filename(show_title, episode, group, resolution)
-                guessit_data = generate_guessit_data(show_title, episode, group, resolution)
+                guessit_data = generate_guessit_data(
+                    show_title, episode, group, resolution
+                )
 
                 # Torrent appears 2-6 hours after episode airs (fansub delay)
                 torrent_pubdate = episode_air_date.add(hours=random.randint(2, 6))
@@ -238,7 +247,9 @@ def generate_show_data(
                     infohash=infohash,
                     filename=filename,
                     pubdate=torrent_pubdate,
-                    size_bytes=random.randint(300_000_000, 1_500_000_000),  # 300MB-1.5GB
+                    size_bytes=random.randint(
+                        300_000_000, 1_500_000_000
+                    ),  # 300MB-1.5GB
                     nyaa_id=random.randint(1000000, 9999999),
                     trusted=group in ["SubsPlease", "Erai-raws"],
                     remake=False,
@@ -262,16 +273,32 @@ def generate_show_data(
                 with db.get_conn() as conn:
                     for timestamp, cumulative_downloads in download_curve:
                         # Seeders and leechers decay over time too
-                        days_since_release = (timestamp - torrent_pubdate).in_seconds() / 86400
-                        seeders = max(5, int(500 * (0.95 ** days_since_release)) + random.randint(-10, 10))
-                        leechers = max(0, int(50 * (0.90 ** days_since_release)) + random.randint(-5, 5))
+                        days_since_release = (
+                            timestamp - torrent_pubdate
+                        ).in_seconds() / 86400
+                        seeders = max(
+                            5,
+                            int(500 * (0.95**days_since_release))
+                            + random.randint(-10, 10),
+                        )
+                        leechers = max(
+                            0,
+                            int(50 * (0.90**days_since_release))
+                            + random.randint(-5, 5),
+                        )
 
                         conn.execute(
                             """
                             INSERT OR REPLACE INTO stats (infohash, timestamp, seeders, leechers, downloads)
                             VALUES (?, ?, ?, ?, ?)
                             """,
-                            (infohash, timestamp, seeders, leechers, cumulative_downloads),
+                            (
+                                infohash,
+                                timestamp,
+                                seeders,
+                                leechers,
+                                cumulative_downloads,
+                            ),
                         )
                     # Commit once per torrent instead of once per stat entry
                     conn.commit()
@@ -319,7 +346,9 @@ def generate_fake_database(db_path: str, verbose: bool = False, quick: bool = Fa
         )
 
     # Generate Winter 2026 shows (currently airing)
-    print(f"\nGenerating Winter 2026 shows (currently airing)... {len(winter_shows)} shows")
+    print(
+        f"\nGenerating Winter 2026 shows (currently airing)... {len(winter_shows)} shows"
+    )
     for i, show_title in enumerate(winter_shows):
         num_episodes = random.randint(12, 13)
         days_offset = (i * 2) % 7
@@ -328,7 +357,9 @@ def generate_fake_database(db_path: str, verbose: bool = False, quick: bool = Fa
         if verbose:
             weeks_aired = (WINTER_2026_NOW - air_start).in_seconds() / (7 * 86400)
             episodes_so_far = min(num_episodes, int(weeks_aired) + 1)
-            print(f"  - {show_title} ({episodes_so_far}/{num_episodes} episodes so far)")
+            print(
+                f"  - {show_title} ({episodes_so_far}/{num_episodes} episodes so far)"
+            )
 
         generate_show_data(
             db,

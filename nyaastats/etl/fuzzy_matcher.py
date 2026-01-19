@@ -180,7 +180,9 @@ class FuzzyMatcher:
                         score = fuzz.token_sort_ratio(normalized, variant)
                         best_score = max(best_score, score)
 
-                unmatched.append((identifier, title, best_score if best_score > 0 else None))
+                unmatched.append(
+                    (identifier, title, best_score if best_score > 0 else None)
+                )
 
         logger.info(
             f"Matched {len(matched)}/{len(torrent_titles)} torrents "

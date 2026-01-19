@@ -13,6 +13,7 @@ from nyaastats.etl.anilist_client import fetch_all_seasons
 from nyaastats.etl.config import MVP_SEASONS
 from nyaastats.etl.exporter import DataExporter
 from nyaastats.etl.fuzzy_matcher import FuzzyMatcher
+from nyaastats.etl.seasonal_exporter import SeasonalExporter
 
 # Configure logging
 logging.basicConfig(
@@ -138,6 +139,26 @@ async def run_etl_pipeline(
         exporter.export_shows_metadata(seasons_data, weekly_rankings)
         exporter.write_match_report(matched, unmatched)
 
+        # Step 9: Export seasonal summary data for interactive visualizations
+        logger.info("\nStep 9: Exporting seasonal summary data...")
+        seasonal_exporter = SeasonalExporter(output_dir)
+
+        for season_config in MVP_SEASONS:
+            # Get show IDs for this season from AniList metadata
+            season_show_ids = [
+                show.id for show in seasons_data.get(season_config.name, [])
+            ]
+            if not season_show_ids:
+                logger.warning(f"No shows found for {season_config.name}, skipping")
+                continue
+
+            seasonal_exporter.export_season_summary(
+                season_config, weekly_rankings, daily_stats, season_show_ids
+            )
+            seasonal_exporter.export_season_episodes(
+                season_config, daily_stats, season_show_ids
+            )
+
         logger.info("\n" + "=" * 80)
         logger.info("ETL pipeline completed successfully!")
         logger.info("=" * 80)
@@ -145,6 +166,7 @@ async def run_etl_pipeline(
         logger.info(f"  - episodes.parquet: {len(daily_stats)} rows")
         logger.info(f"  - rankings.json: {weekly_rankings['week'].n_unique()} weeks")
         logger.info("  - match_report.txt: Match statistics")
+        logger.info("  - season-*.json: Seasonal summary data")
     finally:
         # Ensure database connection is always closed
         aggregator.close()

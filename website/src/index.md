@@ -5,7 +5,7 @@ toc: false
 
 <div class="note">
   Tracking download statistics for Fall 2025 and Winter 2026 anime seasons.
-  Data updates weekly.
+  Data updates weekly. <a href="/season/fall-2025">View the interactive Fall 2025 Season Overview →</a>
 </div>
 
 ```js
@@ -98,13 +98,11 @@ function renderTreemap(weekData, weekIndex) {
     .attr("offset", "100%")
     .attr("stop-color", "rgba(0,0,0,0.85)");
 
-  // Add rectangles (wrapped in links to show pages)
-  const leaf = svg.selectAll("a")
+  // Add rectangles
+  const leaf = svg.selectAll("g")
     .data(root.leaves())
-    .join("a")
-    .attr("href", d => `/show/${d.data.anilist_id}`)
-    .attr("transform", d => `translate(${d.x0},${d.y0})`)
-    .style("cursor", "pointer");
+    .join("g")
+    .attr("transform", d => `translate(${d.x0},${d.y0})`);
 
   // Define clip paths for cells
   leaf.append("clipPath")

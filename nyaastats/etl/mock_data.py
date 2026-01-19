@@ -12,6 +12,10 @@ MOCK_FALL_2025_SHOWS = [
         episodes=12,
         status="FINISHED",
         airing_schedule=[],
+        cover_image_url=None,
+        cover_image_color="#4a9eff",
+        start_date=(2025, 10, 1),
+        format="TV",
     ),
     AniListShow(
         id=1002,
@@ -21,6 +25,10 @@ MOCK_FALL_2025_SHOWS = [
         episodes=12,
         status="FINISHED",
         airing_schedule=[],
+        cover_image_url=None,
+        cover_image_color="#6366f1",
+        start_date=(2025, 10, 1),
+        format="TV",
     ),
     AniListShow(
         id=1003,
@@ -30,6 +38,10 @@ MOCK_FALL_2025_SHOWS = [
         episodes=12,
         status="FINISHED",
         airing_schedule=[],
+        cover_image_url=None,
+        cover_image_color="#dc2626",
+        start_date=(2025, 10, 1),
+        format="TV",
     ),
     AniListShow(
         id=1004,
@@ -39,6 +51,10 @@ MOCK_FALL_2025_SHOWS = [
         episodes=13,
         status="FINISHED",
         airing_schedule=[],
+        cover_image_url=None,
+        cover_image_color="#22c55e",
+        start_date=(2025, 10, 1),
+        format="TV",
     ),
     AniListShow(
         id=1005,
@@ -48,6 +64,10 @@ MOCK_FALL_2025_SHOWS = [
         episodes=12,
         status="FINISHED",
         airing_schedule=[],
+        cover_image_url=None,
+        cover_image_color="#eab308",
+        start_date=(2025, 10, 1),
+        format="TV",
     ),
 ]
 
@@ -60,6 +80,10 @@ MOCK_WINTER_2026_SHOWS = [
         episodes=12,
         status="RELEASING",
         airing_schedule=[],
+        cover_image_url=None,
+        cover_image_color="#8b5cf6",
+        start_date=(2026, 1, 1),
+        format="TV",
     ),
     AniListShow(
         id=2002,
@@ -69,6 +93,10 @@ MOCK_WINTER_2026_SHOWS = [
         episodes=12,
         status="RELEASING",
         airing_schedule=[],
+        cover_image_url=None,
+        cover_image_color="#ec4899",
+        start_date=(2026, 1, 1),
+        format="TV",
     ),
     AniListShow(
         id=2003,
@@ -78,6 +106,10 @@ MOCK_WINTER_2026_SHOWS = [
         episodes=12,
         status="RELEASING",
         airing_schedule=[],
+        cover_image_url=None,
+        cover_image_color="#14b8a6",
+        start_date=(2026, 1, 1),
+        format="TV",
     ),
     AniListShow(
         id=2004,
@@ -87,6 +119,10 @@ MOCK_WINTER_2026_SHOWS = [
         episodes=12,
         status="RELEASING",
         airing_schedule=[],
+        cover_image_url=None,
+        cover_image_color="#f97316",
+        start_date=(2026, 1, 1),
+        format="TV",
     ),
     AniListShow(
         id=2005,
@@ -96,6 +132,10 @@ MOCK_WINTER_2026_SHOWS = [
         episodes=13,
         status="RELEASING",
         airing_schedule=[],
+        cover_image_url=None,
+        cover_image_color="#06b6d4",
+        start_date=(2026, 1, 1),
+        format="TV",
     ),
 ]
 
