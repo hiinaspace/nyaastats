@@ -22,6 +22,7 @@ display(html`<div class="note">
 ```js
 // Load rankings data
 const rankings = FileAttachment("data/rankings.json").json();
+import {addWatermark} from "./components/watermark.js";
 ```
 
 ```js
@@ -67,6 +68,17 @@ function formatDateRange(weekStr, startDate) {
   return `${startFmt} – ${endFmt}, ${yearFmt}`;
 }
 
+// Returns stacked date lines for watermark: ["Jan 11–", "Jan 17", "2026"]
+function formatDateStacked(weekStr, startDate) {
+  const start = startDate ? new Date(startDate) : isoWeekToMonday(weekStr);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
+  const startFmt = start.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const endFmt = end.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const yearFmt = end.toLocaleDateString("en-US", { year: "numeric" });
+  return [startFmt, `–${endFmt}`, yearFmt];
+}
+
 // Build a map of previous week's ranks for calculating deltas
 function getRankChanges(weekIndex) {
   const currentWeek = recentWeeks[weekIndex];
@@ -92,7 +104,7 @@ function getDownloadChanges(weekIndex) {
 
 ```js
 // Treemap rendering function
-function renderTreemap(weekData, weekIndex) {
+function renderTreemap(weekData, weekIndex, titleLines, subtitleLines) {
   const prevRanks = getRankChanges(weekIndex);
   const prevDownloads = getDownloadChanges(weekIndex);
 
@@ -305,6 +317,9 @@ function renderTreemap(weekData, weekIndex) {
     .style("text-shadow", textShadow)
     .text(d => `#${d.data.rank}`);
 
+  // Add watermark overlay
+  addWatermark(svg, width, height, titleLines, subtitleLines);
+
   return svg.node();
 }
 ```
@@ -315,13 +330,10 @@ function renderTreemap(weekData, weekIndex) {
 // Render treemaps for each of the last 4 weeks
 for (let i = 0; i < recentWeeks.length; i++) {
   const week = recentWeeks[i];
-  const rangeLabel = formatDateRange(week.week, week.start_date);
+  const dateLines = formatDateStacked(week.week, week.start_date);
+  const subtitleLines = ["weekly downloads (all episodes)", "nyaastats"];
   display(html`<figure class="chart-figure">
-    <figcaption>
-      <div class="figure-title">Weekly Rankings — ${rangeLabel}</div>
-      <div class="figure-subtitle">Episode download totals for the week • NyaaStats • Posters via AniList API</div>
-    </figcaption>
-    ${renderTreemap(week, i)}
+    ${renderTreemap(week, i, dateLines, subtitleLines)}
   </figure>`);
 }
 ```
@@ -335,23 +347,5 @@ for (let i = 0; i < recentWeeks.length; i++) {
 <style>
   .chart-figure {
     margin: 0 0 1.5rem;
-  }
-
-  .chart-figure figcaption {
-    margin-bottom: 0.6rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-    color: #b5b5b5;
-    font-size: 0.85rem;
-  }
-
-  .figure-title {
-    font-weight: 600;
-    color: #e0e0e0;
-  }
-
-  .figure-subtitle {
-    color: #9a9a9a;
   }
 </style>

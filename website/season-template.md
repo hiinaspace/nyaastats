@@ -11,6 +11,7 @@ const season = FileAttachment("../data/season-__SEASON_SLUG__.json").json();
 const episodesData = FileAttachment("../data/episodes-__SEASON_SLUG__.json").json();
 const seasonLabel = "__SEASON_LABEL__";
 const seasonTitle = "__SEASON_TITLE__";
+import {addWatermark} from "../components/watermark.js";
 ```
 
 ```js
@@ -246,11 +247,16 @@ rankText.append("tspan")
   .attr("fill", "#fff")
   .text(d => `#${d.data.season_rank}`);
 
+// Add watermark overlay
+const treemapTitleLines = seasonLabel.split(" ");
+const isInProgress = seasonTitle !== seasonLabel;
+const todayFmt = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }).format(new Date());
+const treemapSubtitleLines = isInProgress
+  ? [`total downloads (up to ${todayFmt})`, "nyaastats"]
+  : ["total downloads", "nyaastats"];
+addWatermark(treemapSvg, treemapWidth, treemapHeight, treemapTitleLines, treemapSubtitleLines);
+
 display(html`<figure class="chart-figure">
-  <figcaption>
-    <div class="figure-title">${seasonTitle} Season Downloads</div>
-    <div class="figure-subtitle">Total downloads per show • Posters via AniList API • NyaaStats</div>
-  </figcaption>
   ${treemapSvg.node()}
 </figure>`);
 ```
@@ -1194,23 +1200,5 @@ display(html`<div class="facet-stack">
 
   .chart-figure {
     margin: 0;
-  }
-
-  .chart-figure figcaption {
-    margin-top: 0.6rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-    color: #b5b5b5;
-    font-size: 0.85rem;
-  }
-
-  .figure-title {
-    font-weight: 600;
-    color: #e0e0e0;
-  }
-
-  .figure-subtitle {
-    color: #9a9a9a;
   }
 </style>

@@ -23,11 +23,11 @@ export default {
   title: "Nyaastats",
   description: "Nyaa torrent download statistics and rankings by anime season",
 
-  // Theme
-  theme: "dark",
-
   // Root path for the site
   root: "src",
+
+  // seems to be required for simple hosting
+  preserveExtension: true,
 
   // Output directory
   output: "dist",
@@ -43,8 +43,6 @@ export default {
 
   // Footer
   footer: "Built with Observable Framework",
-
-  search: true,
 
   // Head additions
   head: `

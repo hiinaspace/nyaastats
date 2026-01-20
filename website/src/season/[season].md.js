@@ -32,7 +32,7 @@ if (seasonStatus === "in-progress") {
   seasonTitle = `${seasonLabel} (up to ${formatted})`;
 }
 
-const templatePath = new URL("./season-template.md", import.meta.url);
+const templatePath = new URL("../../season-template.md", import.meta.url);
 let template = fs.readFileSync(templatePath, "utf-8");
 
 template = template.replaceAll("__SEASON_SLUG__", requestedSlug);
