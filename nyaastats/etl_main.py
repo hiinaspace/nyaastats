@@ -159,6 +159,10 @@ async def run_etl_pipeline(
                 season_config, daily_stats, season_show_ids
             )
 
+        seasonal_exporter.export_seasons_index(
+            MVP_SEASONS, seasons_data, weekly_rankings
+        )
+
         logger.info("\n" + "=" * 80)
         logger.info("ETL pipeline completed successfully!")
         logger.info("=" * 80)

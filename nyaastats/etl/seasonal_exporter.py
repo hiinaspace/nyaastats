@@ -100,6 +100,86 @@ class SeasonalExporter:
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
+    @staticmethod
+    def _season_slug(season_config: SeasonConfig) -> str:
+        return season_config.name.lower().replace(" ", "-")
+
+    def export_seasons_index(
+        self,
+        seasons: list[SeasonConfig],
+        seasons_data: dict[str, list],
+        weekly_rankings: pl.DataFrame,
+    ) -> str:
+        """Export a season index for navigation and routing.
+
+        Args:
+            seasons: List of seasons to include
+            seasons_data: AniList season data mapping
+            weekly_rankings: Weekly ranking data
+
+        Returns:
+            Path to the generated JSON file
+        """
+        from datetime import date as dt_date
+
+        today = dt_date.today()
+        items = []
+
+        for season_config in seasons:
+            season_slug = self._season_slug(season_config)
+            start_date = season_config.start_date.py_datetime().date()
+            end_date = season_config.end_date.py_datetime().date()
+            season_shows = seasons_data.get(season_config.name, [])
+            season_show_ids = [show.id for show in season_shows]
+
+            filtered = (
+                weekly_rankings.filter(
+                    pl.col("week").map_elements(
+                        lambda w: week_overlaps_range(w, start_date, end_date),
+                        return_dtype=pl.Boolean,
+                    )
+                    & pl.col("anilist_id").is_in(season_show_ids)
+                )
+                if season_show_ids
+                else weekly_rankings.head(0)
+            )
+
+            weeks = sorted(filtered["week"].unique().to_list()) if len(filtered) > 0 else []
+            latest_week = weeks[-1] if weeks else None
+            latest_week_start = (
+                iso_week_to_monday(latest_week).isoformat() if latest_week else None
+            )
+
+            status = "complete" if end_date < today else "in-progress"
+
+            items.append(
+                {
+                    "name": season_config.name,
+                    "slug": season_slug,
+                    "season": season_config.season,
+                    "year": season_config.year,
+                    "start_date": start_date.isoformat(),
+                    "end_date": end_date.isoformat(),
+                    "status": status,
+                    "shows_count": len(season_show_ids),
+                    "weeks_count": len(weeks),
+                    "latest_week": latest_week,
+                    "latest_week_start": latest_week_start,
+                }
+            )
+
+        output_path = self.output_dir / "seasons.json"
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(items, f, indent=2, ensure_ascii=False)
+
+        file_size = output_path.stat().st_size / 1024
+        logger.info(
+            f"Exported seasons index to {output_path} "
+            f"({len(items)} seasons, {file_size:.1f} KB)"
+        )
+
+        return str(output_path)
+
     def export_season_summary(
         self,
         season_config: SeasonConfig,
@@ -118,7 +198,7 @@ class SeasonalExporter:
         Returns:
             Path to the generated JSON file
         """
-        season_slug = season_config.name.lower().replace(" ", "-")
+        season_slug = self._season_slug(season_config)
         filename = f"season-{season_slug}.json"
         output_path = self.output_dir / filename
 
@@ -369,7 +449,7 @@ class SeasonalExporter:
         Returns:
             Path to the generated JSON file
         """
-        season_slug = season_config.name.lower().replace(" ", "-")
+        season_slug = self._season_slug(season_config)
         filename = f"episodes-{season_slug}.json"
         output_path = self.output_dir / filename
 

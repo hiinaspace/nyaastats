@@ -1,9 +1,27 @@
 // Observable Framework configuration
 // See https://observablehq.com/framework/config for documentation
 
+import fs from "node:fs";
+
+const seasonsPath = new URL("./src/data/seasons.json", import.meta.url);
+let seasons = [];
+
+try {
+  seasons = JSON.parse(fs.readFileSync(seasonsPath, "utf-8"));
+} catch {
+  seasons = [];
+}
+
+const seasonPages = seasons.map((season) => ({
+  name: `${season.name} Season`,
+  path: `/season/${season.slug}`
+}));
+
+const dynamicPaths = seasons.map((season) => `/season/${season.slug}`);
+
 export default {
   title: "Nyaastats",
-  description: "Nyaa torrent download statistics and rankings for Fall 2025 & Winter 2026 anime",
+  description: "Nyaa torrent download statistics and rankings by anime season",
 
   // Theme
   theme: "dark",
@@ -17,9 +35,11 @@ export default {
   // Pages and navigation
   pages: [
     {name: "Weekly Rankings", path: "/"},
-    {name: "Fall 2025 Season", path: "/season/fall-2025"},
+    ...seasonPages,
     {name: "About", path: "/about"}
   ],
+
+  dynamicPaths,
 
   // Footer
   footer: "Built with Observable Framework",

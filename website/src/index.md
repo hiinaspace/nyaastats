@@ -3,10 +3,21 @@ toc: false
 ---
 # Nyaa Download Rankings
 
-<div class="note">
-  Tracking download statistics for Fall 2025 and Winter 2026 anime seasons.
-  Data updates weekly. <a href="/season/fall-2025">View the interactive Fall 2025 Season Overview →</a>
-</div>
+```js
+const seasonsIndex = await FileAttachment("data/seasons.json").json();
+const sortedSeasons = [...seasonsIndex].sort((a, b) =>
+  new Date(b.start_date) - new Date(a.start_date)
+);
+const latestSeason = sortedSeasons[0];
+const seasonNames = sortedSeasons.map(s => s.name).join(" and ");
+const latestLink = latestSeason ? `/season/${latestSeason.slug}` : "/season/fall-2025";
+
+display(html`<div class="note">
+  Tracking download statistics for ${seasonNames} anime seasons.
+  Data updates weekly.
+  <a href="${latestLink}">View the interactive ${latestSeason?.name || "Season"} Overview →</a>
+</div>`);
+```
 
 ```js
 // Load rankings data

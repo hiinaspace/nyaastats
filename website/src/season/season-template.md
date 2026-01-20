@@ -2,13 +2,15 @@
 toc: false
 ---
 
-# Nyaastats - Fall 2025 Season
+# Nyaastats - __SEASON_TITLE__
 
 
 ```js
 // Load precomputed seasonal data
-const season = FileAttachment("../data/season-fall-2025.json").json();
-const episodesData = FileAttachment("../data/episodes-fall-2025.json").json();
+const season = FileAttachment("../data/season-__SEASON_SLUG__.json").json();
+const episodesData = FileAttachment("../data/episodes-__SEASON_SLUG__.json").json();
+const seasonLabel = "__SEASON_LABEL__";
+const seasonTitle = "__SEASON_TITLE__";
 ```
 
 ```js
@@ -33,13 +35,12 @@ const showColors = Object.fromEntries(
 const allRankings = weeks.flatMap(w =>
   w.rankings.map(r => ({
     ...r,
-    weekDate: new Date(w.start_date),
+    weekStart: w.start_date,
     week: w.week
   }))
 );
 
-// Parse week dates
-const weekDates = weeks.map(w => new Date(w.start_date));
+const weekLabels = weeks.map(w => w.start_date);
 
 // Format number as K/M
 function formatCompact(n) {
@@ -49,7 +50,7 @@ function formatCompact(n) {
 }
 
 // Max downloads for scaling bars
-const maxDownloads = d3.max(shows, s => s.total_downloads);
+const maxDownloads = d3.max(shows, s => s.total_downloads) || 1;
 const maxEndurance = d3.max(shows.filter(s => s.endurance && s.endurance > 0), s => s.endurance) || 1;
 const maxLatecomers = d3.max(shows.filter(s => s.latecomers != null), s => s.latecomers) || 0.5;
 const clampWidth = (value, min, max) => Math.max(min, Math.min(max, value || min));
@@ -60,9 +61,9 @@ const ep1Values = shows.map(s => s.ep1_downloads).filter(d => d > 0).sort(d3.asc
 const ep1Q1 = d3.quantile(ep1Values, 0.33) || 0;
 const ep1Q2 = d3.quantile(ep1Values, 0.66) || ep1Q1;
 const bucketOrder = [
-  `Lower premieres (<=${formatCompact(ep1Q1)})`,
-  `Mid-tier premieres (${formatCompact(ep1Q1)}-${formatCompact(ep1Q2)})`,
-  `Bigger premieres (>=${formatCompact(ep1Q2)})`
+  `Small premieres (<=${formatCompact(ep1Q1)})`,
+  `Medium premieres (${formatCompact(ep1Q1)}-${formatCompact(ep1Q2)})`,
+  `Big premieres (>=${formatCompact(ep1Q2)})`
 ];
 
 function bucketLabel(ep1Downloads) {
@@ -247,8 +248,8 @@ rankText.append("tspan")
 
 display(html`<figure class="chart-figure">
   <figcaption>
-    <div class="figure-title">Fall 2025 Season Treemap</div>
-    <div class="figure-subtitle">Total season downloads by show • NyaaStats • Posters via AniList API</div>
+    <div class="figure-title">${seasonTitle} Season Downloads</div>
+    <div class="figure-subtitle">Total downloads per show • Posters via AniList API • NyaaStats</div>
   </figcaption>
   ${treemapSvg.node()}
 </figure>`);
@@ -260,7 +261,7 @@ const focusChips = html`<div class="focus-chips">
   <div class="focus-title">Focused shows</div>
   <div class="focus-list">
     ${focused.size === 0
-      ? html`<span class="focus-empty">None selected</span>`
+      ? html`<span class="focus-empty">Click on show to focus data</span>`
       : Array.from(focused)
           .map(id => showLookup.get(id))
           .filter(Boolean)
@@ -314,7 +315,7 @@ const matchedIds = new Set(
 function makeRankSparkline(showId) {
   const ranks = weeklyRanksByShow.get(showId) || [];
   if (ranks.length === 0) return html`<span style="color:#666">—</span>`;
-  const sorted = [...ranks].sort((a, b) => a.weekDate - b.weekDate);
+  const sorted = [...ranks].sort((a, b) => new Date(a.weekStart) - new Date(b.weekStart));
   const width = 50, height = 18;
   const x = d3.scaleLinear().domain([0, sorted.length - 1]).range([2, width - 2]);
   const y = d3.scaleLinear().domain([40, 1]).range([height - 2, 2]);
@@ -526,10 +527,8 @@ const bumpChartData = allRankings.filter(r =>
 );
 
 // Get last week for end labels
-const lastWeekDate = weekDates[weekDates.length - 1];
-const lastWeekRankings = bumpChartData.filter(r =>
-  r.weekDate.getTime() === lastWeekDate.getTime()
-);
+const lastWeekStart = weekLabels[weekLabels.length - 1];
+const lastWeekRankings = bumpChartData.filter(r => r.weekStart === lastWeekStart);
 
 const bumpLegend = focusMode ? html`<div class="bump-legend">
   <span class="bump-legend-label">Focused shows</span>
@@ -541,14 +540,15 @@ const bumpLegend = focusMode ? html`<div class="bump-legend">
 if (bumpLegend) display(bumpLegend);
 
 display(Plot.plot({
-  title: "Fall 2025 Weekly Rank Over Time",
-  subtitle: "Lower rank = more downloads • NyaaStats",
+  title: `${seasonTitle} Weekly Rank Over Time`,
+  subtitle: "Downloads per week (all episodes) • NyaaStats",
   height: 650,
   width: plotWidth,
   marginRight: 220,
+  marginBottom: 100,
   insetBottom: 28,
   insetLeft: 12,
-  insetRight: 24,
+  insetRight: 50,
   y: {
     reverse: true,
     label: "Rank",
@@ -557,13 +557,15 @@ display(Plot.plot({
   },
   x: {
     label: null,
-    type: "utc",
-    tickFormat: d => d.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+    type: "band",
+    domain: weekLabels,
+    tickRotate: -30,
+    tickFormat: d => `Week of ${new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
   },
   marks: [
     // Lines - thicker for interactivity
     Plot.line(bumpChartData, {
-      x: "weekDate",
+      x: "weekStart",
       y: "rank",
       z: "anilist_id",
       stroke: d => highlightMode
@@ -575,7 +577,7 @@ display(Plot.plot({
     }),
     // Poster markers at each data point (always visible)
     Plot.image(bumpChartData, {
-      x: "weekDate",
+      x: "weekStart",
       y: "rank",
       src: "cover_image_url",
       width: 16,
@@ -584,7 +586,7 @@ display(Plot.plot({
     }),
     // Larger poster on hover with tip
     Plot.image(bumpChartData, Plot.pointer({
-      x: "weekDate",
+      x: "weekStart",
       y: "rank",
       src: "cover_image_url",
       width: 24,
@@ -592,25 +594,25 @@ display(Plot.plot({
     })),
     // Tip for hover
     Plot.tip(bumpChartData, Plot.pointer({
-      x: "weekDate",
+      x: "weekStart",
       y: "rank",
       title: d => `${d.title_romaji}\nWeek: ${d.week}\n#${d.rank} • ${formatCompact(d.downloads)} downloads`
     })),
     // End labels with posters
     Plot.image(lastWeekRankings, {
-      x: "weekDate",
+      x: "weekStart",
       y: "rank",
       src: "cover_image_url",
       width: 28,
       height: 42,
-      dx: 25,
+      dx: 55,
       opacity: d => highlightMode && !selectedIds.has(d.anilist_id) ? 0.15 : 1
     }),
     Plot.text(lastWeekRankings, {
-      x: "weekDate",
+      x: "weekStart",
       y: "rank",
       text: d => d.title_romaji?.slice(0, 22) + (d.title_romaji?.length > 22 ? "..." : ""),
-      dx: 55,
+      dx: 85,
       textAnchor: "start",
       fill: d => highlightMode && !selectedIds.has(d.anilist_id) ? "#555" : showColors[d.anilist_id],
       fontSize: 10,
@@ -663,8 +665,8 @@ const episodePercentileData = Array.from(episodeOrdinalGroups, ([ep, data]) => {
 }).sort((a, b) => a.episode - b.episode);
 
 display(Plot.plot({
-  title: "Fall 2025 Downloads by Episode (Absolute)",
-  subtitle: "Cumulative per-episode downloads • NyaaStats",
+  title: `${seasonTitle} Downloads per Episode`,
+  subtitle: "Cumulative over the season • NyaaStats",
   height: 400,
   width: plotWidth,
   marginLeft: 70,
@@ -784,7 +786,7 @@ const yDomainNorm = focusMode && selectedEpisodesNorm.length > 0
   : [0, Math.max(1.5, d3.max(episodesNormalizedPct, d => d.downloads_pct) || 1.5)];
 
 display(Plot.plot({
-  title: "Fall 2025 Downloads by Episode (Normalized)",
+  title: `${seasonTitle} Downloads per Episode (Normalized)`,
   subtitle: "Episode 1 = 100% • NyaaStats",
   height: 400,
   width: plotWidth,
@@ -879,8 +881,8 @@ display(html`<div class="facet-stack">
     const median = d3.median(bucketData, d => d.endurance);
     return html`<div class="facet-block">
       ${Plot.plot({
-        title: "Fall 2025 Endurance by Premiere Size",
-        subtitle: `${bucket} • Avg of later episodes vs Episode 1 • Downloads are per-episode torrents, not unique viewers • NyaaStats`,
+        title: `${seasonTitle} Endurance (${bucket})`,
+        subtitle: `Downloads of episode 1 vs later episodes (averaged) • NyaaStats`,
         height: 460,
         width: plotWidth,
         marginLeft: 70,
@@ -888,7 +890,7 @@ display(html`<div class="facet-stack">
         marginBottom: 40,
         marginTop: 20,
         x: {
-          label: "Endurance (Avg of later episodes vs Episode 1)",
+          label: "Endurance (Episode 1 vs later episodes)",
           domain: enduranceDomain,
           tickFormat: d => `${(d * 100).toFixed(0)}%`
         },
@@ -951,7 +953,7 @@ display(html`<div class="facet-stack">
 ```js
 // Build latecomers data
 const latecomersData = filteredShows
-  .filter(s => s.latecomers !== null && s.latecomers >= 0)
+  .filter(s => s.latecomers !== null && s.latecomers > 0.01)
   .map(s => ({ ...s, ep1_bucket: bucketLabel(s.ep1_downloads) }));
 
 const latecomersDomain = [0, Math.min(0.8, maxLatecomers * 1.1)];
@@ -962,8 +964,8 @@ display(html`<div class="facet-stack">
     const median = d3.median(bucketData, d => d.latecomers);
     return html`<div class="facet-block">
       ${Plot.plot({
-        title: "Fall 2025 Latecomers by Premiere Size",
-        subtitle: `${bucket} • Share of Episode 1 downloads after week 1 • Buckets use Episode 1 download size • NyaaStats`,
+        title: `${seasonTitle} Latecomers (${bucket})`,
+        subtitle: `Ratio of Episode 1 downloads after 1st week • NyaaStats`,
         height: 460,
         width: plotWidth,
         marginLeft: 70,
@@ -971,7 +973,7 @@ display(html`<div class="facet-stack">
         marginBottom: 40,
         marginTop: 20,
         x: {
-          label: "Latecomers (Episode 1 downloads after week 1)",
+          label: "Latecomers (Episode 1 downloads after first week)",
           domain: latecomersDomain,
           tickFormat: d => `${(d * 100).toFixed(0)}%`
         },
