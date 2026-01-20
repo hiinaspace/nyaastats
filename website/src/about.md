@@ -10,7 +10,7 @@ Nyaastats tracks download statistics for anime torrents from [Nyaa.si](https://n
    - Matches torrents to anime shows using fuzzy title matching against the [AniList](https://anilist.co) database
    - Aggregates downloads across multiple torrent releases (different groups, resolutions, etc.)
    - Calculates daily and weekly statistics
-   - Exports processed data as Parquet and JSON files
+   - Exports processed data as JSON files
 
 3. **Visualization**: This website uses [Observable Framework](https://observablehq.com/framework) to create interactive visualizations from the processed data.
 
@@ -46,8 +46,8 @@ Currently tracking:
 ## Technology Stack
 
 - **Backend**: Python 3.11+ with SQLite
-- **ETL**: Polars, DuckDB, Pyarrow
-- **Frontend**: Observable Framework, Observable Plot, Arquero
+- **ETL**: Polars, DuckDB
+- **Frontend**: Observable Framework, Observable Plot
 - **Deployment**: Static hosting (Vercel/Cloudflare Pages)
 
 ## Source Code

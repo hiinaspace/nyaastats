@@ -10,7 +10,7 @@
 
 **Key Features**:
 - **Front page**: Compact weekly ranking bump chart with river width encoding download volume
-- **Per-show pages**: Daily download time series with episode breakdowns and cumulative stats
+- **Season pages**: Episode patterns, rankings, and season-level metrics
 - **MVP Scope**: Fall 2025 and Winter 2026 seasons (first complete data seasons)
 
 ## 2. System Architecture
@@ -39,15 +39,17 @@
          ↓
 ┌─────────────────────────────────┐
 │  Output Files                   │
-│  - episodes.parquet (detailed)  │
-│  - rankings.json (bump chart)   │
+│  - rankings.json (weekly)       │
+│  - seasons.json (index)         │
+│  - season-*.json (summaries)    │
+│  - episodes-*.json (totals)     │
 └────────┬────────────────────────┘
          │
          ↓
 ┌─────────────────────────────────┐
 │  Observable Framework Website   │
-│  - Front page: Bump chart       │
-│  - Show pages: Episode charts   │
+│  - Front page: Weekly treemaps  │
+│  - Season pages: Overview charts│
 └─────────────────────────────────┘
 ```
 
@@ -222,23 +224,35 @@ Group by `(anilist_id, episode, date)` where `date = floor(timestamp to day)`:
 
 ### 3.3 Output Files
 
-#### `episodes.parquet`
-Detailed per-episode time series for show detail pages.
+#### `episodes-*.json`
+Per-season episode totals for season overview pages.
 
 **Schema**:
 ```
 anilist_id (int64): AniList show ID
 episode (int32): Episode number
-date (timestamp): Aggregated daily timestamp
-downloads_daily (int32): Downloads on this day for this episode
-downloads_cumulative (int32): Cumulative downloads for this episode up to this date
-days_since_first_torrent (float64): Normalized time axis
-title (string): Show title (for convenience, denormalized)
+downloads_cumulative (int32): Total downloads for the episode within the season window
 ```
 
-**Sorted by**: `anilist_id`, `episode`, `date`
+**Sorted by**: `anilist_id`, `episode`
 
-**Size estimate**: ~100 shows × ~12 episodes × ~60 days = ~72k rows (very manageable)
+**Size estimate**: ~100 shows × ~12 episodes = ~1.2k rows (very manageable)
+
+#### `season-*.json`
+Per-season summary used by the season overview dashboards.
+
+Contains:
+- `weeks`: per-week rankings within the season
+- `shows`: show summary stats (total downloads, endurance, latecomers, ep1 downloads, etc.)
+- `start_date`/`end_date` for the season window
+
+#### `seasons.json`
+Index of available seasons for navigation and routing.
+
+Contains:
+- `name`, `slug`, `season`, `year`
+- `start_date`, `end_date`, `status`
+- `shows_count`, `weeks_count`, `latest_week`, `latest_week_start`
 
 #### `rankings.json`
 Pre-aggregated weekly ranking data for front page bump chart.
@@ -326,7 +340,7 @@ class WeeklyRanking:
 
 ### 5.1 Technology Stack
 - **Observable Framework**: Static site generator with reactive data
-- **Parquet WASM** + **Arquero**: Load and query Parquet client-side (lightweight, no DuckDB overhead)
+- **Client-side JSON**: Load season summaries and per-season episode totals.
 - **Observable Plot**: Declarative visualization library
 - **Hosting**: Static hosting (Vercel, Cloudflare Pages, GitHub Pages, etc.)
 
@@ -348,7 +362,7 @@ const rankings = FileAttachment("data/rankings.json").json();
 
 **Interactions**:
 - Hover to see show name, rank, download count
-- Click to navigate to show detail page
+- Click to navigate to season overview page
 
 ### 5.3 Show Detail Page (`/show/:anilist_id`)
 
@@ -372,7 +386,7 @@ const rankings = FileAttachment("data/rankings.json").json();
 
 **Data Loading**:
 ```javascript
-const episodes = FileAttachment("data/episodes.parquet").parquet();
+const episodes = FileAttachment("data/episodes-fall-2025.json").json();
 const showData = episodes.filter(d => d.anilist_id === params.anilist_id);
 ```
 
@@ -381,7 +395,7 @@ const showData = episodes.filter(d => d.anilist_id === params.anilist_id);
 Observable Framework supports [data loaders](https://observablehq.com/framework/loaders) that can run Python scripts as part of the build process. For MVP, we use standalone ETL (Option A), but could migrate to integrated loaders (Option B) later:
 
 **Option B (future)**:
-- Create `website/src/data/episodes.parquet.py`
+- Create `website/src/data/episodes-<season>.json.py`
 - Observable runs this automatically on build
 - Requires database access during build (more complex deployment)
 
@@ -395,7 +409,7 @@ nyaastats/
 │   │   ├── anilist_client.py    # GraphQL queries, rate limiting
 │   │   ├── fuzzy_matcher.py     # Title matching with thefuzz
 │   │   ├── aggregator.py        # Download aggregation logic
-│   │   ├── exporter.py          # Parquet/JSON export
+│   │   ├── exporter.py          # JSON export
 │   │   └── config.py            # ETL configuration (season dates, thresholds)
 │   ├── etl_main.py              # Entry point: python -m nyaastats.etl_main
 │   └── ...                       # Existing scraper code
@@ -404,7 +418,7 @@ nyaastats/
 │   │   ├── index.md             # Front page (bump chart)
 │   │   ├── show.md              # Show detail template
 │   │   └── data/
-│   │       ├── episodes.parquet  # Generated by ETL
+│   │       ├── episodes-*.json   # Generated by ETL
 │   │       └── rankings.json     # Generated by ETL
 │   ├── observablehq.config.js   # Framework config
 │   └── package.json
@@ -417,7 +431,7 @@ nyaastats/
 │   │   ├── test_aggregator.py
 │   │   └── test_exporter.py
 │   └── ...
-├── pyproject.toml               # Add new deps: pyarrow, thefuzz, gql
+├── pyproject.toml               # Add new deps: thefuzz, gql
 ├── PIPELINE_DESIGN.md           # This document
 └── README.md
 ```
@@ -429,7 +443,6 @@ Add to `pyproject.toml`:
 ```toml
 dependencies = [
     # ... existing deps
-    "pyarrow>=15.0.0",        # Parquet export
     "thefuzz>=0.20.0",        # Fuzzy string matching
     "python-Levenshtein>=0.21.0",  # Faster fuzzy matching
     "gql>=3.5.0",             # GraphQL client
@@ -455,7 +468,7 @@ dependencies = [
 - [ ] Daily episode aggregation
 - [ ] Weekly ranking calculation
 - [ ] Time normalization logic
-- [ ] Parquet export with pyarrow
+- [ ] JSON exports for season pages
 - [ ] JSON export for bump chart
 - [ ] Manual tuning of fuzzy match threshold with real data
 
@@ -498,7 +511,7 @@ dependencies = [
 
 - **Multi-season support**: Remove Fall 2025 hardcoding, support Winter 2026+
 - **Incremental ETL**: Process only new data since last run (checkpointing)
-- **Resolution/group breakdowns**: Add dimensions to Parquet (filter by 1080p vs 720p, etc.)
+- **Resolution/group breakdowns**: Add dimensions to JSON exports (filter by 1080p vs 720p, etc.)
 - **Local AniList cache**: SQLite table to reduce API calls
 - **Manual matching UI**: Web interface to override fuzzy matches
 - **Historical comparisons**: Compare show performance across seasons
@@ -509,7 +522,7 @@ dependencies = [
 - **ETL Success Rate**: >90% of torrents successfully matched to AniList IDs
 - **False Positive Rate**: <5% incorrect matches (manual inspection)
 - **Data Completeness**: All Fall 2025 and Winter 2026 shows with >1000 downloads represented
-- **Website Performance**: Front page loads in <2s, show pages in <1s (on good connection)
+- **Website Performance**: Front page loads in <2s, season pages in <1s (on good connection)
 - **Mobile Usability**: Bump chart readable on mobile viewport without horizontal scroll
 
 ## 11. Non-Goals (Explicitly Out of Scope for MVP)

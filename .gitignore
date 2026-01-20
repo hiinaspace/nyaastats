@@ -21,4 +21,3 @@ website/dist/
 website/.observablehq/
 website/src/data/*.parquet
 website/src/data/*.json
-website/src/data/match_report.txt

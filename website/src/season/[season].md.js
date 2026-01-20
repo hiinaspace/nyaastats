@@ -22,14 +22,13 @@ const seasonLabel = seasonMeta.name || requestedSlug.replace(/-/g, " ");
 const seasonStatus = seasonMeta.status || "unknown";
 let seasonTitle = seasonLabel;
 if (seasonStatus === "in-progress") {
-  const latest = seasonMeta.latest_week_start;
-  const formatted = latest
-    ? new Intl.DateTimeFormat("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric"
-      }).format(new Date(`${latest}T00:00:00Z`))
-    : "today";
+  const today = new Date();
+  const formatted = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC"
+  }).format(today);
   seasonTitle = `${seasonLabel} (up to ${formatted})`;
 }
 

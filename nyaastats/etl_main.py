@@ -134,10 +134,7 @@ async def run_etl_pipeline(
         logger.info("\nStep 8: Exporting results...")
         exporter = DataExporter(output_dir)
 
-        exporter.export_episode_stats(daily_stats)
         exporter.export_weekly_rankings(weekly_rankings)
-        exporter.export_shows_metadata(seasons_data, weekly_rankings)
-        exporter.write_match_report(matched, unmatched)
 
         # Step 9: Export seasonal summary data for interactive visualizations
         logger.info("\nStep 9: Exporting seasonal summary data...")
@@ -167,10 +164,10 @@ async def run_etl_pipeline(
         logger.info("ETL pipeline completed successfully!")
         logger.info("=" * 80)
         logger.info(f"Outputs written to: {output_dir}")
-        logger.info(f"  - episodes.parquet: {len(daily_stats)} rows")
         logger.info(f"  - rankings.json: {weekly_rankings['week'].n_unique()} weeks")
-        logger.info("  - match_report.txt: Match statistics")
+        logger.info("  - seasons.json: season index")
         logger.info("  - season-*.json: Seasonal summary data")
+        logger.info("  - episodes-*.json: Season episode totals")
     finally:
         # Ensure database connection is always closed
         aggregator.close()
