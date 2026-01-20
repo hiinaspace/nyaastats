@@ -2,7 +2,7 @@
 toc: false
 ---
 
-# Nyaastats - __SEASON_TITLE__
+# Nyaastats: __SEASON_TITLE__
 
 
 ```js
@@ -1049,13 +1049,6 @@ display(html`<div class="facet-stack">
   })}
 </div>`);
 ```
-
----
-
-<div class="note">
-  Data source: Nyaa.si torrent tracker. Statistics aggregated from tracker scrapes.
-  <a href="/">← Back to Weekly Rankings</a>
-</div>
 
 <style>
   .note {

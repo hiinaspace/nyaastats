@@ -1,24 +1,7 @@
 ---
 toc: false
 ---
-# Nyaa Download Rankings
-
-```js
-const seasonsIndex = await FileAttachment("data/seasons.json").json();
-const sortedSeasons = [...seasonsIndex].sort((a, b) =>
-  new Date(b.start_date) - new Date(a.start_date)
-);
-const latestSeason = sortedSeasons[0];
-const seasonNames = sortedSeasons.map(s => s.name).join(" and ");
-const latestLink = latestSeason ? `/season/${latestSeason.slug}` : "/season/fall-2025";
-
-display(html`<div class="note">
-  Tracking download statistics for ${seasonNames} anime seasons.
-  Data updates weekly.
-  <a href="${latestLink}">View the interactive ${latestSeason?.name || "Season"} Overview →</a>
-</div>`);
-```
-
+# Nyaastats: Weekly Rankings
 ```js
 // Load rankings data
 const rankings = FileAttachment("data/rankings.json").json();
@@ -324,8 +307,6 @@ function renderTreemap(weekData, weekIndex, titleLines, subtitleLines) {
 }
 ```
 
-## Weekly Rankings
-
 ```js
 // Render treemaps for each of the last 4 weeks
 for (let i = 0; i < recentWeeks.length; i++) {
@@ -337,12 +318,6 @@ for (let i = 0; i < recentWeeks.length; i++) {
   </figure>`);
 }
 ```
-
----
-
-<div class="note">
-  Data source: Nyaa.si torrent tracker. Statistics aggregated from tracker scrapes.
-</div>
 
 <style>
   .chart-figure {
