@@ -25,8 +25,47 @@ const rankings = FileAttachment("data/rankings.json").json();
 ```
 
 ```js
+const clampWidth = (value, min, max) => Math.max(min, Math.min(max, value || min));
+const plotWidth = clampWidth(width, 720, 1600);
+
 // Get latest 4 weeks (most recent first for display)
 const recentWeeks = rankings.weeks.slice(-4).reverse();
+
+function formatCompact(n) {
+  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
+  if (n >= 1000) return `${(n / 1000).toFixed(0)}K`;
+  return String(n);
+}
+
+function isoWeekToMonday(weekStr) {
+  const [yearStr, weekNumStr] = weekStr.split("-W");
+  const year = Number(yearStr);
+  const week = Number(weekNumStr);
+  const simple = new Date(Date.UTC(year, 0, 1 + (week - 1) * 7));
+  const dow = simple.getUTCDay();
+  const isoMonday = new Date(simple);
+  isoMonday.setUTCDate(simple.getUTCDate() - ((dow + 6) % 7));
+  return isoMonday;
+}
+
+function formatDateRange(weekStr, startDate) {
+  const start = startDate ? new Date(startDate) : isoWeekToMonday(weekStr);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
+  const sameMonth = start.getMonth() === end.getMonth();
+  const sameYear = start.getFullYear() === end.getFullYear();
+  const startFmt = start.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric"
+  });
+  const endFmt = end.toLocaleDateString("en-US", {
+    month: sameMonth ? "short" : "short",
+    day: "numeric",
+    year: sameYear ? undefined : "numeric"
+  });
+  const yearFmt = end.toLocaleDateString("en-US", { year: "numeric" });
+  return `${startFmt} – ${endFmt}, ${yearFmt}`;
+}
 
 // Build a map of previous week's ranks for calculating deltas
 function getRankChanges(weekIndex) {
@@ -69,13 +108,16 @@ function renderTreemap(weekData, weekIndex) {
       downloadChange: prevDownloads.has(r.anilist_id)
         ? r.downloads - prevDownloads.get(r.anilist_id)
         : null,
+      downloadChangePct: prevDownloads.has(r.anilist_id) && prevDownloads.get(r.anilist_id) > 0
+        ? (r.downloads - prevDownloads.get(r.anilist_id)) / prevDownloads.get(r.anilist_id)
+        : null,
       isNew: !prevRanks.has(r.anilist_id)
     }))
   };
 
   // Create treemap layout (~20% larger)
-  const width = 1080;
-  const height = 720;
+  const width = plotWidth;
+  const height = Math.round(width * 0.66);
 
   const root = d3.hierarchy(hierarchyData)
     .sum(d => d.value)
@@ -110,20 +152,26 @@ function renderTreemap(weekData, weekIndex) {
     .attr("stop-color", "rgba(0,0,0,0.85)");
 
   // Add rectangles
-  const leaf = svg.selectAll("g")
+  const leaf = svg.selectAll("a")
     .data(root.leaves())
-    .join("g")
+    .join("a")
+    .attr("href", d => `https://anilist.co/anime/${d.data.anilist_id}`)
+    .attr("target", "_blank")
+    .attr("rel", "noopener")
+    .style("cursor", "pointer");
+
+  const leafGroup = leaf.append("g")
     .attr("transform", d => `translate(${d.x0},${d.y0})`);
 
   // Define clip paths for cells
-  leaf.append("clipPath")
+  leafGroup.append("clipPath")
     .attr("id", (d, i) => `cell-clip-${weekIndex}-${i}`)
     .append("rect")
     .attr("width", d => d.x1 - d.x0)
     .attr("height", d => d.y1 - d.y0);
 
   // Rectangle background (fallback color or default)
-  leaf.append("rect")
+  leafGroup.append("rect")
     .attr("width", d => d.x1 - d.x0)
     .attr("height", d => d.y1 - d.y0)
     .attr("fill", d => d.data.cover_image_color || "#1a1a2e")
@@ -131,7 +179,7 @@ function renderTreemap(weekData, weekIndex) {
     .attr("stroke-width", 1);
 
   // Cover image background
-  leaf.filter(d => d.data.cover_image_url)
+  leafGroup.filter(d => d.data.cover_image_url)
     .append("image")
     .attr("href", d => d.data.cover_image_url)
     .attr("width", d => d.x1 - d.x0)
@@ -140,7 +188,7 @@ function renderTreemap(weekData, weekIndex) {
     .attr("clip-path", (d, i) => `url(#cell-clip-${weekIndex}-${i})`);
 
   // Only add text elements for top 40 shows
-  const textLeaf = leaf.filter(d => d.data.rank <= 40);
+  const textLeaf = leafGroup.filter(d => d.data.rank <= 40);
 
   // Text background gradient (bottom portion only)
   const textBgHeight = 80;
@@ -179,13 +227,20 @@ function renderTreemap(weekData, weekIndex) {
     .attr("font-size", "10px")
     .attr("fill", "#ddd")
     .style("text-shadow", textShadow)
-    .text(d => {
-      const dl = d.data.downloads.toLocaleString();
-      if (d.data.downloadChange !== null && d.data.downloadChange !== 0) {
-        const sign = d.data.downloadChange > 0 ? "+" : "";
-        return `${dl} (${sign}${d.data.downloadChange.toLocaleString()})`;
-      }
-      return dl;
+    .call(text => {
+      text.append("tspan")
+        .text(d => formatCompact(d.data.downloads));
+      text.append("tspan")
+        .attr("fill", d => {
+          if (d.data.downloadChangePct > 0) return "#4ade80";
+          if (d.data.downloadChangePct < 0) return "#f87171";
+          return "#aaa";
+        })
+        .text(d => {
+          if (d.data.downloadChangePct == null || d.data.downloadChangePct === 0) return "";
+          const sign = d.data.downloadChangePct > 0 ? "+" : "";
+          return ` (${sign}${(d.data.downloadChangePct * 100).toFixed(0)}%)`;
+        });
     });
 
   // English title (secondary, above downloads)
@@ -220,15 +275,19 @@ function renderTreemap(weekData, weekIndex) {
     .attr("fill", "#fff")
     .text(d => `#${d.data.rank}`);
 
+  const isOldestWeek = weekIndex === recentWeeks.length - 1;
+
   // Change indicator in color
   rankText.append("tspan")
     .attr("fill", d => {
+      if (isOldestWeek) return "#888";
       if (d.data.isNew) return "#aaa";
       if (d.data.rankChange > 0) return "#4ade80";
       if (d.data.rankChange < 0) return "#f87171";
       return "#888";
     })
     .text(d => {
+      if (isOldestWeek) return "";
       if (d.data.isNew) return " NEW";
       if (d.data.rankChange > 0) return ` ▲${d.data.rankChange}`;
       if (d.data.rankChange < 0) return ` ▼${Math.abs(d.data.rankChange)}`;
@@ -236,7 +295,7 @@ function renderTreemap(weekData, weekIndex) {
     });
 
   // For ranks >40, just show the rank number (no title/details)
-  const smallLeaf = leaf.filter(d => d.data.rank > 40);
+  const smallLeaf = leafGroup.filter(d => d.data.rank > 40);
   smallLeaf.append("text")
     .attr("x", 4)
     .attr("y", d => Math.min(14, (d.y1 - d.y0) - 4))
@@ -256,8 +315,14 @@ function renderTreemap(weekData, weekIndex) {
 // Render treemaps for each of the last 4 weeks
 for (let i = 0; i < recentWeeks.length; i++) {
   const week = recentWeeks[i];
-  display(html`<h3>Week ${week.week}</h3>`);
-  display(renderTreemap(week, i));
+  const rangeLabel = formatDateRange(week.week, week.start_date);
+  display(html`<figure class="chart-figure">
+    <figcaption>
+      <div class="figure-title">Weekly Rankings — ${rangeLabel}</div>
+      <div class="figure-subtitle">Episode download totals for the week • NyaaStats • Posters via AniList API</div>
+    </figcaption>
+    ${renderTreemap(week, i)}
+  </figure>`);
 }
 ```
 
@@ -266,3 +331,27 @@ for (let i = 0; i < recentWeeks.length; i++) {
 <div class="note">
   Data source: Nyaa.si torrent tracker. Statistics aggregated from tracker scrapes.
 </div>
+
+<style>
+  .chart-figure {
+    margin: 0 0 1.5rem;
+  }
+
+  .chart-figure figcaption {
+    margin-bottom: 0.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    color: #b5b5b5;
+    font-size: 0.85rem;
+  }
+
+  .figure-title {
+    font-weight: 600;
+    color: #e0e0e0;
+  }
+
+  .figure-subtitle {
+    color: #9a9a9a;
+  }
+</style>

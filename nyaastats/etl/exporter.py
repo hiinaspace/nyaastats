@@ -3,10 +3,17 @@
 import json
 import logging
 from pathlib import Path
+from datetime import date, datetime
 
 import polars as pl
 
 logger = logging.getLogger(__name__)
+
+
+def iso_week_to_monday(week_str: str) -> date:
+    """Convert ISO week string (2025-W40) to Monday of that week."""
+    year, week = week_str.split("-W")
+    return datetime.strptime(f"{year}-W{week}-1", "%G-W%V-%u").date()
 
 
 class DataExporter:
@@ -92,10 +99,10 @@ class DataExporter:
             ).to_dicts()
 
             # Get week start date (Monday of ISO week)
-            # For now, just use the week string
+            week_start = iso_week_to_monday(week).isoformat()
             week_entry = {
                 "week": week,
-                "start_date": None,  # TODO: calculate from ISO week if needed
+                "start_date": week_start,
                 "rankings": rankings_list,
             }
 
