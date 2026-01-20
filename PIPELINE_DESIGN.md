@@ -243,7 +243,7 @@ Per-season summary used by the season overview dashboards.
 
 Contains:
 - `weeks`: per-week rankings within the season
-- `shows`: show summary stats (total downloads, endurance, latecomers, ep1 downloads, etc.)
+- `shows`: show summary stats (total downloads, endurance, late_starters, ep1 downloads, etc.)
 - `start_date`/`end_date` for the season window
 
 #### `seasons.json`

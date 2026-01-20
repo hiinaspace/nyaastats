@@ -316,7 +316,7 @@ class SeasonalExporter:
             episodes_aired = 0
             ep1_downloads = 0
             endurance = None
-            latecomers = None
+            late_starters = None
 
             if len(show_episodes) > 0:
                 # Get unique episodes
@@ -345,7 +345,7 @@ class SeasonalExporter:
                 if len(ep1_data) > 0:
                     ep1_downloads = ep1_data["downloads_total"][0]
 
-                    # Latecomers: share of Ep1 downloads after day 7
+                    # Late Starters: share of Ep1 downloads after day 7
                     ep1_stats = show_episodes.filter(pl.col("episode") == min_episode)
                     if len(ep1_stats) > 0:
                         ep1_total = ep1_stats["downloads_daily"].sum()
@@ -353,7 +353,7 @@ class SeasonalExporter:
                             pl.col("days_since_first_torrent") <= 7
                         )["downloads_daily"].sum()
                         if ep1_total > 0:
-                            latecomers = (ep1_total - ep1_early) / ep1_total
+                            late_starters = (ep1_total - ep1_early) / ep1_total
 
                 # Endurance: avg of later episodes vs Ep1
                 eligible_later = per_episode.filter(
@@ -391,7 +391,7 @@ class SeasonalExporter:
                     "total_downloads": total_downloads,
                     "episodes_aired": episodes_aired,
                     "endurance": round(endurance, 3) if endurance is not None else None,
-                    "latecomers": round(latecomers, 3) if latecomers is not None else None,
+                    "late_starters": round(late_starters, 3) if late_starters is not None else None,
                     "ep1_downloads": int(ep1_downloads) if ep1_downloads else 0,
                     "current_rank": current_rank,
                 }

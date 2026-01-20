@@ -53,7 +53,7 @@ function formatCompact(n) {
 // Max downloads for scaling bars
 const maxDownloads = d3.max(shows, s => s.total_downloads) || 1;
 const maxEndurance = d3.max(shows.filter(s => s.endurance && s.endurance > 0), s => s.endurance) || 1;
-const maxLatecomers = d3.max(shows.filter(s => s.latecomers != null), s => s.latecomers) || 0.5;
+const maxLateStarters = d3.max(shows.filter(s => s.late_starters != null), s => s.late_starters) || 0.5;
 const clampWidth = (value, min, max) => Math.max(min, Math.min(max, value || min));
 const plotWidth = clampWidth(width, 720, 1600);
 
@@ -82,7 +82,7 @@ const episodesByShow = d3.group(episodesData, d => d.anilist_id);
 // Weekly rank data by show for sparklines
 const weeklyRanksByShow = d3.group(allRankings, d => d.anilist_id);
 
-// Metrics (endurance + latecomers) are precomputed in ETL
+// Metrics (endurance + late_starters) are precomputed in ETL
 ```
 
 ```js
@@ -386,24 +386,30 @@ function makeEnduranceCell(show) {
   </div>`;
 }
 
-function makeLatecomersCell(show) {
-  if (!show || show.latecomers == null) return html`<span style="color:#666">—</span>`;
+function makeLateStartersCell(show) {
+  if (!show || show.late_starters == null) return html`<span style="color:#666">—</span>`;
   const color = showColors[show.anilist_id] || "#4a9eff";
-  return sparkbar(maxLatecomers, color, x => `${(x * 100).toFixed(0)}%`)(show.latecomers);
+  return sparkbar(maxLateStarters, color, x => `${(x * 100).toFixed(0)}%`)(show.late_starters);
 }
 ```
 
 ```js
 // Interactive table with multi-select
 const table = Inputs.table(sortedShows, {
-  columns: ["cover_image_url", "title_romaji", "season_rank", "total_downloads", "endurance", "latecomers"],
+  columns: ["cover_image_url", "title_romaji", "season_rank", "total_downloads", "endurance", "late_starters"],
   header: {
     cover_image_url: "",
     title_romaji: "Title",
     season_rank: "Rank",
     total_downloads: "Downloads",
-    endurance: "Endurance",
-    latecomers: "Latecomers"
+    // the <b> wrapping is since inputs.css has some odd empty span rule that's margin-block and 0 width,
+    // so the default html span also gets that rule and throws off the html.
+    endurance: html`<b>Endurance <a href="/about#what-is-endurance" class="info-icon" title="How well shows maintain viewership after episode 1. Click for details.">ⓘ</a></b>`,
+    late_starters: html`<b>Late Starters <a href="/about#what-are-late-starters" class="info-icon" title="Percentage of viewers who started after premiere week. Click for details.">ⓘ</a></b>`
+  },
+  align: {
+    endurance: 'left',
+    late_starters: 'left'
   },
   format: {
     cover_image_url: url => url ? html`<img src="${url}" style="height:45px;border-radius:4px;object-fit:cover">` : "",
@@ -426,7 +432,7 @@ const table = Inputs.table(sortedShows, {
     },
     total_downloads: (_, i, data) => makeDownloadsCell(data[i]),
     endurance: (_, i, data) => makeEnduranceCell(data[i]),
-    latecomers: (_, i, data) => makeLatecomersCell(data[i])
+    late_starters: (_, i, data) => makeLateStartersCell(data[i])
   },
   width: {
     cover_image_url: 55,
@@ -434,7 +440,7 @@ const table = Inputs.table(sortedShows, {
     season_rank: 100,
     total_downloads: 140,
     endurance: 150,
-    latecomers: 120
+    late_starters: 120
   },
   align: {
     season_rank: "right",
@@ -888,7 +894,7 @@ display(html`<div class="facet-stack">
     return html`<div class="facet-block">
       ${Plot.plot({
         title: `${seasonTitle} Endurance (${bucket})`,
-        subtitle: `Downloads of episode 1 vs later episodes (averaged) • NyaaStats`,
+        subtitle: `How well shows maintain viewership after episode 1 • NyaaStats`,
         height: 460,
         width: plotWidth,
         marginLeft: 70,
@@ -896,7 +902,7 @@ display(html`<div class="facet-stack">
         marginBottom: 40,
         marginTop: 20,
         x: {
-          label: "Endurance (Episode 1 vs later episodes)",
+          label: "Viewership retained after episode 1",
           domain: enduranceDomain,
           tickFormat: d => `${(d * 100).toFixed(0)}%`
         },
@@ -957,21 +963,21 @@ display(html`<div class="facet-stack">
 ```
 
 ```js
-// Build latecomers data
-const latecomersData = filteredShows
-  .filter(s => s.latecomers !== null && s.latecomers > 0.01)
+// Build late_starters data
+const lateStartersData = filteredShows
+  .filter(s => s.late_starters !== null && s.late_starters > 0.01)
   .map(s => ({ ...s, ep1_bucket: bucketLabel(s.ep1_downloads) }));
 
-const latecomersDomain = [0, Math.min(0.8, maxLatecomers * 1.1)];
+const lateStartersDomain = [0, Math.min(0.8, maxLateStarters * 1.1)];
 
 display(html`<div class="facet-stack">
   ${bucketOrder.map(bucket => {
-    const bucketData = latecomersData.filter(d => d.ep1_bucket === bucket);
-    const median = d3.median(bucketData, d => d.latecomers);
+    const bucketData = lateStartersData.filter(d => d.ep1_bucket === bucket);
+    const median = d3.median(bucketData, d => d.late_starters);
     return html`<div class="facet-block">
       ${Plot.plot({
-        title: `${seasonTitle} Latecomers (${bucket})`,
-        subtitle: `Ratio of Episode 1 downloads after 1st week • NyaaStats`,
+        title: `${seasonTitle} Late Starters (${bucket})`,
+        subtitle: `Percentage of viewers starting after premiere week • NyaaStats`,
         height: 460,
         width: plotWidth,
         marginLeft: 70,
@@ -979,8 +985,8 @@ display(html`<div class="facet-stack">
         marginBottom: 40,
         marginTop: 20,
         x: {
-          label: "Latecomers (Episode 1 downloads after first week)",
-          domain: latecomersDomain,
+          label: "Viewers who started after premiere week",
+          domain: lateStartersDomain,
           tickFormat: d => `${(d * 100).toFixed(0)}%`
         },
         y: { axis: null },
@@ -989,12 +995,12 @@ display(html`<div class="facet-stack">
           Plot.dot(
             bucketData,
             Plot.dodgeY({
-              x: "latecomers",
+              x: "late_starters",
               r: 22,
               anchor: "middle",
               fill: d => {
                 if (highlightMode && !selectedIds.has(d.anilist_id)) return "#333";
-                return d.latecomers >= 0.35 ? "#4ade80" : d.latecomers <= 0.15 ? "#f87171" : showColors[d.anilist_id];
+                return d.late_starters >= 0.35 ? "#4ade80" : d.late_starters <= 0.15 ? "#f87171" : showColors[d.anilist_id];
               },
               fillOpacity: d => highlightMode && !selectedIds.has(d.anilist_id) ? 0.45 : 0.85,
               stroke: d => selectedIds.has(d.anilist_id) ? "#fff" : "none",
@@ -1004,7 +1010,7 @@ display(html`<div class="facet-stack">
           Plot.image(
             bucketData,
             Plot.dodgeY({
-              x: "latecomers",
+              x: "late_starters",
               src: "cover_image_url",
               width: 36,
               height: 54,
@@ -1016,7 +1022,7 @@ display(html`<div class="facet-stack">
           focusMode && selectedShows.length > 0 ? Plot.text(
             bucketData,
             Plot.dodgeY({
-              x: "latecomers",
+              x: "late_starters",
               text: d => selectedIds.has(d.anilist_id) ? d.title_romaji?.slice(0, 18) : "",
               r: 22,
               anchor: "middle",
@@ -1029,12 +1035,12 @@ display(html`<div class="facet-stack">
             })
           ) : null,
           Plot.tip(bucketData, Plot.pointer(Plot.dodgeY({
-            x: "latecomers",
+            x: "late_starters",
             r: 22,
             anchor: "middle",
             title: d => {
-              const pct = (d.latecomers * 100).toFixed(0);
-              return `${d.title_romaji}\nLatecomers: ${pct}%\nEpisode 1: ${formatCompact(d.ep1_downloads || 0)}\nTotal: ${formatCompact(d.total_downloads)}`;
+              const pct = (d.late_starters * 100).toFixed(0);
+              return `${d.title_romaji}\nLate Starters: ${pct}%\nEpisode 1: ${formatCompact(d.ep1_downloads || 0)}\nTotal: ${formatCompact(d.total_downloads)}`;
             }
           })))
         ].filter(Boolean)
@@ -1088,6 +1094,22 @@ display(html`<div class="facet-stack">
   /* Better link styling */
   a:hover {
     text-decoration: underline !important;
+  }
+
+  /* Info icon in table headers */
+  .info-icon {
+    display: inline-block;
+    margin-left: 4px;
+    color: #888;
+    text-decoration: none !important;
+    font-size: 0.85em;
+    vertical-align: middle;
+    cursor: help;
+  }
+
+  .info-icon:hover {
+    color: #4a9eff;
+    text-decoration: none !important;
   }
 
   .focus-chips {

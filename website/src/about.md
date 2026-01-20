@@ -1,67 +1,118 @@
 # About Nyaastats
 
-Nyaastats tracks download statistics for anime torrents from [Nyaa.si](https://nyaa.si), the largest anime torrent tracker.
+Nyaastats tracks download statistics for anime torrents from [Nyaa.si](https://nyaa.si), one of the largest anime torrent sites. This page explains how the data works and what the numbers mean.
 
-## How It Works
+---
 
-1. **Data Collection**: A Python scraper runs hourly to collect torrent metadata and download statistics from Nyaa's RSS feed and BitTorrent trackers.
+## Understanding the Data
 
-2. **ETL Pipeline**: Weekly, an ETL pipeline processes the raw data:
-   - Matches torrents to anime shows using fuzzy title matching against the [AniList](https://anilist.co) database
-   - Aggregates downloads across multiple torrent releases (different groups, resolutions, etc.)
-   - Calculates daily and weekly statistics
-   - Exports processed data as JSON files
+### What do the download numbers actually represent?
 
-3. **Visualization**: This website uses [Observable Framework](https://observablehq.com/framework) to create interactive visualizations from the processed data.
+The numbers show how many times torrents were fully downloaded, as reported by BitTorrent trackers. When you see "50K downloads" for an episode, it means torrent files for that episode were downloaded to completion approximately 50,000 times.
 
-## Data Coverage
+### Does one download equal one viewer?
 
-Currently tracking:
-- **Fall 2025** season (complete)
-- **Winter 2026** season (ongoing)
+Not exactly, but it's a reasonable proxy. Some people download multiple versions (different quality, different subtitle groups), while others stream or use other sources entirely. We assume the average viewer downloads roughly one version per episode, so the totals approximate unique viewers within this community.
 
-## Methodology
+### Why track torrents instead of streaming numbers?
 
-### Download Counting
-- Downloads are tracked from the BitTorrent tracker's "completed downloads" metric
-- Statistics are aggregated across all torrent versions of an episode (different groups, resolutions, etc.)
-- **Assumption**: The average viewer downloads only one version per episode, so summing across torrents approximates unique viewers
+Streaming platforms don't publish detailed per-show statistics. Torrent downloads are publicly observable and provide a consistent, measurable signal of fan interest—particularly among international viewers who may not have legal streaming access.
 
-### Fuzzy Matching
-- Torrent titles are matched to AniList shows using edit distance (Levenshtein)
-- Manual overrides handle edge cases where auto-matching fails
-- Batch torrents and v2 torrents are excluded to avoid double-counting
+### Which torrents are included?
 
-### Time Normalization
-- Episode statistics are normalized to "days since first torrent release"
-- This allows fair comparison across episodes that aired on different dates
+We track torrents from Nyaa.si tagged as anime. The data is matched to shows in the [AniList](https://anilist.co) database using fuzzy title matching. We exclude batch torrents (full-season packs) and repack/v2 releases to avoid double-counting.
+
+---
+
+## The Metrics
+
+### What is Endurance?
+
+**Endurance** measures how well a show maintains its audience after the first episode.
+
+It's calculated as: *average downloads of episodes 2–14* divided by *episode 1 downloads*.
+
+- **100%** means later episodes get the same downloads as episode 1
+- **80%** means later episodes average 80% of episode 1's downloads (typical drop-off)
+- **Above 100%** is rare—it means the show *grew* in popularity after premiering
+
+We cap at episode 14 to keep comparisons within a single season, even for shows that continue longer.
+
+**What it reveals:** Shows with unusually high endurance kept viewers engaged. Shows with low endurance had many people try episode 1 but not continue.
+
+### What are Late Starters?
+
+**Late Starters** measures what percentage of episode 1 downloads came *after* the first week.
+
+- **10%** means most people downloaded episode 1 right away (hype-driven premiere)
+- **40%** means many people started the show weeks later (word-of-mouth growth)
+
+**What it reveals:** High late starter percentages often indicate "sleeper hits"—shows that weren't hyped but gained audience through recommendations and positive buzz after airing.
+
+### Why group shows by premiere size in some charts?
+
+Shows with huge premieres (like sequels to popular series) behave differently than smaller shows. Grouping by episode 1 download size lets you compare apples to apples—a small show with great endurance vs. other small shows, rather than against blockbusters.
+
+---
+
+## Methodology Details
+
+### How do you handle different subtitle groups and video qualities?
+
+We sum downloads across all releases of the same episode. If SubGroup A's 1080p release got 10K downloads and SubGroup B's 720p got 5K, we report 15K total for that episode.
+
+This assumes most viewers pick one version to watch. It may slightly overcount if many people download multiple versions, or undercount if we miss some releases.
+
+### How do you match torrents to anime shows?
+
+Torrent titles are messy—they include group names, quality tags, and varying title formats. We use fuzzy string matching (edit distance) to find the closest AniList entry, with manual overrides for tricky cases.
+
+Some torrents can't be matched reliably and are excluded from the statistics.
+
+### How do you define a "season"?
+
+Anime seasons follow the standard industry calendar:
+- **Winter**: January–March
+- **Spring**: April–June
+- **Summer**: July–September
+- **Fall**: October–December
+
+Shows are assigned to seasons based on their air date in AniList. Shows that span multiple seasons appear in their starting season.
+
+### How fresh is the data?
+
+The scraper runs hourly to collect new torrents and update download counts. Weekly statistics are computed once per week. For ongoing seasons, you're seeing data up to the most recent weekly update.
+
+---
 
 ## Limitations
 
-- **Not comprehensive**: Only tracks torrents on Nyaa.si, not streaming or direct downloads
-- **Biased sample**: Nyaa is primarily used by international fans; Japanese domestic viewership is not captured
-- **Delayed data**: Statistics lag by ~24 hours due to scrape frequency
-- **Aggregation assumptions**: Summing torrents may over/under-count if viewers download multiple versions
+### What doesn't this data capture?
 
-## Technology Stack
+- **Streaming viewers**: Most anime fans watch via Crunchyroll, Netflix, etc.
+- **Japanese domestic audience**: Nyaa is primarily used by international fans
+- **Direct downloads**: Some people use file hosting sites instead of torrents
+- **Regional variation**: We can't break down by country or region
 
-- **Backend**: Python 3.11+ with SQLite
-- **ETL**: Polars, DuckDB
-- **Frontend**: Observable Framework, Observable Plot
-- **Deployment**: Static hosting (Vercel/Cloudflare Pages)
+This data represents one slice of anime fandom—engaged international fans who use torrents—not the complete picture.
 
-## Source Code
+### Why might some shows be missing or have low numbers?
 
-This project is open source: [github.com/hiinaspace/nyaastats](https://github.com/hiinaspace/nyaastats)
+- **Streaming exclusives**: Shows only on Netflix/etc. may have fewer torrent releases
+- **Niche shows**: Less popular genres have smaller torrent communities
+- **Matching failures**: Some torrents couldn't be matched to AniList entries
+- **Release delays**: Fansub releases may lag behind simulcasts
 
-## License
+---
 
-This project is licensed under the [WTFPL](http://www.wtfpl.net/).
+## More Information
 
-Data is provided as-is for educational and entertainment purposes. Nyaa.si data is publicly available; AniList data is used under their API terms.
+For technical details about the scraper, ETL pipeline, and data formats, see the [GitHub repository](https://github.com/hiinaspace/nyaastats).
+
+Questions or feedback? [Open an issue on GitHub](https://github.com/hiinaspace/nyaastats/issues).
 
 ---
 
 <div class="note">
-  Questions or feedback? Open an issue on <a href="https://github.com/hiinaspace/nyaastats/issues">GitHub</a>.
+  Data is provided for educational and entertainment purposes. Nyaa.si data is publicly available; AniList data is used under their API terms.
 </div>
