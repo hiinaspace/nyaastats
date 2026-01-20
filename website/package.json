@@ -1,0 +1,14 @@
+{
+  "name": "nyaastats-website",
+  "version": "0.1.0",
+  "description": "Nyaa torrent statistics visualization website",
+  "type": "module",
+  "scripts": {
+    "build": "observable build",
+    "dev": "observable preview",
+    "deploy": "observable build && observable deploy"
+  },
+  "devDependencies": {
+    "@observablehq/framework": "^1.0.0"
+  }
+}

@@ -14,3 +14,10 @@ wheels/
 *.db
 *.db-shm
 *.db-wal
+
+# Website
+website/node_modules/
+website/dist/
+website/.observablehq/
+website/src/data/*.parquet
+website/src/data/*.json
