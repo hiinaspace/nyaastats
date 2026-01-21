@@ -14,7 +14,8 @@ export function addWatermark(svg, width, height, titleLines, subtitleLines) {
   const watermarkFill = "rgba(255, 255, 100, 0.85)";
 
   const overlayGroup = svg.append("g")
-    .attr("text-anchor", "end");
+    .attr("text-anchor", "end")
+    .attr("style", "pointer-events: none");
 
   // Calculate total height for subtitle lines
   const subtitleHeight = subtitleLines.length > 0
