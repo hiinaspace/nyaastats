@@ -102,7 +102,12 @@ for (let i = 0; i < weeks.length; i++) {
   }).join("\n");
 
   const dateRange = formatDateRange(weekData.week, weekData.start_date);
-  const description = `<h3>All Anime by Downloads (${dateRange})</h3>\n<pre>${rankingLines}</pre>`;
+  const treemapUrl = `${BASE_URL}/_file/data/treemaps/treemap-${weekData.week}.jpg`;
+  const description = [
+    `<h3>All Anime by Downloads (${dateRange})</h3>`,
+    `<p><img src="${treemapUrl}" alt="Weekly treemap ${dateRange}" loading="lazy"></p>`,
+    `<pre>${rankingLines}</pre>`
+  ].join("\n");
 
   feed.addItem({
     title: `Weekly Rankings: ${dateRange}`,
@@ -110,6 +115,10 @@ for (let i = 0; i < weeks.length; i++) {
     description: description,
     date: weekData.start_date ? new Date(weekData.start_date) : isoWeekToMonday(weekData.week),
     guid: `nyaastats-weekly-${weekData.week}`,
+    enclosure: {
+      url: treemapUrl,
+      type: "image/jpeg"
+    }
   });
 }
 

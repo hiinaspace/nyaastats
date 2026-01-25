@@ -12,6 +12,9 @@
     "@observablehq/framework": "^1.0.0"
   },
   "dependencies": {
-    "feed": "^5.2.0"
+    "d3-hierarchy": "^3.1.2",
+    "feed": "^5.2.0",
+    "jszip": "^3.10.1",
+    "sharp": "^0.34.2"
   }
 }
