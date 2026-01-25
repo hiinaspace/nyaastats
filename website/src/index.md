@@ -1,12 +1,18 @@
 ---
 toc: false
+head: '<link rel="alternate" type="application/rss+xml" title="Nyaastats Weekly Rankings" href="/_file/data/feed.xml">'
 ---
-# Nyaastats: Weekly Rankings
+
 ```js
 // Load rankings data
 const rankings = FileAttachment("data/rankings.json").json();
 import {addWatermark} from "./components/watermark.js";
+import {formatRankingLineHTML} from "./components/rankings.js";
 ```
+
+# Nyaastats: Weekly Rankings
+
+<a href="/_file/data/feed.xml" target="_blank" rel="noopener">Subscribe via RSS </a>
 
 ```js
 const clampWidth = (value, min, max) => Math.max(min, Math.min(max, value || min));
@@ -308,19 +314,156 @@ function renderTreemap(weekData, weekIndex, titleLines, subtitleLines) {
 ```
 
 ```js
-// Render treemaps for each of the last 4 weeks
+// Text rankings rendering function
+function renderTextRankings(weekData, weekIndex) {
+  const prevRanks = getRankChanges(weekIndex);
+  const prevDownloads = getDownloadChanges(weekIndex);
+  const isOldestWeek = weekIndex === recentWeeks.length - 1;
+
+  // Show all rankings, not just top 20
+  const allRankings = weekData.rankings;
+
+  // Create DOM elements for each ranking line
+  const rankingElements = allRankings.map(show => {
+    // Calculate options for formatting
+    const rankChange = prevRanks.has(show.anilist_id)
+      ? prevRanks.get(show.anilist_id) - show.rank
+      : null;
+    const prevDl = prevDownloads.get(show.anilist_id);
+    const isNew = !prevRanks.has(show.anilist_id);
+
+    const formattedHTML = formatRankingLineHTML(show, {
+      rankChange,
+      prevDownloads: prevDl,
+      isNew,
+      isOldest: isOldestWeek
+    });
+
+    // Create link wrapper
+    const link = document.createElement('a');
+    link.href = `https://anilist.co/anime/${show.anilist_id}`;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.className = 'ranking-line';
+    link.innerHTML = formattedHTML;
+
+    return link;
+  });
+
+  // Create the container
+  const details = document.createElement('details');
+  details.className = 'text-rankings';
+
+  const summary = document.createElement('summary');
+  summary.textContent = `View ${allRankings.length} rankings as text`;
+  details.appendChild(summary);
+
+  const content = document.createElement('div');
+  content.className = 'rankings-content';
+  rankingElements.forEach(el => content.appendChild(el));
+  details.appendChild(content);
+
+  return details;
+}
+```
+
+```js
+// Pre-create text rankings (independent of width, won't re-render on resize)
+const textRankingElements = recentWeeks.map((week, i) => renderTextRankings(week, i));
+```
+
+```js
+// Render treemaps and text rankings for each of the last 4 weeks
+// Only treemaps depend on width and will re-render on resize
 for (let i = 0; i < recentWeeks.length; i++) {
   const week = recentWeeks[i];
   const dateLines = formatDateStacked(week.week, week.start_date);
+  const dateRange = formatDateRange(week.week, week.start_date);
   const subtitleLines = ["weekly downloads (all episodes)", "nyaastats"];
+
+  // Add h2 header for the week
+  display(html`<h2 id="week-${week.week}">${dateRange}</h2>`);
+
   display(html`<figure class="chart-figure">
     ${renderTreemap(week, i, dateLines, subtitleLines)}
   </figure>`);
+
+  // Display pre-created text rankings (same DOM node, won't reset details state)
+  display(textRankingElements[i]);
 }
 ```
 
 <style>
   .chart-figure {
     margin: 0 0 1.5rem;
+  }
+
+  .text-rankings {
+    margin: 1rem 0 2rem;
+    border: 1px solid var(--theme-foreground-faint);
+    border-radius: 4px;
+    padding: 0.5rem;
+  }
+
+  .text-rankings summary {
+    cursor: pointer;
+    font-weight: 600;
+    padding: 0.5rem;
+  }
+
+  .text-rankings summary:hover {
+    background: var(--theme-foreground-faintest);
+  }
+
+  .rankings-content {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .ranking-line {
+    white-space: pre;
+  }
+
+  .rank-up {
+    color: #4ade80;
+  }
+
+  .rank-down {
+    color: #f87171;
+  }
+
+  .rank-same {
+    color: #888;
+  }
+
+  .rank-new {
+    color: #aaa;
+  }
+
+  .dl-up {
+    color: #4ade80;
+  }
+
+  .dl-down {
+    color: #f87171;
+  }
+
+  .dl-same {
+    color: #888;
+  }
+
+  .ranking-line {
+    display: block;
+    white-space: pre;
+    text-decoration: none;
+    color: var(--theme-foreground) !important;
+    padding: 0.1rem 0;
+  }
+
+  .ranking-line:hover {
+    background: var(--theme-foreground-faintest);
   }
 </style>

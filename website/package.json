@@ -10,5 +10,8 @@
   },
   "devDependencies": {
     "@observablehq/framework": "^1.0.0"
+  },
+  "dependencies": {
+    "feed": "^5.2.0"
   }
 }
