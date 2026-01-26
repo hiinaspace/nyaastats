@@ -14,6 +14,7 @@ from nyaastats.etl.config import MVP_SEASONS
 from nyaastats.etl.exporter import DataExporter
 from nyaastats.etl.fuzzy_matcher import FuzzyMatcher
 from nyaastats.etl.seasonal_exporter import SeasonalExporter
+from nyaastats.etl.title_corrections import apply_title_corrections
 
 # Configure logging
 logging.basicConfig(
@@ -74,22 +75,69 @@ async def run_etl_pipeline(
         torrents_raw = pl.read_database(query, connection=aggregator.sqlite_conn)
         logger.info(f"Loaded {len(torrents_raw)} torrents")
 
-        # Parse guessit data to extract titles (only need title for fuzzy matching)
+        # Parse guessit data to extract metadata for fuzzy matching
         import json
 
-        def extract_title(guessit_json: str) -> str | None:
-            """Extract title from guessit JSON for fuzzy matching."""
+        def extract_metadata(guessit_json: str) -> dict:
+            """Extract title, season, and episode from guessit JSON.
+
+            Returns:
+                Dict with 'title', 'season', and 'episode' keys (all may be None)
+            """
             try:
                 data = json.loads(guessit_json)
-                return data.get("title")
+                title = data.get("title")
+                season = data.get("season")
+                episode = data.get("episode")
+
+                # Apply title corrections to fix guessit parsing errors
+                corrected_title = apply_title_corrections(title)
+
+                # Only use integer seasons, skip arrays (batch releases like [1,2,3])
+                season_int = season if isinstance(season, int) else None
+
+                # For episodes, handle both single int and lists (take first if list)
+                if isinstance(episode, list) and len(episode) > 0:
+                    episode_int = episode[0] if isinstance(episode[0], int) else None
+                elif isinstance(episode, int):
+                    episode_int = episode
+                else:
+                    episode_int = None
+
+                return {
+                    "title": corrected_title,
+                    "season": season_int,
+                    "episode": episode_int,
+                }
             except Exception:
-                return None
+                # Return dict with None values instead of None itself
+                # This ensures polars can always extract struct fields
+                return {
+                    "title": None,
+                    "season": None,
+                    "episode": None,
+                }
+
+        # Define struct schema for metadata extraction
+        metadata_schema = pl.Struct(
+            [
+                pl.Field("title", pl.Utf8),
+                pl.Field("season", pl.Int64),
+                pl.Field("episode", pl.Int64),
+            ]
+        )
 
         torrents_raw = torrents_raw.with_columns(
             [
                 pl.col("guessit_data")
-                .map_elements(extract_title, return_dtype=pl.Utf8)
-                .alias("title"),
+                .map_elements(extract_metadata, return_dtype=metadata_schema)
+                .alias("metadata"),
+            ]
+        ).with_columns(
+            [
+                pl.col("metadata").struct.field("title").alias("title"),
+                pl.col("metadata").struct.field("season").alias("season"),
+                pl.col("metadata").struct.field("episode").alias("episode"),
             ]
         )
 
@@ -100,16 +148,90 @@ async def run_etl_pipeline(
         logger.info("\nStep 3: Fuzzy matching torrent titles to AniList shows...")
         matcher = FuzzyMatcher(all_shows, threshold=fuzzy_threshold)
 
-        # Prepare batch for matching
+        # Prepare batch for matching (with season info)
         title_batch = [
-            (row["infohash"], row["title"])
+            (row["infohash"], row["title"], row["season"], row["episode"])
             for row in torrents_for_matching.iter_rows(named=True)
         ]
 
         matched, unmatched = matcher.match_batch(title_batch)
 
         # Convert matched list to dict for easier lookup
-        matched_dict = {infohash: match for infohash, match in matched}
+        matched_dict = dict(matched)
+
+        # Generate unmatched torrents report for investigation
+        logger.info("\nGenerating unmatched torrents report...")
+        if unmatched:
+            # Get download stats for unmatched torrents
+            unmatched_infohashes = [infohash for infohash, _, _ in unmatched]
+            unmatched_stats_query = f"""
+            SELECT
+                t.infohash,
+                t.filename,
+                json_extract(t.guessit_data, '$.title') as guessit_title,
+                json_extract(t.guessit_data, '$.season') as season,
+                json_extract(t.guessit_data, '$.episode') as episode,
+                MAX(s.downloads) as max_downloads,
+                COUNT(s.timestamp) as stat_count
+            FROM torrents t
+            LEFT JOIN stats s ON t.infohash = s.infohash
+            WHERE t.infohash IN ({",".join(["?"] * len(unmatched_infohashes))})
+            GROUP BY t.infohash
+            ORDER BY max_downloads DESC
+            LIMIT 100
+            """
+            # Use parameterized query directly
+            cursor = aggregator.sqlite_conn.cursor()
+            cursor.execute(unmatched_stats_query, unmatched_infohashes)
+            rows = cursor.fetchall()
+
+            # Convert to dataframe manually
+            unmatched_df = pl.DataFrame(
+                {
+                    "infohash": [r[0] for r in rows],
+                    "filename": [r[1] for r in rows],
+                    "guessit_title": [r[2] for r in rows],
+                    "season": [r[3] for r in rows],
+                    "episode": [r[4] for r in rows],
+                    "max_downloads": [r[5] for r in rows],
+                    "stat_count": [r[6] for r in rows],
+                }
+            )
+
+            # Export unmatched report
+            import json
+            from pathlib import Path
+
+            report_data = []
+            for row in unmatched_df.iter_rows(named=True):
+                report_data.append(
+                    {
+                        "filename": row["filename"],
+                        "guessit_title": row["guessit_title"],
+                        "season": row["season"],
+                        "episode": row["episode"],
+                        "max_downloads": row["max_downloads"],
+                        "stat_count": row["stat_count"],
+                    }
+                )
+
+            report_path = Path(output_dir) / "unmatched_torrents_report.json"
+            report_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(report_path, "w") as f:
+                json.dump(report_data, f, indent=2)
+
+            logger.info(
+                f"Exported unmatched torrents report to {report_path} "
+                f"({len(report_data)} torrents)"
+            )
+
+            # Log top 10 unmatched by downloads
+            logger.info("\nTop 10 unmatched torrents by download count:")
+            for i, item in enumerate(report_data[:10], 1):
+                logger.info(
+                    f"  {i}. {item['guessit_title']} (S{item['season']}E{item['episode']}) "
+                    f"- {item['max_downloads']:,} downloads - {item['filename'][:60]}..."
+                )
 
         # Step 4: Filter and aggregate downloads
         logger.info("\nStep 4: Filtering and aggregating download stats...")

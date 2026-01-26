@@ -123,7 +123,27 @@ class AniListClient:
                 "perPage": per_page,
             }
 
-            result = await self._session.execute(query, variable_values=variables)
+            # Retry logic for transient failures
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    result = await self._session.execute(
+                        query, variable_values=variables
+                    )
+                    break  # Success, exit retry loop
+                except Exception as e:
+                    if attempt < max_retries - 1:
+                        wait_time = 2**attempt  # Exponential backoff: 1s, 2s, 4s
+                        logger.warning(
+                            f"AniList API error (attempt {attempt + 1}/{max_retries}): {e}. "
+                            f"Retrying in {wait_time}s..."
+                        )
+                        await asyncio.sleep(wait_time)
+                    else:
+                        logger.error(
+                            f"AniList API failed after {max_retries} attempts: {e}"
+                        )
+                        raise
             page_data = result["Page"]
 
             # Parse shows from this page
@@ -138,8 +158,8 @@ class AniListClient:
             page += 1
 
             # Rate limiting: AniList allows 90 req/min
-            # Sleep briefly between pages to be respectful
-            await asyncio.sleep(0.7)  # ~85 requests per minute
+            # Sleep between pages to be respectful
+            await asyncio.sleep(1.0)  # Conservative rate: 60 requests per minute
 
         logger.info(f"Fetched {len(shows)} shows for {season_config.name}")
         return shows
@@ -198,8 +218,15 @@ async def fetch_all_seasons(
     result = {}
 
     async with AniListClient() as client:
-        for season in seasons:
+        for i, season in enumerate(seasons):
             shows = await client.get_season_anime(season)
             result[season.name] = shows
+
+            # Sleep between seasons to avoid rate limiting
+            if i < len(seasons) - 1:
+                logger.info(
+                    "Sleeping 2 seconds before next season to respect rate limits..."
+                )
+                await asyncio.sleep(2.0)
 
     return result

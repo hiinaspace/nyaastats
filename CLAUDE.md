@@ -1,6 +1,6 @@
 # Nyaastats Project - Claude Reference
 
-This file contains important information for Claude about the project setup and tools.
+Quick reference for project setup and common commands.
 
 ## Project Overview
 - **Name**: Nyaastats
@@ -39,6 +39,12 @@ uv run nyaastats
 # Run backfill script
 uv run nyaastats-backfill --help
 
+# Run ETL pipeline to generate analytics
+uv run nyaastats-etl --db nyaastats.db --output output/
+
+# Run ETL with custom fuzzy matching threshold
+uv run nyaastats-etl --db nyaastats.db --output output/ --fuzzy-threshold 80
+
 # Example cron setup for hourly execution
 # Add to crontab with: crontab -e
 # 0 * * * * cd /path/to/nyaastats && uv run nyaastats
@@ -75,10 +81,21 @@ nyaastats/
 │   ├── scheduler.py     # Time-decay algorithm with batching
 │   ├── config.py        # Pydantic configuration
 │   ├── main.py          # Main run-once execution
-│   └── backfill.py      # Historical data script
+│   ├── backfill.py      # Historical data script
+│   ├── etl_main.py      # ETL pipeline orchestration
+│   └── etl/             # ETL pipeline components
+│       ├── config.py           # ETL configuration and mappings
+│       ├── anilist_client.py   # AniList GraphQL API client
+│       ├── fuzzy_matcher.py    # Title matching logic
+│       ├── title_corrections.py # Title parsing corrections
+│       ├── aggregator.py       # Download aggregation
+│       ├── exporter.py         # JSON export
+│       └── seasonal_exporter.py # Seasonal data export
 ├── tests/               # Test modules
+│   └── etl/             # ETL-specific tests
 ├── pyproject.toml       # Project config and dependencies
-└── CLAUDE.md           # This file
+├── CLAUDE.md           # This file
+└── ETL_CONFIGURATION.md # Detailed ETL configuration guide
 ```
 
 ## Key Technologies
@@ -90,6 +107,15 @@ nyaastats/
 - **pydantic**: Configuration management
 - **pytest**: Testing framework
 - **ruff**: Linting and formatting
+
+## ETL Pipeline Quick Reference
+
+For detailed ETL configuration (season matching, episode mappings, etc.), see **[ETL_CONFIGURATION.md](ETL_CONFIGURATION.md)**.
+
+**Quick tips:**
+- ETL generates `unmatched_torrents_report.json` - use this to find shows that need configuration
+- Three-layer matching: episode-range → manual overrides → season-aware → fuzzy
+- Configuration files: `nyaastats/etl/config.py` and `nyaastats/etl/title_corrections.py`
 
 ## Common Tasks
 

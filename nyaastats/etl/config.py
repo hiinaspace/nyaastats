@@ -41,8 +41,27 @@ MVP_SEASONS = [FALL_2025, WINTER_2026]
 # Manual title overrides for fuzzy matching
 # Maps torrent title variations to specific AniList IDs
 TITLE_OVERRIDES: dict[str, int] = {
-    # Add entries as needed during development
-    # Example: "Boku no Hero": 123456,
+    # Oshi no Ko Season 3 (guessit parses as "Oshi no", correction to "Oshi no ko"
+    # doesn't match well enough to "[Oshi no Ko] 3rd Season")
+    "oshi no ko": 182587,  # [Oshi no Ko] 3rd Season (Winter 2026)
+    # Yuusha Kei ni Shosu - Long subtitle prevents fuzzy match (score 49 < 85)
+    "yuushakei ni shosu": 167152,  # Sentenced to Be a Hero (Winter 2026)
+}
+
+# Episode-to-season mappings for continuing series with continuous numbering
+# Maps normalized title -> list of (min_ep, max_ep, anilist_id) tuples
+# Used for shows like "Spy x Family" where ep 38 needs to map to Season 3
+EPISODE_SEASON_MAPPINGS: dict[str, list[tuple[int, int, int]]] = {
+    "spy x family": [
+        # Some release groups use continuous numbering across seasons
+        # Only mapping Season 3 (Fall 2025) since earlier seasons aren't tracked
+        (26, 50, 177937),  # Season 3 (Fall 2025) - eps 26+ map to S3
+    ],
+    "jujutsu kaisen": [
+        # Continuous numbering across seasons
+        # Only mapping Season 3 (Winter 2026) since earlier seasons aren't tracked
+        (48, 75, 172463),  # Season 3: The Culling Game Part 1 (Winter 2026)
+    ],
 }
 
 # Fuzzy matching threshold (0-100)
