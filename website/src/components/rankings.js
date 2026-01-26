@@ -35,17 +35,17 @@ export function formatRankingLine(show, options = {}) {
   // Download count with comma separator (padded to 6 chars)
   const downloads = show.downloads.toLocaleString('en-US').padStart(6, ' ');
 
-  // Download delta (padded to 5 chars with sign and no decimal)
-  let downloadDelta = '     ';
+  // Download delta (padded with sign and no decimal)
+  let downloadDelta = '      ';
   if (!isOldest && prevDownloads && prevDownloads > 0) {
     const dlPct = Math.round(((show.downloads - prevDownloads) / prevDownloads) * 100);
-    const sign = dlPct >= 0 ? '+' : '';
-    downloadDelta = `${sign}${dlPct.toString().padStart(3, ' ')}%`;
+    const sign = dlPct >= 0 ? '+' : '-';
+    downloadDelta = `${sign}${dlPct.toString().replaceAll('-','').padStart(3, ' ')}%`;
   }
 
   const title = show.title_romaji || show.title;
 
-  return `#${rank} (${rankDelta}) ${downloads} (${downloadDelta}) ${title}`;
+  return `#${rank} (${rankDelta}) ${downloads} test (${downloadDelta}) ${title}`;
 }
 
 /**
@@ -88,8 +88,8 @@ export function formatRankingLineHTML(show, options = {}) {
   let dlClass = '';
   if (!isOldest && prevDownloads && prevDownloads > 0) {
     const dlPct = Math.round(((show.downloads - prevDownloads) / prevDownloads) * 100);
-    const sign = dlPct >= 0 ? '+' : '';
-    downloadDelta = `${sign}${dlPct.toString().padStart(3, ' ')}%`;
+    const sign = dlPct >= 0 ? '+' : '-';
+    downloadDelta = `${sign}${dlPct.toString().replaceAll('-','').padStart(3, ' ')}%`;
     dlClass = dlPct > 0 ? 'dl-up' : dlPct < 0 ? 'dl-down' : 'dl-same';
   }
 

@@ -102,7 +102,7 @@ for (let i = 0; i < weeks.length; i++) {
   }).join("\n");
 
   const dateRange = formatDateRange(weekData.week, weekData.start_date);
-  const treemapUrl = `${BASE_URL}/_file/data/treemaps/treemap-${weekData.week}.jpg`;
+	const treemapUrl = `${BASE_URL}/data/treemaps/treemap-${weekData.week}.jpg`;
   const description = [
     `<h3>All Anime by Downloads (${dateRange})</h3>`,
     `<p><img src="${treemapUrl}" alt="Weekly treemap ${dateRange}" loading="lazy"></p>`,

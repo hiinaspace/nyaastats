@@ -1,6 +1,6 @@
 ---
 toc: false
-head: '<link rel="alternate" type="application/rss+xml" title="Nyaastats Weekly Rankings" href="/_file/data/feed.xml">'
+head: '<link rel="alternate" type="application/rss+xml" title="Nyaastats Weekly Rankings" href="/data/feed.xml">'
 ---
 
 ```js
@@ -12,7 +12,7 @@ import {formatRankingLineHTML} from "./components/rankings.js";
 
 # Nyaastats: Weekly Rankings
 
-<a href="/_file/data/feed.xml" target="_blank" rel="noopener">Subscribe via RSS </a>
+<a href="/data/feed.xml" target="_blank" rel="noopener">Subscribe via RSS </a>
 
 ```js
 const clampWidth = (value, min, max) => Math.max(min, Math.min(max, value || min));
@@ -379,7 +379,7 @@ for (let i = 0; i < recentWeeks.length; i++) {
   const week = recentWeeks[i];
   const dateLines = formatDateStacked(week.week, week.start_date);
   const dateRange = formatDateRange(week.week, week.start_date);
-  const subtitleLines = ["weekly downloads (all episodes)", "nyaastats"];
+  const subtitleLines = ["weekly downloads (all episodes)", "nyaastats.hiina.space"];
 
   // Add h2 header for the week
   display(html`<h2 id="week-${week.week}">${dateRange}</h2>`);

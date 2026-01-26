@@ -243,7 +243,7 @@ async function renderTreemapSvg(weekData, weekIndex) {
   }
 
   const titleLines = formatDateStacked(weekData.week, weekData.start_date);
-  const subtitleLines = ["weekly downloads (all episodes)", "nyaastats"];
+  const subtitleLines = ["weekly downloads (all episodes)", "nyaastats.hiina.space"];
   const titleFontSize = 48 * scale;
   const subtitleFontSize = 14 * scale;
   const titleLineHeight = 58 * scale;

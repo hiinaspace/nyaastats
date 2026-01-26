@@ -4,7 +4,10 @@
 import fs from "node:fs";
 
 const seasonsPath = new URL("./src/data/seasons.json", import.meta.url);
+const rankingsPath = new URL("./src/data/rankings.json", import.meta.url);
+const treemapsLoaderPath = new URL("./src/data/treemaps.zip.js", import.meta.url);
 let seasons = [];
+let rankings = null;
 
 try {
   seasons = JSON.parse(fs.readFileSync(seasonsPath, "utf-8"));
@@ -12,12 +15,38 @@ try {
   seasons = [];
 }
 
+try {
+  rankings = JSON.parse(fs.readFileSync(rankingsPath, "utf-8"));
+} catch {
+  rankings = null;
+}
+
+try {
+  const rankingsStat = fs.statSync(rankingsPath);
+  const loaderStat = fs.statSync(treemapsLoaderPath);
+  if (rankingsStat.mtimeMs > loaderStat.mtimeMs) {
+    fs.utimesSync(treemapsLoaderPath, rankingsStat.atime, rankingsStat.mtime);
+  }
+} catch {
+  // Ignore missing files during initial setup
+}
+
 const seasonPages = seasons.map((season) => ({
   name: `${season.name} Season`,
   path: `/season/${season.slug}`
 }));
 
-const dynamicPaths = seasons.map((season) => `/season/${season.slug}`);
+const treemapWeekCount = Number(process.env.NYAASTATS_TREEMAP_WEEKS || 4);
+const treemapWeeks = rankings?.weeks
+  ? rankings.weeks.slice(-treemapWeekCount).reverse()
+  : [];
+const treemapPaths = treemapWeeks.map((week) => `/data/treemaps/treemap-${week.week}.jpg`);
+
+const dynamicPaths = [
+  ...seasons.map((season) => `/season/${season.slug}`),
+  "/data/feed.xml",
+  ...treemapPaths
+];
 
 export default {
   title: "Nyaastats",
