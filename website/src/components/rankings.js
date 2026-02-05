@@ -45,7 +45,7 @@ export function formatRankingLine(show, options = {}) {
 
   const title = show.title_romaji || show.title;
 
-  return `#${rank} (${rankDelta}) ${downloads} test (${downloadDelta}) ${title}`;
+  return `#${rank} (${rankDelta}) ${downloads} (${downloadDelta}) ${title}`;
 }
 
 /**

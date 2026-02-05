@@ -45,7 +45,11 @@ class DataExporter:
         weeks = [
             week
             for week in weeks
-            if not (iso_week_to_monday(week) <= today < iso_week_to_monday(week) + timedelta(days=7))
+            if not (
+                iso_week_to_monday(week)
+                <= today
+                < iso_week_to_monday(week) + timedelta(days=7)
+            )
         ]
 
         rankings_data = {
