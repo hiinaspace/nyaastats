@@ -2,8 +2,8 @@
 
 import json
 import logging
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
-from datetime import date, datetime, timedelta, timezone
 
 import polars as pl
 
@@ -41,7 +41,7 @@ class DataExporter:
 
         # Group by week and convert to structured JSON
         weeks = weekly_rankings["week"].unique().sort().to_list()
-        today = datetime.now(timezone.utc).date()
+        today = datetime.now(UTC).date()
         weeks = [
             week
             for week in weeks

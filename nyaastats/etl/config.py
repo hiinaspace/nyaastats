@@ -39,13 +39,32 @@ MVP_SEASONS = [FALL_2025, WINTER_2026]
 
 
 # Manual title overrides for fuzzy matching
-# Maps torrent title variations to specific AniList IDs
+# Maps normalized torrent title to specific AniList IDs
+# Use scripts/anilist_lookup.py to find IDs for new overrides
 TITLE_OVERRIDES: dict[str, int] = {
     # Oshi no Ko Season 3 (guessit parses as "Oshi no", correction to "Oshi no ko"
     # doesn't match well enough to "[Oshi no Ko] 3rd Season")
     "oshi no ko": 182587,  # [Oshi no Ko] 3rd Season (Winter 2026)
     # Yuusha Kei ni Shosu - Long subtitle prevents fuzzy match (score 49 < 85)
     "yuushakei ni shosu": 167152,  # Sentenced to Be a Hero (Winter 2026)
+    # Gachiakuta - no AniList title variant matches "Gachiakuta" at threshold
+    "gachiakuta": 178025,  # Gachiakuta (Summer 2025)
+    # Jigokuraku S2 - normalized "jigokuraku" doesn't match "Jigokuraku 2nd Season"
+    "jigokuraku": 166613,  # Jigokuraku 2nd Season (Winter 2026)
+    # Mushoku no Eiyuu - long subtitle on AniList prevents fuzzy match
+    "mushoku no eiyuu": 169969,  # Hero Without a Class (Fall 2025)
+    # Mikata ga Yowasugite... - extremely long AniList title
+    "mikata ga yowasugite hojo mahou": 188487,  # Banished Court Magician (Fall 2025)
+    # Akujiki Reijou - extremely long AniList title
+    "akujiki reijou to kyouketsu koushaku": 183291,  # Pass the Monster Meat (Fall 2025)
+    # Enen no Shouboutai S3 - guessit drops episode number, season=3 episode=null
+    "enen no shouboutai": 179062,  # Fire Force S3 Part 2 (Winter 2026)
+    # Kaguya-sama - subtitle stripping matches this but override is more reliable
+    "kaguyasama wa kokurasetai": 194884,  # Kaguya-sama: Otona e no Kaidan (Fall 2025)
+    # Silent Witch - subtitle stripping would help but override is explicit
+    "silent witch": 179966,  # Secrets of the Silent Witch (Summer 2025)
+    # Kizoku Tensei - subtitle stripping would help but "Kizoku Tensei" alone is ambiguous
+    "kizoku tensei": 185993,  # Noble Reincarnation (Winter 2026)
 }
 
 # Episode-to-season mappings for continuing series with continuous numbering
@@ -61,6 +80,11 @@ EPISODE_SEASON_MAPPINGS: dict[str, list[tuple[int, int, int]]] = {
         # Continuous numbering across seasons
         # Only mapping Season 3 (Winter 2026) since earlier seasons aren't tracked
         (48, 75, 172463),  # Season 3: The Culling Game Part 1 (Winter 2026)
+    ],
+    "one piece": [
+        # ONE PIECE uses continuous numbering across 1000+ episodes
+        # Single AniList entry (ID 21) covers the entire series
+        (1, 9999, 21),
     ],
 }
 

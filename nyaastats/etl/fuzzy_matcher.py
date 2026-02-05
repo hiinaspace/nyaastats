@@ -225,6 +225,62 @@ class FuzzyMatcher:
                 season_matched=best_season_match,
             )
 
+        # Fallback: strip subtitle after " - " (common in SubsPlease titles with
+        # Japanese subtitles that tank fuzzy scores, e.g.
+        # "Kizoku Tensei - Megumareta Umare kara Saikyou no Chikara wo Eru")
+        # Check the raw title since normalization removes the dash
+        if best_score < self.threshold and " - " in torrent_title:
+            prefix = self._normalize_title(torrent_title.split(" - ")[0].strip())
+            if len(prefix) >= 4:
+                return self._match_prefix_fallback(prefix, season)
+
+        return None
+
+    def _match_prefix_fallback(
+        self, prefix: str, season: int | None
+    ) -> TitleMatch | None:
+        """Try matching with just the title prefix (before subtitle).
+
+        Args:
+            prefix: Normalized title prefix to match
+            season: Season number from guessit (if available)
+
+        Returns:
+            TitleMatch if a match is found, None otherwise
+        """
+        # Check manual overrides first
+        if prefix in self.overrides:
+            anilist_id = self.overrides[prefix]
+            show = self._show_by_id.get(anilist_id)
+            if show:
+                return TitleMatch(
+                    anilist_id=anilist_id,
+                    score=100.0,
+                    method="manual_override",
+                    matched_title=show.title_romaji,
+                    season_matched=season,
+                )
+
+        best_score = 0.0
+        best_id = None
+
+        for anilist_id, variants in self._title_variants.items():
+            for variant in variants:
+                score = fuzz.token_sort_ratio(prefix, variant)
+                if score > best_score:
+                    best_score = score
+                    best_id = anilist_id
+
+        if best_score >= self.threshold and best_id:
+            show = self._show_by_id[best_id]
+            return TitleMatch(
+                anilist_id=best_id,
+                score=best_score,
+                method="fuzzy",
+                matched_title=show.title_romaji,
+                season_matched=None,
+            )
+
         return None
 
     def match_batch(

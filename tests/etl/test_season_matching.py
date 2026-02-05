@@ -229,3 +229,117 @@ class TestMatchBatch:
 
         # Check that method counts are logged
         assert "Match methods:" in caplog.text or len(matched) == 0
+
+
+class TestSubtitleStrippingFallback:
+    """Test subtitle-stripping fallback for titles with ' - ' separators."""
+
+    @pytest.fixture
+    def subtitle_shows(self):
+        """Create shows that match the prefix but not the full subtitle title."""
+        return [
+            AniListShow(
+                id=100,
+                title_romaji="Kizoku Tensei",
+                title_english="Noble Reincarnation",
+                synonyms=[],
+                format="ONA",
+                status="RELEASING",
+                episodes=None,
+                airing_schedule=[],
+                cover_image_url=None,
+                cover_image_color=None,
+                start_date=(2026, 1, 1),
+            ),
+            AniListShow(
+                id=101,
+                title_romaji="Silent Witch: Chinmoku no Majo no Kakushigoto",
+                title_english="Secrets of the Silent Witch",
+                synonyms=[],
+                format="TV",
+                status="FINISHED",
+                episodes=13,
+                airing_schedule=[],
+                cover_image_url=None,
+                cover_image_color=None,
+                start_date=(2025, 7, 1),
+            ),
+            AniListShow(
+                id=102,
+                title_romaji="Kaguya-sama wa Kokurasetai: Otona e no Kaidan",
+                title_english="Kaguya-sama: Love Is War -Stairway to Adulthood-",
+                synonyms=[],
+                format="SPECIAL",
+                status="FINISHED",
+                episodes=2,
+                airing_schedule=[],
+                cover_image_url=None,
+                cover_image_color=None,
+                start_date=(2025, 10, 1),
+            ),
+        ]
+
+    def test_subtitle_stripping_matches_prefix(self, subtitle_shows):
+        """Title with long Japanese subtitle should match via prefix stripping."""
+        matcher = FuzzyMatcher(subtitle_shows, threshold=85, overrides={})
+        result = matcher.match(
+            "Kizoku Tensei - Megumareta Umare kara Saikyou no Chikara wo Eru"
+        )
+        assert result is not None
+        assert result.anilist_id == 100
+
+    def test_subtitle_stripping_silent_witch(self, subtitle_shows):
+        """Silent Witch with subtitle should match."""
+        matcher = FuzzyMatcher(subtitle_shows, threshold=85, overrides={})
+        result = matcher.match("Silent Witch - Chinmoku no Majo no Kakushigoto")
+        assert result is not None
+        assert result.anilist_id == 101
+
+    def test_subtitle_stripping_kaguya(self, subtitle_shows):
+        """Kaguya-sama with subtitle should match via stripping."""
+        matcher = FuzzyMatcher(subtitle_shows, threshold=85, overrides={})
+        result = matcher.match("Kaguya-sama wa Kokurasetai - Otona e no Kaidan")
+        assert result is not None
+        assert result.anilist_id == 102
+
+    def test_no_stripping_when_direct_match_works(self, subtitle_shows):
+        """If the full title matches directly, don't need stripping."""
+        matcher = FuzzyMatcher(subtitle_shows, threshold=85, overrides={})
+        result = matcher.match("Kizoku Tensei")
+        assert result is not None
+        assert result.anilist_id == 100
+        # Should match directly, not via fallback
+
+    def test_short_prefix_not_used(self, subtitle_shows):
+        """Prefix shorter than 4 chars should not trigger fallback."""
+        matcher = FuzzyMatcher(subtitle_shows, threshold=85, overrides={})
+        # "AB - something long" - prefix "AB" is too short
+        result = matcher.match("AB - something long that won't match anything")
+        assert result is None
+
+    def test_subtitle_stripping_checks_overrides(self, subtitle_shows):
+        """Subtitle stripping fallback should check manual overrides for prefix."""
+        overrides = {"kizoku tensei": 999}
+        # Add a show with id 999 so override can resolve
+        subtitle_shows.append(
+            AniListShow(
+                id=999,
+                title_romaji="Override Target",
+                title_english=None,
+                synonyms=[],
+                format="TV",
+                status="RELEASING",
+                episodes=None,
+                airing_schedule=[],
+                cover_image_url=None,
+                cover_image_color=None,
+                start_date=(2026, 1, 1),
+            )
+        )
+        matcher = FuzzyMatcher(subtitle_shows, threshold=85, overrides=overrides)
+        result = matcher.match(
+            "Kizoku Tensei - Megumareta Umare kara Saikyou no Chikara wo Eru"
+        )
+        assert result is not None
+        assert result.anilist_id == 999
+        assert result.method == "manual_override"
