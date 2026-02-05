@@ -47,8 +47,10 @@ TITLE_OVERRIDES: dict[str, int] = {
     "oshi no ko": 182587,  # [Oshi no Ko] 3rd Season (Winter 2026)
     # Yuusha Kei ni Shosu - Long subtitle prevents fuzzy match (score 49 < 85)
     "yuushakei ni shosu": 167152,  # Sentenced to Be a Hero (Winter 2026)
-    # Gachiakuta - no AniList title variant matches "Gachiakuta" at threshold
-    "gachiakuta": 178025,  # Gachiakuta (Summer 2025)
+    # Spy x Family - "spy x family" scores 73 vs "Spy x Family Season 3" (below 85)
+    "spy x family": 177937,  # Spy x Family Season 3 (Fall 2025)
+    # Jujutsu Kaisen - "jujutsu kaisen" scores 55 vs long AniList S3 title (below 85)
+    "jujutsu kaisen": 172463,  # Jujutsu Kaisen S3: The Culling Game Part 1 (Winter 2026)
     # Jigokuraku S2 - normalized "jigokuraku" doesn't match "Jigokuraku 2nd Season"
     "jigokuraku": 166613,  # Jigokuraku 2nd Season (Winter 2026)
     # Mushoku no Eiyuu - long subtitle on AniList prevents fuzzy match
@@ -61,8 +63,6 @@ TITLE_OVERRIDES: dict[str, int] = {
     "enen no shouboutai": 179062,  # Fire Force S3 Part 2 (Winter 2026)
     # Kaguya-sama - subtitle stripping matches this but override is more reliable
     "kaguyasama wa kokurasetai": 194884,  # Kaguya-sama: Otona e no Kaidan (Fall 2025)
-    # Silent Witch - subtitle stripping would help but override is explicit
-    "silent witch": 179966,  # Secrets of the Silent Witch (Summer 2025)
     # Kizoku Tensei - subtitle stripping would help but "Kizoku Tensei" alone is ambiguous
     "kizoku tensei": 185993,  # Noble Reincarnation (Winter 2026)
 }
@@ -81,11 +81,24 @@ EPISODE_SEASON_MAPPINGS: dict[str, list[tuple[int, int, int]]] = {
         # Only mapping Season 3 (Winter 2026) since earlier seasons aren't tracked
         (48, 75, 172463),  # Season 3: The Culling Game Part 1 (Winter 2026)
     ],
-    "one piece": [
-        # ONE PIECE uses continuous numbering across 1000+ episodes
-        # Single AniList entry (ID 21) covers the entire series
-        (1, 9999, 21),
-    ],
+}
+
+# Titles to exclude from the unmatched report (normalized).
+# These are intentionally untracked — not bugs in matching.
+IGNORED_TITLES: set[str] = {
+    # Summer 2025 shows — scraper started mid-June so data is incomplete
+    "gachiakuta",  # Gachiakuta (Summer 2025, AniList 178025)
+    "silent witch",  # Secrets of the Silent Witch (Summer 2025, AniList 179966)
+    "secrets of the silent witch",
+    # Ongoing long-running series outside tracked seasons
+    "one piece",  # ONE PIECE (ongoing since 1999, AniList 21)
+    # Movies — not tracked yet (may add separate movie display later)
+    "demon slayer kimetsu no yaiba infinity castle",
+    "kimetsu no yaiba",  # Movie releases parsed without "Infinity Castle"
+    "chainsaw man the movie reze arc",
+    "gekijouban chainsaw man reze hen",
+    "chainsaw man movie rezehen",  # "Chainsaw Man Movie: Reze-hen" after normalization
+    "chainsaw man the movie",  # "Chainsaw Man: The Movie" without subtitle
 }
 
 # Fuzzy matching threshold (0-100)

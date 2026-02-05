@@ -10,7 +10,7 @@ import polars as pl
 
 from nyaastats.etl.aggregator import DownloadAggregator
 from nyaastats.etl.anilist_client import fetch_all_seasons
-from nyaastats.etl.config import MVP_SEASONS
+from nyaastats.etl.config import IGNORED_TITLES, MVP_SEASONS
 from nyaastats.etl.exporter import DataExporter
 from nyaastats.etl.fuzzy_matcher import FuzzyMatcher
 from nyaastats.etl.seasonal_exporter import SeasonalExporter
@@ -186,28 +186,43 @@ async def run_etl_pipeline(
             rows = cursor.fetchall()
 
             # Convert to dataframe manually
+            # season/episode from json_extract can be int, JSON array string, or None
+            def _to_int_or_none(val):
+                return val if isinstance(val, int) else None
+
             unmatched_df = pl.DataFrame(
                 {
                     "infohash": [r[0] for r in rows],
                     "filename": [r[1] for r in rows],
                     "guessit_title": [r[2] for r in rows],
-                    "season": [r[3] for r in rows],
-                    "episode": [r[4] for r in rows],
+                    "season": [_to_int_or_none(r[3]) for r in rows],
+                    "episode": [_to_int_or_none(r[4]) for r in rows],
                     "max_downloads": [r[5] for r in rows],
                     "stat_count": [r[6] for r in rows],
                 }
             )
 
-            # Export unmatched report
+            # Export unmatched report (filtering out intentionally ignored titles)
             import json
+            import re
             from pathlib import Path
 
+            def _normalize_title(title):
+                title = title.lower()
+                title = re.sub(r"[^a-z0-9\s]", "", title)
+                return re.sub(r"\s+", " ", title).strip()
+
             report_data = []
+            ignored_count = 0
             for row in unmatched_df.iter_rows(named=True):
+                guessit_title = row["guessit_title"]
+                if guessit_title and _normalize_title(guessit_title) in IGNORED_TITLES:
+                    ignored_count += 1
+                    continue
                 report_data.append(
                     {
                         "filename": row["filename"],
-                        "guessit_title": row["guessit_title"],
+                        "guessit_title": guessit_title,
                         "season": row["season"],
                         "episode": row["episode"],
                         "max_downloads": row["max_downloads"],
@@ -222,7 +237,7 @@ async def run_etl_pipeline(
 
             logger.info(
                 f"Exported unmatched torrents report to {report_path} "
-                f"({len(report_data)} torrents)"
+                f"({len(report_data)} torrents, {ignored_count} ignored)"
             )
 
             # Log top 10 unmatched by downloads
