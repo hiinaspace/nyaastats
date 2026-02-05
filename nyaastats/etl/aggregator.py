@@ -109,7 +109,7 @@ class DownloadAggregator:
                 episode = data.get("episode")
 
                 # Filter out batch torrents (episode as list)
-                if isinstance(episode, (list, tuple)):
+                if isinstance(episode, list | tuple):
                     return None
                 elif episode is not None:
                     # Convert to int if it's not already

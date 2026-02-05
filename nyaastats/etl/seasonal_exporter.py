@@ -135,7 +135,9 @@ class SeasonalExporter:
             filtered = (
                 weekly_rankings.filter(
                     pl.col("week").map_elements(
-                        lambda w: week_overlaps_range(w, start_date, end_date),
+                        lambda w, sd=start_date, ed=end_date: week_overlaps_range(
+                            w, sd, ed
+                        ),
                         return_dtype=pl.Boolean,
                     )
                     & pl.col("anilist_id").is_in(season_show_ids)
@@ -144,7 +146,9 @@ class SeasonalExporter:
                 else weekly_rankings.head(0)
             )
 
-            weeks = sorted(filtered["week"].unique().to_list()) if len(filtered) > 0 else []
+            weeks = (
+                sorted(filtered["week"].unique().to_list()) if len(filtered) > 0 else []
+            )
             latest_week = weeks[-1] if weeks else None
             latest_week_start = (
                 iso_week_to_monday(latest_week).isoformat() if latest_week else None
@@ -277,9 +281,7 @@ class SeasonalExporter:
         show_ids = filtered_rankings["anilist_id"].unique().to_list()
 
         # Filter episode stats to season shows (no date cutoff; trust AniList season)
-        season_episodes = episode_stats.filter(
-            pl.col("anilist_id").is_in(show_ids)
-        )
+        season_episodes = episode_stats.filter(pl.col("anilist_id").is_in(show_ids))
 
         # Recompute cumulative downloads within the season window
         if len(season_episodes) > 0:
@@ -330,9 +332,7 @@ class SeasonalExporter:
                     .agg(
                         [
                             pl.col("downloads_daily").sum().alias("downloads_total"),
-                            pl.col("days_since_first_torrent")
-                            .max()
-                            .alias("max_days"),
+                            pl.col("days_since_first_torrent").max().alias("max_days"),
                         ]
                     )
                     .with_columns(
@@ -391,7 +391,9 @@ class SeasonalExporter:
                     "total_downloads": total_downloads,
                     "episodes_aired": episodes_aired,
                     "endurance": round(endurance, 3) if endurance is not None else None,
-                    "late_starters": round(late_starters, 3) if late_starters is not None else None,
+                    "late_starters": round(late_starters, 3)
+                    if late_starters is not None
+                    else None,
                     "ep1_downloads": int(ep1_downloads) if ep1_downloads else 0,
                     "current_rank": current_rank,
                 }

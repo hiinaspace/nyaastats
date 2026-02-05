@@ -116,7 +116,10 @@ def test_scheduler_integration(temp_db):
     import httpx
 
     rss_fetcher = RSSFetcher(temp_db, httpx.Client())
-    scheduler = Scheduler(temp_db)
+    # Pin scheduler time to shortly after the hardcoded pubdates (Jul 16, 2025)
+    # so the torrents are classified as "hourly" (<2 days old)
+    fake_now = Instant.from_utc(2025, 7, 16, 12, 0, 0)
+    scheduler = Scheduler(temp_db, now_func=lambda: fake_now)
 
     # Mock HTTP response and process RSS
     mock_response = Mock()
@@ -191,7 +194,9 @@ def test_tracker_integration(temp_db):
 
     rss_fetcher = RSSFetcher(temp_db, httpx.Client())
     tracker_scraper = TrackerScraper(temp_db, httpx.Client())
-    scheduler = Scheduler(temp_db)
+    # Pin scheduler time to shortly after the hardcoded pubdates
+    fake_now = Instant.from_utc(2025, 7, 16, 12, 0, 0)
+    scheduler = Scheduler(temp_db, now_func=lambda: fake_now)
 
     # Process RSS first
     mock_response = Mock()
