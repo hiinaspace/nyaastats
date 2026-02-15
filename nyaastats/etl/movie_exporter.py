@@ -3,8 +3,13 @@
 import json
 import logging
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import polars as pl
+
+if TYPE_CHECKING:
+    from .anilist_client import AniListShow
+    from .fuzzy_matcher import TitleMatch
 
 logger = logging.getLogger(__name__)
 
@@ -94,4 +99,96 @@ class MovieExporter:
             f"Exported {len(movies_data)} movies to {output_path} ({file_size:.1f} KB)"
         )
 
+        return str(output_path)
+
+    def export_movie_match_report(
+        self,
+        movie_torrents: pl.DataFrame,
+        movie_shows: list["AniListShow"],
+        movie_matches: dict[str, "TitleMatch"],
+        filename: str = "movie_match_report.json",
+    ) -> str:
+        """Export per-movie matched torrent filenames and guessit output.
+
+        Args:
+            movie_torrents: Matched movie torrents dataframe from MovieAggregator
+            movie_shows: AniList movie metadata used for matching
+            movie_matches: Dict mapping infohash -> TitleMatch
+            filename: Output filename
+
+        Returns:
+            Path to the generated JSON file
+        """
+        output_path = self.output_dir / filename
+
+        if len(movie_torrents) == 0:
+            with open(output_path, "w", encoding="utf-8") as f:
+                json.dump({"movies": []}, f, indent=2)
+            logger.info(f"Exported empty movie match report to {output_path}")
+            return str(output_path)
+
+        show_lookup = {show.id: show for show in movie_shows}
+        movie_rows: dict[int, list[dict]] = {}
+
+        for row in movie_torrents.iter_rows(named=True):
+            anilist_id = row["anilist_id"]
+            infohash = row["infohash"]
+            raw_guessit = row.get("guessit_data")
+            guessit = {}
+            if isinstance(raw_guessit, str):
+                try:
+                    guessit = json.loads(raw_guessit)
+                except json.JSONDecodeError:
+                    guessit = {"_parse_error": "invalid_json", "_raw": raw_guessit}
+
+            match = movie_matches.get(infohash)
+            torrent_entry = {
+                "infohash": infohash,
+                "filename": row.get("filename"),
+                "pubdate": row.get("pubdate"),
+                "trusted": bool(row.get("trusted")),
+                "remake": bool(row.get("remake")),
+                "guessit": guessit,
+                "guessit_title": guessit.get("title"),
+                "guessit_season": guessit.get("season"),
+                "guessit_episode": guessit.get("episode"),
+                "match": {
+                    "method": match.method if match else None,
+                    "score": match.score if match else None,
+                    "matched_title": match.matched_title if match else None,
+                    "season_matched": match.season_matched if match else None,
+                },
+            }
+            movie_rows.setdefault(anilist_id, []).append(torrent_entry)
+
+        movies_data = []
+        for anilist_id in sorted(movie_rows.keys()):
+            show = show_lookup.get(anilist_id)
+            title_romaji = show.title_romaji if show else "Unknown"
+            title_english = (
+                show.title_english if show and show.title_english else title_romaji
+            )
+            torrents = sorted(
+                movie_rows[anilist_id],
+                key=lambda t: (t["pubdate"] or "", t["filename"] or ""),
+            )
+
+            movies_data.append(
+                {
+                    "anilist_id": anilist_id,
+                    "title": title_english,
+                    "title_romaji": title_romaji,
+                    "torrent_count": len(torrents),
+                    "torrents": torrents,
+                }
+            )
+
+        movies_data.sort(key=lambda m: m["torrent_count"], reverse=True)
+
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump({"movies": movies_data}, f, indent=2, ensure_ascii=False)
+
+        logger.info(
+            f"Exported movie match report to {output_path} ({len(movies_data)} movies)"
+        )
         return str(output_path)

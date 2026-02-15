@@ -49,6 +49,13 @@ class FuzzyMatcher:
         # Build searchable title variants
         self._title_variants = self._build_title_index()
 
+    def _is_informative_normalized_title(self, title: str) -> bool:
+        """Check if normalized title has enough signal for fuzzy matching."""
+        # Avoid empty/non-latin-normalized strings and low-information tokens
+        # like "2" that can spuriously score 100 against similarly degenerate
+        # AniList synonyms.
+        return len(title) >= 3 and bool(re.search(r"[a-z]", title))
+
     def _build_title_index(self) -> dict[int, list[str]]:
         """Build index of normalized title variants per show.
 
@@ -60,19 +67,28 @@ class FuzzyMatcher:
         for show in self.shows:
             variants = []
 
+            variant_set = set()
+
             # Add romaji title
             if show.title_romaji:
-                variants.append(self._normalize_title(show.title_romaji))
+                normalized = self._normalize_title(show.title_romaji)
+                if self._is_informative_normalized_title(normalized):
+                    variant_set.add(normalized)
 
             # Add english title
             if show.title_english:
-                variants.append(self._normalize_title(show.title_english))
+                normalized = self._normalize_title(show.title_english)
+                if self._is_informative_normalized_title(normalized):
+                    variant_set.add(normalized)
 
             # Add synonyms
             for synonym in show.synonyms:
                 if synonym:
-                    variants.append(self._normalize_title(synonym))
+                    normalized = self._normalize_title(synonym)
+                    if self._is_informative_normalized_title(normalized):
+                        variant_set.add(normalized)
 
+            variants.extend(variant_set)
             index[show.id] = variants
 
         return index
@@ -154,6 +170,10 @@ class FuzzyMatcher:
         """
         normalized_torrent = self._normalize_title(torrent_title)
 
+        # Skip fuzzy matching for low-information parsed titles
+        if not self._is_informative_normalized_title(normalized_torrent):
+            return None
+
         # Priority 1: Episode-range mapping (for continuing series)
         episode_match = self._episode_range_match(torrent_title, episode)
         if episode_match:
@@ -231,7 +251,7 @@ class FuzzyMatcher:
         # Check the raw title since normalization removes the dash
         if best_score < self.threshold and " - " in torrent_title:
             prefix = self._normalize_title(torrent_title.split(" - ")[0].strip())
-            if len(prefix) >= 4:
+            if self._is_informative_normalized_title(prefix) and len(prefix) >= 4:
                 return self._match_prefix_fallback(prefix, season)
 
         return None
@@ -308,6 +328,9 @@ class FuzzyMatcher:
             else:
                 # For unmatched, try to get best score for debugging
                 normalized = self._normalize_title(title)
+                if not self._is_informative_normalized_title(normalized):
+                    unmatched.append((identifier, title, None))
+                    continue
                 best_score = 0.0
                 for variants in self._title_variants.values():
                     for variant in variants:

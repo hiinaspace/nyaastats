@@ -231,6 +231,20 @@ class TestMatchBatch:
         assert "Match methods:" in caplog.text or len(matched) == 0
 
 
+class TestLowInformationTitleGuard:
+    """Test guardrails against low-information fuzzy matches."""
+
+    def test_numeric_only_guessit_title_does_not_match(self, mock_shows):
+        matcher = FuzzyMatcher(mock_shows, threshold=70)
+        result = matcher.match("2", season=2024, episode=1)
+        assert result is None
+
+    def test_non_latin_only_guessit_title_does_not_match(self, mock_shows):
+        matcher = FuzzyMatcher(mock_shows, threshold=70)
+        result = matcher.match("中文配音", season=None, episode=None)
+        assert result is None
+
+
 class TestSubtitleStrippingFallback:
     """Test subtitle-stripping fallback for titles with ' - ' separators."""
 

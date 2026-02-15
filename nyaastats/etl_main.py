@@ -379,6 +379,13 @@ async def run_etl_pipeline(
                 )
 
                 if len(movie_torrents_df) > 0:
+                    movie_exporter = MovieExporter(output_dir)
+                    movie_exporter.export_movie_match_report(
+                        movie_torrents_df,
+                        movie_shows,
+                        movie_matched_dict,
+                    )
+
                     movie_deltas_df = aggregator.calculate_download_deltas(
                         movie_torrents_df
                     )
@@ -389,7 +396,6 @@ async def run_etl_pipeline(
 
                     # Step M4: Export movies.json
                     logger.info("\nStep M4: Exporting movies.json...")
-                    movie_exporter = MovieExporter(output_dir)
                     movie_exporter.export_movies(movie_stats)
                 else:
                     logger.warning("No movie torrents found in database")
@@ -407,6 +413,7 @@ async def run_etl_pipeline(
         logger.info("  - season-*.json: Seasonal summary data")
         logger.info("  - episodes-*.json: Season episode totals")
         logger.info("  - movies.json: Movie download data")
+        logger.info("  - movie_match_report.json: Movie torrent/guessit match debug")
     finally:
         # Ensure database connection is always closed
         aggregator.close()
