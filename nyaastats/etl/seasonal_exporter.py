@@ -2,7 +2,7 @@
 
 import json
 import logging
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 
 import polars as pl
@@ -12,29 +12,18 @@ from .config import SeasonConfig
 logger = logging.getLogger(__name__)
 
 
-def iso_week_to_monday(week_str: str) -> date:
-    """Convert ISO week string (2025-W40) to Monday of that week.
-
-    Args:
-        week_str: ISO week string like "2025-W40"
-
-    Returns:
-        Date of the Monday of that ISO week
-    """
-    # Parse "2025-W40" format
-    year, week = week_str.split("-W")
-    # ISO week 1 is the week containing the first Thursday of the year
-    # Use datetime.strptime with ISO week format
-    return datetime.strptime(f"{year}-W{week}-1", "%G-W%V-%u").date()
+def week_start_date(week_str: str) -> date:
+    """Parse a week identifier (YYYY-MM-DD Sunday start) into a date."""
+    return date.fromisoformat(week_str)
 
 
 def week_overlaps_range(week_str: str, start_date: date, end_date: date) -> bool:
-    """Check if an ISO week overlaps with a date range.
+    """Check if a Sun-Sat week overlaps with a date range.
 
     A week overlaps if any of its days fall within the range.
 
     Args:
-        week_str: ISO week string like "2025-W40"
+        week_str: Week identifier as YYYY-MM-DD (the Sunday start date)
         start_date: Start of date range (inclusive)
         end_date: End of date range (inclusive)
 
@@ -43,11 +32,11 @@ def week_overlaps_range(week_str: str, start_date: date, end_date: date) -> bool
     """
     from datetime import timedelta
 
-    monday = iso_week_to_monday(week_str)
-    sunday = monday + timedelta(days=6)
+    sunday = week_start_date(week_str)
+    saturday = sunday + timedelta(days=6)
 
     # Week overlaps if it starts before range ends AND ends after range starts
-    return monday <= end_date and sunday >= start_date
+    return sunday <= end_date and saturday >= start_date
 
 
 def compute_percentiles(
@@ -150,9 +139,7 @@ class SeasonalExporter:
                 sorted(filtered["week"].unique().to_list()) if len(filtered) > 0 else []
             )
             latest_week = weeks[-1] if weeks else None
-            latest_week_start = (
-                iso_week_to_monday(latest_week).isoformat() if latest_week else None
-            )
+            latest_week_start = latest_week  # week identifier is already the Sunday start date
 
             status = "complete" if end_date < today else "in-progress"
 
@@ -234,7 +221,7 @@ class SeasonalExporter:
 
         for week in weeks:
             week_data = filtered_rankings.filter(pl.col("week") == week)
-            week_start = iso_week_to_monday(week).isoformat()
+            week_start = week  # week identifier is already the Sunday start date
 
             rankings_list = []
             for row in week_data.iter_rows(named=True):

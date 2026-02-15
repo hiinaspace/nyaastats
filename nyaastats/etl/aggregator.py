@@ -388,15 +388,22 @@ class DownloadAggregator:
         Returns:
             DataFrame with weekly rankings
         """
-        # Extract ISO week from date
-        # Use %G-%V for true ISO week (week 1 = first week with Thursday of new year)
+        # Compute EST (UTC-5) Sunday-to-Saturday weekly buckets.
+        # Shift datetimes to EST, extract date, then find the containing week's
+        # Sunday start using weekday arithmetic (Polars weekday: Mon=1 … Sun=7).
         daily_stats = daily_stats.with_columns(
-            [
-                pl.col("date")
-                .cast(pl.Datetime("us"))
-                .dt.strftime("%G-W%V")
-                .alias("iso_week"),
-            ]
+            (pl.col("period_start") - pl.duration(hours=5))
+            .dt.date()
+            .alias("est_date")
+        )
+        daily_stats = daily_stats.with_columns(
+            (
+                pl.col("est_date")
+                - pl.duration(days=pl.col("est_date").dt.weekday() % 7)
+            )
+            .cast(pl.Date)
+            .dt.strftime("%Y-%m-%d")
+            .alias("iso_week"),
         )
 
         # Aggregate downloads by (anilist_id, iso_week)

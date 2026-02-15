@@ -572,7 +572,7 @@ display(Plot.plot({
     type: "band",
     domain: weekLabels,
     tickRotate: -30,
-    tickFormat: d => `Week of ${new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+    tickFormat: d => `Week of ${new Date(d).toLocaleDateString("en-US", { timeZone: "UTC", month: "short", day: "numeric" })}`
   },
   marks: [
     // Lines - thicker for interactivity

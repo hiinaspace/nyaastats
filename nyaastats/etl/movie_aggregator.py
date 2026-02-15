@@ -142,9 +142,12 @@ class MovieAggregator:
             .alias("weeks_since_release")
         )
 
-        # Also compute absolute ISO week (Monday-based) for the weekly chart
+        # Compute absolute Sun-Sat week start (EST / UTC-5) for the weekly chart
+        est_dt = pl.col("datetime") - pl.duration(hours=5)
         combined = combined.with_columns(
-            pl.col("datetime").dt.truncate("1w").dt.date().alias("week_start")
+            (est_dt.dt.date() - pl.duration(days=est_dt.dt.weekday() % 7))
+            .cast(pl.Date)
+            .alias("week_start")
         )
 
         # Aggregate by (anilist_id, weeks_since_release)

@@ -10,10 +10,9 @@ import polars as pl
 logger = logging.getLogger(__name__)
 
 
-def iso_week_to_monday(week_str: str) -> date:
-    """Convert ISO week string (2025-W40) to Monday of that week."""
-    year, week = week_str.split("-W")
-    return datetime.strptime(f"{year}-W{week}-1", "%G-W%V-%u").date()
+def week_start_date(week_str: str) -> date:
+    """Parse a week identifier (YYYY-MM-DD Sunday start) into a date."""
+    return date.fromisoformat(week_str)
 
 
 class DataExporter:
@@ -41,15 +40,15 @@ class DataExporter:
 
         # Group by week and convert to structured JSON
         weeks = weekly_rankings["week"].unique().sort().to_list()
-        today = datetime.now(UTC).date()
+        # Compute the current EST week's Sunday start to exclude in-progress week
+        now_est = datetime.now(UTC) - timedelta(hours=5)
+        today_est = now_est.date()
+        days_since_sunday = (today_est.weekday() + 1) % 7
+        current_week_sunday = today_est - timedelta(days=days_since_sunday)
         weeks = [
             week
             for week in weeks
-            if not (
-                iso_week_to_monday(week)
-                <= today
-                < iso_week_to_monday(week) + timedelta(days=7)
-            )
+            if week_start_date(week) != current_week_sunday
         ]
 
         rankings_data = {
@@ -73,11 +72,9 @@ class DataExporter:
                 ]
             ).to_dicts()
 
-            # Get week start date (Monday of ISO week)
-            week_start = iso_week_to_monday(week).isoformat()
             week_entry = {
                 "week": week,
-                "start_date": week_start,
+                "start_date": week,  # week identifier is already the Sunday start date
                 "rankings": rankings_list,
             }
 

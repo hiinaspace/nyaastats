@@ -51,10 +51,11 @@ function isoWeekToMonday(weekStr) {
 function formatDateStacked(weekStr, startDate) {
   const start = startDate ? new Date(startDate) : isoWeekToMonday(weekStr);
   const end = new Date(start);
-  end.setDate(end.getDate() + 6);
-  const startFmt = start.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  const endFmt = end.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  const yearFmt = end.toLocaleDateString("en-US", { year: "numeric" });
+  end.setUTCDate(end.getUTCDate() + 6);
+  const utc = { timeZone: "UTC" };
+  const startFmt = start.toLocaleDateString("en-US", { ...utc, month: "short", day: "numeric" });
+  const endFmt = end.toLocaleDateString("en-US", { ...utc, month: "short", day: "numeric" });
+  const yearFmt = end.toLocaleDateString("en-US", { ...utc, year: "numeric" });
   return [startFmt, `–${endFmt}`, yearFmt];
 }
 
