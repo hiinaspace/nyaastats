@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from gql import Client, gql
 from gql.transport.aiohttp import AIOHTTPTransport
 
-from .config import ANILIST_API_URL, SeasonConfig
+from .config import ANILIST_API_URL, MOVIE_DATE_RANGE, MOVIE_FORMATS, SeasonConfig
 
 logger = logging.getLogger(__name__)
 
@@ -164,6 +164,123 @@ class AniListClient:
         logger.info(f"Fetched {len(shows)} shows for {season_config.name}")
         return shows
 
+    async def get_movies_by_date_range(
+        self,
+        start_date: tuple[int, int, int],
+        end_date: tuple[int, int, int],
+        formats: list[str] | None = None,
+    ) -> list[AniListShow]:
+        """Query AniList for movies/specials in a date range.
+
+        Args:
+            start_date: (year, month, day) tuple for range start
+            end_date: (year, month, day) tuple for range end
+            formats: AniList format types to include (default: MOVIE_FORMATS)
+
+        Returns:
+            List of shows filtered to single-episode entries
+        """
+        if formats is None:
+            formats = MOVIE_FORMATS
+
+        # AniList uses YYYYMMDD integer format for fuzzy dates
+        start_int = start_date[0] * 10000 + start_date[1] * 100 + start_date[2]
+        end_int = end_date[0] * 10000 + end_date[1] * 100 + end_date[2]
+
+        query = gql(
+            """
+            query ($formats: [MediaFormat!], $startDate: FuzzyDateInt, $endDate: FuzzyDateInt, $page: Int!, $perPage: Int!) {
+              Page(page: $page, perPage: $perPage) {
+                pageInfo {
+                  hasNextPage
+                  currentPage
+                }
+                media(type: ANIME, format_in: $formats, startDate_greater: $startDate, startDate_lesser: $endDate) {
+                  id
+                  title {
+                    romaji
+                    english
+                    native
+                  }
+                  synonyms
+                  episodes
+                  status
+                  format
+                  startDate {
+                    year
+                    month
+                    day
+                  }
+                  airingSchedule {
+                    nodes {
+                      episode
+                      airingAt
+                    }
+                  }
+                  coverImage {
+                    large
+                    medium
+                    color
+                  }
+                }
+              }
+            }
+            """
+        )
+
+        shows = []
+        page = 1
+        per_page = 50
+
+        while True:
+            logger.info(f"Fetching movies (formats={formats}), page {page}...")
+
+            variables = {
+                "formats": formats,
+                "startDate": start_int,
+                "endDate": end_int,
+                "page": page,
+                "perPage": per_page,
+            }
+
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    result = await self._session.execute(
+                        query, variable_values=variables
+                    )
+                    break
+                except Exception as e:
+                    if attempt < max_retries - 1:
+                        wait_time = 2**attempt
+                        logger.warning(
+                            f"AniList API error (attempt {attempt + 1}/{max_retries}): {e}. "
+                            f"Retrying in {wait_time}s..."
+                        )
+                        await asyncio.sleep(wait_time)
+                    else:
+                        logger.error(
+                            f"AniList API failed after {max_retries} attempts: {e}"
+                        )
+                        raise
+
+            page_data = result["Page"]
+
+            for media in page_data["media"]:
+                show = self._parse_show(media)
+                # Post-filter: only keep single-episode entries (movies/specials)
+                if show.episodes is None or show.episodes <= 1:
+                    shows.append(show)
+
+            if not page_data["pageInfo"]["hasNextPage"]:
+                break
+
+            page += 1
+            await asyncio.sleep(1.0)
+
+        logger.info(f"Fetched {len(shows)} movies/specials")
+        return shows
+
     def _parse_show(self, media: dict) -> AniListShow:
         """Parse AniList media object into AniListShow.
 
@@ -230,3 +347,27 @@ async def fetch_all_seasons(
                 await asyncio.sleep(2.0)
 
     return result
+
+
+async def fetch_movies(
+    start_date: tuple[int, int, int] | None = None,
+    end_date: tuple[int, int, int] | None = None,
+) -> list[AniListShow]:
+    """Fetch movies/specials from AniList for a date range.
+
+    Args:
+        start_date: (year, month, day) tuple, defaults to MOVIE_DATE_RANGE start
+        end_date: (year, month, day) tuple, defaults to MOVIE_DATE_RANGE end
+
+    Returns:
+        List of movie/special shows
+    """
+    if start_date is None:
+        dt = MOVIE_DATE_RANGE[0].py_datetime()
+        start_date = (dt.year, dt.month, dt.day)
+    if end_date is None:
+        dt = MOVIE_DATE_RANGE[1].py_datetime()
+        end_date = (dt.year, dt.month, dt.day)
+
+    async with AniListClient() as client:
+        return await client.get_movies_by_date_range(start_date, end_date)

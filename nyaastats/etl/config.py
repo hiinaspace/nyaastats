@@ -92,13 +92,39 @@ IGNORED_TITLES: set[str] = {
     "secrets of the silent witch",
     # Ongoing long-running series outside tracked seasons
     "one piece",  # ONE PIECE (ongoing since 1999, AniList 21)
-    # Movies — not tracked yet (may add separate movie display later)
-    "demon slayer kimetsu no yaiba infinity castle",
-    "kimetsu no yaiba",  # Movie releases parsed without "Infinity Castle"
-    "chainsaw man the movie reze arc",
-    "gekijouban chainsaw man reze hen",
-    "chainsaw man movie rezehen",  # "Chainsaw Man Movie: Reze-hen" after normalization
-    "chainsaw man the movie",  # "Chainsaw Man: The Movie" without subtitle
+}
+
+# --- Movie tracking configuration ---
+
+# Date range for movie tracking (covers entire scraping period)
+MOVIE_DATE_RANGE = (Instant.from_utc(2025, 6, 1), Instant.from_utc(2026, 3, 31))
+
+# AniList format types to query for movies
+MOVIE_FORMATS = ["MOVIE", "ONA", "SPECIAL"]
+
+# Manual title overrides for movie fuzzy matching
+# Maps normalized torrent title to AniList ID
+MOVIE_TITLE_OVERRIDES: dict[str, int] = {
+    # Demon Slayer: Infinity Castle trilogy
+    "demon slayer kimetsu no yaiba infinity castle": 178788,  # Kimetsu no Yaiba: Mugen Shiro-hen Movie 1
+    "kimetsu no yaiba": 178788,  # Movie releases parsed without "Infinity Castle"
+    # Chainsaw Man: Reze Arc movie
+    "chainsaw man the movie reze arc": 171627,  # Chainsaw Man Movie: Reze-hen
+    "gekijouban chainsaw man reze hen": 171627,
+    "chainsaw man movie rezehen": 171627,
+    "chainsaw man the movie": 171627,
+    # Cosmic Princess Kaguya (ONA format on AniList)
+    "cosmic princess kaguya": 201903,
+}
+
+# AniList IDs to exclude from movie results.
+# These pass the format/episodes filter but aren't standalone movies.
+MOVIE_EXCLUDED_IDS: set[int] = {
+    191205,  # Okiraku Ryoushu no Tanoshii Ryouchi Bouei — episodic ONA (seasonal anime)
+    185993,  # Kizoku Tensei — episodic ONA (tracked in TV pipeline as Winter 2026)
+    185753,  # MF Ghost 3rd Season — TV show, AniList classifies as ONA
+    133007,  # Mahou Shoujo Madoka Magica: Walpurgis no Kaiten — not yet released
+    177687,  # Hyakuemu. — episodic ONA (seasonal anime)
 }
 
 # Fuzzy matching threshold (0-100)

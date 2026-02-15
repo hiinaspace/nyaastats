@@ -65,6 +65,7 @@ export default {
   pages: [
     {name: "Weekly Rankings", path: "/"},
     ...seasonPages,
+    {name: "Movies", path: "/movies"},
     {name: "About", path: "/about"}
   ],
 

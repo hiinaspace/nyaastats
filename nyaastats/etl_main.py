@@ -9,10 +9,18 @@ from pathlib import Path
 import polars as pl
 
 from nyaastats.etl.aggregator import DownloadAggregator
-from nyaastats.etl.anilist_client import fetch_all_seasons
-from nyaastats.etl.config import IGNORED_TITLES, MVP_SEASONS
+from nyaastats.etl.anilist_client import fetch_all_seasons, fetch_movies
+from nyaastats.etl.config import (
+    IGNORED_TITLES,
+    MOVIE_DATE_RANGE,
+    MOVIE_EXCLUDED_IDS,
+    MOVIE_TITLE_OVERRIDES,
+    MVP_SEASONS,
+)
 from nyaastats.etl.exporter import DataExporter
 from nyaastats.etl.fuzzy_matcher import FuzzyMatcher
+from nyaastats.etl.movie_aggregator import MovieAggregator
+from nyaastats.etl.movie_exporter import MovieExporter
 from nyaastats.etl.seasonal_exporter import SeasonalExporter
 from nyaastats.etl.title_corrections import apply_title_corrections
 
@@ -297,6 +305,89 @@ async def run_etl_pipeline(
             MVP_SEASONS, seasons_data, weekly_rankings
         )
 
+        # --- Movie Pipeline ---
+        logger.info("\n" + "=" * 80)
+        logger.info("Starting movie pipeline")
+        logger.info("=" * 80)
+
+        # Step M1: Fetch movie metadata from AniList
+        logger.info("\nStep M1: Fetching movie metadata from AniList...")
+        if use_mock_anilist:
+            movie_shows = []
+        else:
+            movie_shows = await fetch_movies()
+
+        # Filter out excluded IDs (episodic ONAs, unreleased, etc.)
+        before_filter = len(movie_shows)
+        movie_shows = [s for s in movie_shows if s.id not in MOVIE_EXCLUDED_IDS]
+        if before_filter != len(movie_shows):
+            logger.info(
+                f"  Excluded {before_filter - len(movie_shows)} false positives"
+            )
+
+        # Add movies from manual overrides that may not appear in AniList query
+        movie_show_ids = {show.id for show in movie_shows}
+        for override_id in MOVIE_TITLE_OVERRIDES.values():
+            if override_id not in movie_show_ids:
+                # Check if it exists in TV shows (some movies may be there)
+                for show in all_shows:
+                    if show.id == override_id:
+                        movie_shows.append(show)
+                        movie_show_ids.add(override_id)
+                        break
+
+        logger.info(f"  Movies: {len(movie_shows)} shows")
+
+        if movie_shows:
+            # Step M2: Fuzzy match torrents against movies
+            logger.info("\nStep M2: Fuzzy matching torrents to movies...")
+            movie_matcher = FuzzyMatcher(
+                movie_shows,
+                threshold=fuzzy_threshold,
+                overrides=MOVIE_TITLE_OVERRIDES,
+            )
+
+            # Use all torrents (not just episode-less ones)
+            movie_title_batch = [
+                (row["infohash"], row["title"], row["season"], row["episode"])
+                for row in torrents_for_matching.iter_rows(named=True)
+            ]
+
+            movie_matched, movie_unmatched = movie_matcher.match_batch(
+                movie_title_batch
+            )
+            movie_matched_dict = dict(movie_matched)
+
+            if movie_matched_dict:
+                # Step M3: Load and aggregate movie downloads
+                logger.info("\nStep M3: Aggregating movie downloads...")
+                movie_agg = MovieAggregator(aggregator)
+
+                min_date = MOVIE_DATE_RANGE[0].format_common_iso()
+                movie_torrents_df = movie_agg.load_movie_torrents(
+                    min_date, movie_matched_dict
+                )
+
+                if len(movie_torrents_df) > 0:
+                    movie_deltas_df = aggregator.calculate_download_deltas(
+                        movie_torrents_df
+                    )
+
+                    movie_stats = movie_agg.aggregate_movie_downloads(
+                        movie_torrents_df, movie_deltas_df, movie_shows
+                    )
+
+                    # Step M4: Export movies.json
+                    logger.info("\nStep M4: Exporting movies.json...")
+                    movie_exporter = MovieExporter(output_dir)
+                    movie_exporter.export_movies(movie_stats)
+                else:
+                    logger.warning("No movie torrents found in database")
+            else:
+                logger.warning("No torrents matched to movies")
+        else:
+            logger.warning("No movie shows found, skipping movie pipeline")
+
         logger.info("\n" + "=" * 80)
         logger.info("ETL pipeline completed successfully!")
         logger.info("=" * 80)
@@ -305,6 +396,7 @@ async def run_etl_pipeline(
         logger.info("  - seasons.json: season index")
         logger.info("  - season-*.json: Seasonal summary data")
         logger.info("  - episodes-*.json: Season episode totals")
+        logger.info("  - movies.json: Movie download data")
     finally:
         # Ensure database connection is always closed
         aggregator.close()
