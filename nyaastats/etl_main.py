@@ -317,7 +317,17 @@ async def run_etl_pipeline(
         else:
             movie_shows = await fetch_movies()
 
-        # Filter out excluded IDs (episodic ONAs, unreleased, etc.)
+        # Filter out unreleased movies (NOT_YET_RELEASED, CANCELLED)
+        allowed_statuses = {"FINISHED", "RELEASING"}
+        unreleased = [s for s in movie_shows if s.status not in allowed_statuses]
+        if unreleased:
+            logger.info(
+                f"  Filtering {len(unreleased)} unreleased/cancelled movies: "
+                + ", ".join(f"{s.title_romaji} ({s.status})" for s in unreleased[:5])
+            )
+        movie_shows = [s for s in movie_shows if s.status in allowed_statuses]
+
+        # Filter out excluded IDs (episodic ONAs, etc.)
         before_filter = len(movie_shows)
         movie_shows = [s for s in movie_shows if s.id not in MOVIE_EXCLUDED_IDS]
         if before_filter != len(movie_shows):

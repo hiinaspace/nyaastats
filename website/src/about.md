@@ -88,6 +88,20 @@ and some shows just don't fit nicely into the assumptions made by the parser
 (off-season, episode 0s/OVAs). If you think you can improve any of the methods,
 [Open an issue on GitHub](https://github.com/hiinaspace/nyaastats/issues). 
 
+### How are movies tracked?
+
+The [Movies](/movies) page tracks standalone movies, OVAs, and specials separately from the weekly seasonal rankings.
+
+**How it works:**
+
+1. We query AniList for anime with format MOVIE, ONA, or SPECIAL that started airing during the tracking period (June 2025 – March 2026).
+2. We filter to **released, single-episode** entries only — this excludes episodic ONAs (which are really seasonal shows) and unreleased films.
+3. Some entries that slip through (e.g., episodic ONAs that AniList misclassifies) are manually excluded.
+4. Torrents are fuzzy-matched to these movies the same way seasonal shows are, with manual overrides for titles that don't match well (e.g., Demon Slayer, Chainsaw Man).
+5. Downloads are aggregated in **weekly buckets** since older movies are only scraped weekly.
+
+Because AniList sometimes assigns movies to seasons outside the tracking period (e.g., a movie that aired in Fall 2025 but is tagged as Summer 2025), we query by date range rather than by season.
+
 ### Where's the data before Fall 2025?
 
 I only started scraping in June of 2025, so that's the first complete season I

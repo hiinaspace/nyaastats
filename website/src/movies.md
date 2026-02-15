@@ -4,6 +4,12 @@ toc: false
 
 # Nyaastats: Movies
 
+<div class="note">
+
+Movies, OVAs, and specials with one episode, released during the tracking period (Jun 2025 – Mar 2026). Queried from AniList by date range and format (MOVIE, ONA, SPECIAL), filtered to released single-episode entries. Downloads are aggregated in weekly buckets across all torrent releases. See [About](/about#how-are-movies-tracked) for details.
+
+</div>
+
 ```js
 const moviesData = FileAttachment("data/movies.json").json();
 ```
