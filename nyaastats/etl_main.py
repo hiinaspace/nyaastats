@@ -275,9 +275,16 @@ async def run_etl_pipeline(
         logger.info("\nStep 7: Calculating weekly rankings...")
         weekly_rankings = aggregator.calculate_weekly_rankings(daily_stats, all_shows)
 
+        # Step 7b: Export per-torrent download diagnostics
+        logger.info("\nStep 7b: Exporting torrent download diagnostics...")
+        exporter = DataExporter(output_dir)
+
+        exporter.export_torrent_diagnostics(
+            torrents_df, deltas_df, matched_dict, all_shows, weekly_rankings
+        )
+
         # Step 8: Export results
         logger.info("\nStep 8: Exporting results...")
-        exporter = DataExporter(output_dir)
 
         exporter.export_weekly_rankings(weekly_rankings)
 
@@ -412,6 +419,7 @@ async def run_etl_pipeline(
         logger.info("  - seasons.json: season index")
         logger.info("  - season-*.json: Seasonal summary data")
         logger.info("  - episodes-*.json: Season episode totals")
+        logger.info("  - torrent_downloads_report.json: Per-torrent weekly diagnostics")
         logger.info("  - movies.json: Movie download data")
         logger.info("  - movie_match_report.json: Movie torrent/guessit match debug")
     finally:
