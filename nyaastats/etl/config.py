@@ -34,8 +34,16 @@ WINTER_2026 = SeasonConfig(
     end_date=Instant.from_utc(2026, 3, 31),
 )
 
+SPRING_2026 = SeasonConfig(
+    name="Spring 2026",
+    season="SPRING",
+    year=2026,
+    start_date=Instant.from_utc(2026, 4, 1),
+    end_date=Instant.from_utc(2026, 6, 30),
+)
+
 # All seasons to process for MVP
-MVP_SEASONS = [FALL_2025, WINTER_2026]
+MVP_SEASONS = [FALL_2025, WINTER_2026, SPRING_2026]
 
 
 # Manual title overrides for fuzzy matching
@@ -65,6 +73,37 @@ TITLE_OVERRIDES: dict[str, int] = {
     "kaguyasama wa kokurasetai": 194884,  # Kaguya-sama: Otona e no Kaidan (Fall 2025)
     # Kizoku Tensei - subtitle stripping would help but "Kizoku Tensei" alone is ambiguous
     "kizoku tensei": 185993,  # Noble Reincarnation (Winter 2026)
+    # --- Spring 2026 ---
+    # Kanteishi (Kari) - guessit drops "(Kari)" leaving bare "Kanteishi"; long AniList title
+    "kanteishi": 200769,  # Saikyou no Shokugyou wa... Kanteishi (Kari) (Spring 2026)
+    # Honzuki no Gekokujou S4 - short title scores ~65 vs long subtitle-heavy AniList title
+    "honzuki no gekokujou": 171110,  # Ascendance of a Bookworm S4 (Spring 2026)
+    # Dr. Stone Cour 3 - "dr stone" scores ~35 vs "SCIENCE FUTURE Cour 3" AniList title
+    "dr stone": 199221,  # Dr. STONE SCIENCE FUTURE Cour 3 (Spring 2026)
+    # Shunkashuutou Daikousha - guessit drops subtitle; English-only title scores 0
+    "shunkashuutou daikousha": 190143,  # Agents of the Four Seasons: Dance of Spring (Spring 2026)
+    # Dorohedoro S2 - "dorohedoro" scores ~67+10 with season bonus, still below 85
+    "dorohedoro": 173172,  # Dorohedoro Season 2 (Spring 2026)
+    # Re:Zero S4 - English title "Re:ZERO -Starting Life in Another World- Season 4" scores 0
+    "re zero kara hajimeru isekai seikatsu": 189046,  # Re:ZERO Season 4 (Spring 2026)
+    # Kirei ni Shite Moraemasu ka - space vs no-space in "Shite moraemasu" may tank score
+    "kirei ni shite moraemasu ka": 194028,  # Kirei ni Shitemoraemasu ka. (Winter 2026)
+    # --- Winter 2026 ---
+    # Vigilante S2 - guessit title "Vigilante" scores ~30 vs full franchise name
+    "vigilante": 195322,  # Vigilante: Boku no Hero Academia ILLEGALS 2nd Season (Winter 2026)
+    # JoJo Steel Ball Run - guessit gives franchise name "JoJos Bizarre Adventure" (S6 label)
+    "jojos bizarre adventure": 190327,  # JoJo no Kimyou na Bouken: Steel Ball Run 1st STAGE (Winter 2026)
+    # Golden Kamuy Final - "golden kamuy" scores ~71 vs "Golden Kamuy: Saishuushou"
+    "golden kamuy": 166521,  # Golden Kamuy Final Season (Winter 2026)
+    # Toumei Otoko - subtitle "Sonouchi Fuufu ni Naru Futari" tanks fuzzy score
+    "toumei otoko to ningen onna": 185039,  # Toumei Otoko to Ningen Onna (Winter 2026)
+    # MF Ghost S3 - AniList classifies as ONA; "mf ghost" scores ~67 vs "3rd Season" title
+    "mf ghost": 185753,  # MF Ghost 3rd Season (Winter 2026)
+    # --- Fall 2025 ---
+    # Kingdom S6 - "kingdom" alone scores ~52 vs "Kingdom 6th Season"
+    "kingdom": 190840,  # Kingdom 6th Season (Fall 2025)
+    # Ranma 1/2 S2 - guessit mangles "Ranma 1/2" to bare "Ranma"; 1/2 → "12" after normalize
+    "ranma": 185731,  # Ranma 1/2 (2024) 2nd Season (Fall 2025)
 }
 
 # Episode-to-season mappings for continuing series with continuous numbering
@@ -122,7 +161,8 @@ MOVIE_TITLE_OVERRIDES: dict[str, int] = {
 MOVIE_EXCLUDED_IDS: set[int] = {
     191205,  # Okiraku Ryoushu no Tanoshii Ryouchi Bouei — episodic ONA (seasonal anime)
     185993,  # Kizoku Tensei — episodic ONA (tracked in TV pipeline as Winter 2026)
-    185753,  # MF Ghost 3rd Season — TV show, AniList classifies as ONA
+    185753,  # MF Ghost 3rd Season — tracked in TV pipeline via "mf ghost" override (Winter 2026)
+    190327,  # JoJo no Kimyou na Bouken: Steel Ball Run 1st STAGE — ONA, tracked in TV pipeline (Winter 2026)
     133007,  # Mahou Shoujo Madoka Magica: Walpurgis no Kaiten — not yet released
     177687,  # Hyakuemu. — episodic ONA (seasonal anime)
 }
