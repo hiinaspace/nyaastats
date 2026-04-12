@@ -40,14 +40,10 @@ uv run nyaastats
 uv run nyaastats-backfill --help
 
 # Run ETL pipeline to generate analytics
-uv run nyaastats-etl --db nyaastats.db --output output/
+uv run nyaastats-etl --db nyaastats.db --output website/src/data
 
 # Run ETL with custom fuzzy matching threshold
-uv run nyaastats-etl --db nyaastats.db --output output/ --fuzzy-threshold 80
-
-# Example cron setup for hourly execution
-# Add to crontab with: crontab -e
-# 0 * * * * cd /path/to/nyaastats && uv run nyaastats
+uv run nyaastats-etl --db nyaastats.db --output website/src/data --fuzzy-threshold 80
 ```
 
 ### Development Setup
