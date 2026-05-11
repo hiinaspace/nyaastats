@@ -20,7 +20,7 @@ dependencies = [
     "gql>=4.0.0",
     "aiohttp>=3.13.3",
     "duckdb>=1.4.3",
-    "polars>=1.37.1",
+    "polars[rtcompat]>=1.37.1",
 ]
 
 [project.scripts]

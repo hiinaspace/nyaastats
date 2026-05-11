@@ -5,7 +5,6 @@ import fs from "node:fs";
 
 const seasonsPath = new URL("./src/data/seasons.json", import.meta.url);
 const rankingsPath = new URL("./src/data/rankings.json", import.meta.url);
-const treemapsLoaderPath = new URL("./src/data/treemaps.zip.js", import.meta.url);
 let seasons = [];
 let rankings = null;
 
@@ -19,16 +18,6 @@ try {
   rankings = JSON.parse(fs.readFileSync(rankingsPath, "utf-8"));
 } catch {
   rankings = null;
-}
-
-try {
-  const rankingsStat = fs.statSync(rankingsPath);
-  const loaderStat = fs.statSync(treemapsLoaderPath);
-  if (rankingsStat.mtimeMs > loaderStat.mtimeMs) {
-    fs.utimesSync(treemapsLoaderPath, rankingsStat.atime, rankingsStat.mtime);
-  }
-} catch {
-  // Ignore missing files during initial setup
 }
 
 const seasonPages = seasons.map((season) => ({
