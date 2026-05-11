@@ -16,6 +16,7 @@ wheels/
 *.db-wal
 
 # Website
+scripts/deploy_website.sh
 website/node_modules/
 website/dist/
 website/.observablehq/
