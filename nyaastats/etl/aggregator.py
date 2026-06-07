@@ -392,15 +392,10 @@ class DownloadAggregator:
         # Shift datetimes to EST, extract date, then find the containing week's
         # Sunday start using weekday arithmetic (Polars weekday: Mon=1 … Sun=7).
         daily_stats = daily_stats.with_columns(
-            (pl.col("period_start") - pl.duration(hours=5))
-            .dt.date()
-            .alias("est_date")
+            (pl.col("period_start") - pl.duration(hours=5)).dt.date().alias("est_date")
         )
         daily_stats = daily_stats.with_columns(
-            (
-                pl.col("est_date")
-                - pl.duration(days=pl.col("est_date").dt.weekday() % 7)
-            )
+            (pl.col("est_date") - pl.duration(days=pl.col("est_date").dt.weekday() % 7))
             .cast(pl.Date)
             .dt.strftime("%Y-%m-%d")
             .alias("iso_week"),

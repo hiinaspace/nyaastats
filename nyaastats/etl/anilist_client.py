@@ -27,6 +27,14 @@ class AniListShow:
     cover_image_color: str | None  # Dominant color hex
     start_date: tuple[int | None, int | None, int | None] | None  # (year, month, day)
     format: str | None  # TV, TV_SHORT, MOVIE, OVA, etc.
+    id_mal: int | None = None  # MyAnimeList ID for cross-source joins
+    average_score: int | None = None  # AniList weighted average score (0-100)
+    mean_score: int | None = None  # AniList mean score (0-100)
+    popularity: int | None = None  # Number of users with this in their list
+    favourites: int | None = None  # Number of users who favourited this
+    title_native: str | None = (
+        None  # Native (usually Japanese) title; Niconico join key
+    )
 
 
 class AniListClient:
@@ -78,6 +86,7 @@ class AniListClient:
                 }
                 media(season: $season, seasonYear: $seasonYear, type: ANIME) {
                   id
+                  idMal
                   title {
                     romaji
                     english
@@ -87,6 +96,10 @@ class AniListClient:
                   episodes
                   status
                   format
+                  averageScore
+                  meanScore
+                  popularity
+                  favourites
                   startDate {
                     year
                     month
@@ -197,6 +210,7 @@ class AniListClient:
                 }
                 media(type: ANIME, format_in: $formats, startDate_greater: $startDate, startDate_lesser: $endDate) {
                   id
+                  idMal
                   title {
                     romaji
                     english
@@ -206,6 +220,10 @@ class AniListClient:
                   episodes
                   status
                   format
+                  averageScore
+                  meanScore
+                  popularity
+                  favourites
                   startDate {
                     year
                     month
@@ -308,6 +326,7 @@ class AniListClient:
             id=media["id"],
             title_romaji=title.get("romaji", ""),
             title_english=title.get("english"),
+            title_native=title.get("native"),
             synonyms=media.get("synonyms", []),
             episodes=media.get("episodes"),
             status=media.get("status", ""),
@@ -318,6 +337,11 @@ class AniListClient:
             cover_image_color=cover_image.get("color"),
             start_date=start_date,
             format=media.get("format"),
+            id_mal=media.get("idMal"),
+            average_score=media.get("averageScore"),
+            mean_score=media.get("meanScore"),
+            popularity=media.get("popularity"),
+            favourites=media.get("favourites"),
         )
 
 

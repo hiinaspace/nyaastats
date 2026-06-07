@@ -49,7 +49,9 @@ def test_export_movie_match_report_empty(tmp_path):
 
 def test_export_movie_match_report_populated(tmp_path):
     exporter = MovieExporter(tmp_path)
-    show = _sample_show(113971, "Kidou Senshi Gundam: Senkou no Hathaway - Circe no Majo")
+    show = _sample_show(
+        113971, "Kidou Senshi Gundam: Senkou no Hathaway - Circe no Majo"
+    )
     match = TitleMatch(
         anilist_id=113971,
         score=97.0,
@@ -66,7 +68,11 @@ def test_export_movie_match_report_populated(tmp_path):
                 "pubdate": ["2025-10-07T00:00:00Z"],
                 "guessit_data": [
                     json.dumps(
-                        {"title": "Kidou Senshi Gundam", "season": None, "episode": None}
+                        {
+                            "title": "Kidou Senshi Gundam",
+                            "season": None,
+                            "episode": None,
+                        }
                     )
                 ],
                 "trusted": [1],

@@ -8,6 +8,7 @@ from pathlib import Path
 import polars as pl
 
 from .config import SeasonConfig
+from .metrics import compute_rank_deltas
 
 logger = logging.getLogger(__name__)
 
@@ -139,7 +140,9 @@ class SeasonalExporter:
                 sorted(filtered["week"].unique().to_list()) if len(filtered) > 0 else []
             )
             latest_week = weeks[-1] if weeks else None
-            latest_week_start = latest_week  # week identifier is already the Sunday start date
+            latest_week_start = (
+                latest_week  # week identifier is already the Sunday start date
+            )
 
             status = "complete" if end_date < today else "in-progress"
 
@@ -177,6 +180,7 @@ class SeasonalExporter:
         weekly_rankings: pl.DataFrame,
         episode_stats: pl.DataFrame,
         season_show_ids: list[int],
+        show_metrics: dict[int, dict] | None = None,
     ) -> str:
         """Export seasonal summary JSON with all data needed for visualizations.
 
@@ -383,11 +387,15 @@ class SeasonalExporter:
                     else None,
                     "ep1_downloads": int(ep1_downloads) if ep1_downloads else 0,
                     "current_rank": current_rank,
+                    **(show_metrics or {}).get(anilist_id, {}),
                 }
             )
 
         # Sort shows by total downloads
         shows_data.sort(key=lambda x: x["total_downloads"], reverse=True)
+
+        # Annotate over/under-performance rank-deltas across this season's shows
+        compute_rank_deltas(shows_data)
 
         # Compute percentiles
         weekly_percentiles = compute_percentiles(

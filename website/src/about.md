@@ -56,6 +56,59 @@ It's calculated as the *episode 1 downloads in the first week* divided by *episo
 - **10%** means most people downloaded episode 1 right away.
 - **50%** means half the people started the show weeks later.
 
+### What are the "rank delta" charts?
+
+These compare how a show ranks on **nyaa downloads** versus how it ranks on an
+external **rating** — [MyAnimeList](https://myanimelist.net) score (via the
+[Jikan API](https://jikan.moe)) and [AniList](https://anilist.co) average score.
+
+For each show we compute its download rank and its rating rank within the season,
+then take the difference (`download rank − rating rank`):
+
+- **Positive (green)** — the show is rated highly but comparatively few people
+  download it: an *underrated* pick by nyaa standards.
+- **Negative (red)** — downloads outrun the critical reception: popular to grab
+  but rated lower.
+
+The companion scatterplot puts the rating score on the x-axis and total downloads
+(log scale) on the y-axis. The dashed line is a least-squares fit of downloads
+against score (computed in log space, since downloads span orders of magnitude),
+and the short colored segment on each point is its *residual* — the gap to the
+trend. Shows sitting well above the line over-download for their score (green
+residual), while those below under-download (red). The biggest outliers are
+labelled directly. Shows without a matching MAL/AniList entry are omitted.
+
+### What is the Niconico column?
+
+Some anime air on Niconico's official live broadcasts (ニコ生), where viewers are
+shown a 5-point satisfaction survey (公式アンケート) at the end of each episode:
+『とても良かった』(very good) → 『良くなかった』(not good). The **Niconico** column
+is the average, across a show's episodes, of the percentage of live viewers who
+picked 『とても良かった』— the headline number the Niconico community tracks.
+
+This data comes from the fan-run database at
+[nicolive-anime-survey.info](https://nicolive-anime-survey.info/). Only shows that
+actually aired on a Niconico live broadcast have survey data, so many shows show a
+"—". Niconico's live-broadcast audience skews differently from nyaa downloaders,
+which is part of what makes the comparison interesting. (Note: this is the survey
+*rating* only — Niconico view counts aren't part of this source.)
+
+### What is the "Season at a glance" card grid?
+
+A uniform card per show (unlike the area-weighted treemap), small enough to
+screenshot a whole season. Each card packs:
+
+- **Three sparklines** — downloads per episode, weekly rank over time, and the
+  Niconico 『とても良かった』% per episode (where available).
+- **A rank radar** with four spokes — nyaa downloads, MyAnimeList, AniList, and
+  Niconico. Each spoke is the show's *rank within the season* on that metric,
+  normalized so the season-best reaches the outer edge and a missing metric
+  collapses to the centre. A big, full diamond is a show that's near the top on
+  everything; a lopsided shape shows where a show over- or under-performs.
+
+Use the **Sort cards by** selector to reorder (descending, left-to-right); it
+defaults to nyaa downloads.
+
 ### Why group shows by premiere size?
 
 Shows with huge premieres (like sequels to popular series) behave differently

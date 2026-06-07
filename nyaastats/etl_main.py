@@ -8,6 +8,7 @@ from pathlib import Path
 
 import polars as pl
 
+from nyaastats.database import Database
 from nyaastats.etl.aggregator import DownloadAggregator
 from nyaastats.etl.anilist_client import fetch_all_seasons, fetch_movies
 from nyaastats.etl.config import (
@@ -19,8 +20,11 @@ from nyaastats.etl.config import (
 )
 from nyaastats.etl.exporter import DataExporter
 from nyaastats.etl.fuzzy_matcher import FuzzyMatcher
+from nyaastats.etl.jikan_client import fetch_mal_ratings
+from nyaastats.etl.metrics import build_show_metrics
 from nyaastats.etl.movie_aggregator import MovieAggregator
 from nyaastats.etl.movie_exporter import MovieExporter
+from nyaastats.etl.niconico_client import ingest_niconico_surveys
 from nyaastats.etl.seasonal_exporter import SeasonalExporter
 from nyaastats.etl.title_corrections import apply_title_corrections
 
@@ -63,6 +67,19 @@ async def run_etl_pipeline(
     for season_name, shows in seasons_data.items():
         logger.info(f"  {season_name}: {len(shows)} shows")
         all_shows.extend(shows)
+
+    # Step 1b: Enrich with external ratings (MyAnimeList via Jikan) + Niconico surveys.
+    # Cached in the DB so reruns don't re-hit the APIs.
+    logger.info("\nStep 1b: Fetching external ratings (MyAnimeList via Jikan)...")
+    db = Database(db_path)
+    if use_mock_anilist:
+        mal_ratings: dict = {}
+    else:
+        mal_ratings = await fetch_mal_ratings(db, all_shows)
+        logger.info("Ingesting Niconico per-episode survey ratings...")
+        await ingest_niconico_surveys(db, all_shows, MVP_SEASONS)
+    niconico_surveys = db.get_niconico_surveys()
+    show_metrics = build_show_metrics(all_shows, mal_ratings, niconico_surveys)
 
     # Step 2: Load torrents from database
     logger.info("\nStep 2: Loading torrents from database...")
@@ -302,7 +319,11 @@ async def run_etl_pipeline(
                 continue
 
             seasonal_exporter.export_season_summary(
-                season_config, weekly_rankings, daily_stats, season_show_ids
+                season_config,
+                weekly_rankings,
+                daily_stats,
+                season_show_ids,
+                show_metrics=show_metrics,
             )
             seasonal_exporter.export_season_episodes(
                 season_config, daily_stats, season_show_ids

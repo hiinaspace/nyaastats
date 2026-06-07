@@ -177,3 +177,43 @@ POST_AIRING_WEEKS = 4
 # AniList API configuration
 ANILIST_API_URL = "https://graphql.anilist.co"
 ANILIST_RATE_LIMIT_PER_MINUTE = 90
+
+# Jikan (unofficial MyAnimeList) API configuration
+JIKAN_API_URL = "https://api.jikan.moe/v4"
+# Jikan v4 caps: 3 req/s and 60 req/min. Sleep 1s between requests to stay
+# comfortably under both limits.
+JIKAN_RATE_LIMIT = 1.0  # seconds between requests
+# Re-fetch cached external ratings older than this many days.
+EXTERNAL_RATING_TTL_DAYS = 7
+
+# Niconico per-episode survey (公式アンケート) data is sourced from the fan-run
+# database at nicolive-anime-survey.info, which offers a full CSV export of every
+# catalogued broadcast survey (5-point satisfaction scale).
+NICONICO_SURVEY_CSV_URL = "https://nicolive-anime-survey.info/index.php?export=all"
+# The CSV is one HTTP request for the whole archive; cache it this long between
+# downloads (it only grows by a handful of rows per day).
+NICONICO_CSV_TTL_DAYS = 1
+# Minimum fuzzy score (0-100) for matching a Niconico Japanese title to an AniList
+# native title. Japanese strings match near-exactly when they're the same show.
+NICONICO_MATCH_THRESHOLD = 90
+
+# AniList season name -> Niconico season-code suffix letter. Niconico codes look
+# like "2026B" (year + quarter): A=winter, B=spring, C=summer, D=fall.
+NICONICO_SEASON_LETTERS = {
+    "WINTER": "A",
+    "SPRING": "B",
+    "SUMMER": "C",
+    "FALL": "D",
+}
+
+
+def niconico_season_code(season: str, year: int) -> str | None:
+    """Build the Niconico season code (e.g. "2026B") for an AniList season/year."""
+    letter = NICONICO_SEASON_LETTERS.get(season.upper())
+    return f"{year}{letter}" if letter else None
+
+
+# Manual mapping from a Niconico series title to an AniList id, for survey rows
+# whose Japanese title doesn't fuzzy-match an AniList native title (mirrors
+# TITLE_OVERRIDES). Populated as mismatches are discovered.
+NICONICO_TITLE_MAP: dict[str, int] = {}

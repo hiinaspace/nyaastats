@@ -113,6 +113,27 @@ For detailed ETL configuration (season matching, episode mappings, etc.), see **
 - Three-layer matching: episode-range → manual overrides → season-aware → fuzzy
 - Configuration files: `nyaastats/etl/config.py` and `nyaastats/etl/title_corrections.py`
 
+**External ratings (cross-source join):**
+- AniList scores (`averageScore`, `meanScore`, `popularity`, `favourites`, `idMal`)
+  come from the existing AniList query (`nyaastats/etl/anilist_client.py`).
+- MyAnimeList scores are fetched via Jikan (`nyaastats/etl/jikan_client.py`), keyed by
+  AniList's `idMal`, and cached in the `external_ratings` table (7-day TTL) so reruns
+  don't re-hit the API.
+- Niconico per-episode survey ratings (公式アンケート, 5-point scale) are ingested by
+  `nyaastats/etl/niconico_client.py` from the full CSV export of the fan DB
+  `nicolive-anime-survey.info` (cached in `external_ratings`, source `niconico_csv`).
+  Rows are matched to shows by AniList **native** (Japanese) title — exact, then
+  length-gated `partial_ratio` fuzzy — with `NICONICO_TITLE_MAP` in `config.py` for
+  manual overrides, and stored per-episode in the `niconico_survey` table. Season
+  codes map via `niconico_season_code()` (e.g. Spring 2026 → `2026B`). This source
+  has survey *ratings* only — not Niconico view counts.
+- `nyaastats/etl/metrics.py` merges these into per-show fields and computes
+  `rank_delta_dl_vs_mal` / `rank_delta_dl_vs_anilist` (download rank − rating rank;
+  positive = underrated by downloads). Emitted per show in `season-*.json` and
+  visualized as premiere-size-bucketed rank-delta beehives + a score-vs-downloads
+  scatter (with a log-space regression line, residual segments, and outlier labels)
+  on season pages. AniList/MAL/Niconico scores also appear as table columns.
+
 ## Common Tasks
 
 ### Before making changes:

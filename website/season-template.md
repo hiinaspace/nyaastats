@@ -261,6 +261,168 @@ display(html`<figure class="chart-figure">
 </figure>`);
 ```
 
+---
+
+## Season at a glance
+
+```js
+// Per-show "card grid": one equal-size card per show — a uniform visual gloss of
+// the whole season (vs the area-weighted treemap above). Each card carries the
+// poster, title, three mini sparklines (downloads/episode, weekly rank, Niconico
+// survey/episode) and a 4-axis rank radar (downloads / MAL / AniList / Niconico).
+
+// Normalized within-season rank per metric for the radar: 1.0 = best in season,
+// 0 = worst, missing = 0 (collapses that axis to the centre).
+const radarMetrics = [
+  { key: "total_downloads", label: "DL" },
+  { key: "mal_score", label: "MAL" },
+  { key: "average_score", label: "AL" },
+  { key: "niconico_very_good_pct", label: "Nico" }
+];
+const radarRanks = Object.fromEntries(radarMetrics.map(m => {
+  const valued = filteredShows.filter(s => s[m.key] != null).sort((a, b) => b[m.key] - a[m.key]);
+  const n = valued.length;
+  const map = new Map(valued.map((s, i) => [s.anilist_id, n > 1 ? 1 - i / (n - 1) : 1]));
+  return [m.key, map];
+}));
+```
+
+```js
+// Static colors for single-series visualizations. Per-show cover colors are kept
+// only for the multi-series bump/retention line charts (where colour = series id);
+// everywhere else a fixed per-metric colour reads cleaner and avoids the
+// low-contrast cover colours.
+const vizColor = {
+  downloads: "#4a9eff",  // blue accent — downloads / endurance / general
+  rank: "#fbbf24",       // amber — weekly rank
+  niconico: "#f472b6",   // pink — Niconico survey
+  neutral: "#4a9eff"
+};
+```
+
+```js
+function cardRadar(show, size = 76) {
+  const cx = size / 2, cy = size / 2, r = size / 2 - 13;
+  const n = radarMetrics.length;
+  const ang = i => (Math.PI * 2 * i) / n - Math.PI / 2;
+  const color = vizColor.neutral;
+  const at = (i, v) => [cx + Math.cos(ang(i)) * r * v, cy + Math.sin(ang(i)) * r * v];
+  const poly = radarMetrics
+    .map((m, i) => at(i, radarRanks[m.key].get(show.anilist_id) ?? 0).join(","))
+    .join(" ");
+  return html`<svg width="${size}" height="${size}" style="display:block;flex:none" viewBox="0 0 ${size} ${size}">
+    ${[0.5, 1].map(rr => svg`<circle cx="${cx}" cy="${cy}" r="${r * rr}" fill="none" stroke="#fff" stroke-opacity="0.18"/>`)}
+    ${radarMetrics.map((m, i) => {
+      const [ex, ey] = at(i, 1);
+      const [lx, ly] = at(i, 1.32);
+      return svg`<line x1="${cx}" y1="${cy}" x2="${ex}" y2="${ey}" stroke="#fff" stroke-opacity="0.18"/>
+        <text x="${lx}" y="${ly}" font-size="7" fill="#bbb" text-anchor="middle" dominant-baseline="middle" style="text-shadow:0 0 3px #000">${m.label}</text>`;
+    })}
+    <polygon points="${poly}" fill="${color}" fill-opacity="0.45" stroke="${color}" stroke-width="1.5"/>
+    ${radarMetrics.map((m, i) => {
+      const v = radarRanks[m.key].get(show.anilist_id);
+      if (v == null) return null;
+      const [px, py] = at(i, v);
+      return svg`<circle cx="${px}" cy="${py}" r="1.6" fill="#fff"/>`;
+    })}
+  </svg>`;
+}
+
+// Generic compact sparkline. `invert` flips the y-domain (used for rank, where a
+// lower number is better and should plot higher).
+function cardSpark(values, color, { height = 20, width = 96, invert = false, yMin, yMax } = {}) {
+  if (!values || values.length === 0) return html`<svg width="${width}" height="${height}"></svg>`;
+  const x = d3.scaleLinear().domain([0, Math.max(1, values.length - 1)]).range([2, width - 2]);
+  const lo = yMin ?? d3.min(values), hi = yMax ?? d3.max(values);
+  const dom = invert ? [hi, lo] : [lo, hi];
+  if (dom[0] === dom[1]) { dom[0] -= 1; dom[1] += 1; }
+  const y = d3.scaleLinear().domain(dom).range([height - 2, 2]);
+  const line = d3.line().x((d, i) => x(i)).y(d => y(d));
+  const area = d3.area().x((d, i) => x(i)).y0(height - 2).y1(d => y(d));
+  return html`<svg width="${width}" height="${height}" style="display:block">
+    <path d="${area(values)}" fill="${color}" opacity="0.16"></path>
+    <path d="${line(values)}" fill="none" stroke="${color}" stroke-width="1.3"></path>
+  </svg>`;
+}
+
+function cardDownloadsSpark(show) {
+  const eps = (episodesByShow.get(show.anilist_id) || []).slice().sort((a, b) => a.episode - b.episode);
+  return cardSpark(eps.map(e => e.downloads_cumulative), vizColor.downloads, { yMin: 0 });
+}
+
+function cardRankSpark(show) {
+  const ranks = (weeklyRanksByShow.get(show.anilist_id) || [])
+    .slice().sort((a, b) => new Date(a.weekStart) - new Date(b.weekStart));
+  return cardSpark(ranks.map(r => Math.min(r.rank, 40)), vizColor.rank, { invert: true, yMin: 1, yMax: 40 });
+}
+
+function cardNicoSpark(show) {
+  const series = show.niconico_episodes || [];
+  return cardSpark(series.map(e => e.very_good_pct), vizColor.niconico, { yMin: 0, yMax: 100 });
+}
+
+function makeSeasonCard(show) {
+  const color = vizColor.downloads;
+  const eng = show.title && show.title !== show.title_romaji ? show.title : "";
+  const fmtScore = (v, suffix = "") => v == null ? "—" : `${v}${suffix}`;
+  return html`<div class="season-card ${selectedIds.has(show.anilist_id) ? "is-selected" : ""}"
+       style="--card-color:${color}"
+       onclick=${() => toggleFocusedId(show.anilist_id)}>
+    <div class="season-card-bg" style="background-image:url('${show.cover_image_url}')"></div>
+    <div class="season-card-body">
+      <div class="season-card-head">
+        <span class="season-card-rank">#${show.season_rank}</span>
+        <span class="season-card-dl">${formatCompact(show.total_downloads)}</span>
+      </div>
+      <div class="season-card-title" title="${show.title_romaji}${eng ? " — " + eng : ""}">${show.title_romaji}</div>
+      ${eng ? html`<div class="season-card-eng">${eng}</div>` : ""}
+      <div class="season-card-viz">
+        ${cardRadar(show)}
+        <div class="season-card-sparks">
+          <div class="spark-row"><span class="spark-lbl">DL/ep</span>${cardDownloadsSpark(show)}</div>
+          <div class="spark-row"><span class="spark-lbl">Rank</span>${cardRankSpark(show)}</div>
+          <div class="spark-row"><span class="spark-lbl">Nico</span>${cardNicoSpark(show)}</div>
+        </div>
+      </div>
+      <div class="season-card-scores">
+        <span>AL ${fmtScore(show.average_score)}</span>
+        <span>MAL ${show.mal_score == null ? "—" : show.mal_score.toFixed(2)}</span>
+        <span>Nico ${show.niconico_very_good_pct == null ? "—" : show.niconico_very_good_pct.toFixed(0) + "%"}</span>
+      </div>
+    </div>
+  </div>`;
+}
+```
+
+```js
+// Sort selector — default Nyaa downloads (descending); cards flow left-to-right.
+const cardSortKey = view(Inputs.select(
+  new Map([
+    ["Nyaa downloads", "total_downloads"],
+    ["AniList score", "average_score"],
+    ["MyAnimeList score", "mal_score"],
+    ["Niconico approval", "niconico_very_good_pct"],
+    ["Endurance", "endurance"],
+    ["Late starters", "late_starters"]
+  ]),
+  { label: "Sort cards by", value: "total_downloads" }
+));
+```
+
+```js
+{
+  const sorted = [...filteredShows].sort((a, b) => {
+    const av = a[cardSortKey], bv = b[cardSortKey];
+    if (av == null && bv == null) return a.season_rank - b.season_rank;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    if (bv !== av) return bv - av;
+    return a.season_rank - b.season_rank;
+  });
+  display(html`<div class="season-card-grid">${sorted.map(makeSeasonCard)}</div>`);
+}
+```
+
 ```js
 // Focus chips
 const focusChips = html`<div class="focus-chips">
@@ -328,7 +490,7 @@ function makeRankSparkline(showId) {
   const line = d3.line().x((d, i) => x(i)).y(d => y(Math.min(d.rank, 40)));
   const path = line(sorted);
   return html`<svg width="${width}" height="${height}" style="vertical-align:middle">
-    <path d="${path}" fill="none" stroke="${showColors[showId]}" stroke-width="1.5"/>
+    <path d="${path}" fill="none" stroke="${vizColor.rank}" stroke-width="1.5"/>
   </svg>`;
 }
 
@@ -351,7 +513,7 @@ function sparkbar(max, color, format) {
 
 function makeDownloadsCell(show) {
   if (!show?.total_downloads) return html`<span style="color:#666">—</span>`;
-  const color = showColors[show.anilist_id] || "#4a9eff";
+  const color = vizColor.downloads;
   return sparkbar(maxDownloads, color)(show.total_downloads);
 }
 
@@ -376,7 +538,7 @@ function makeEnduranceCell(show) {
   const path = line(values);
   const pct = `${(show.endurance * 100).toFixed(0)}%`;
   const baselineY = y(1);
-  const color = showColors[show.anilist_id] || "#4a9eff";
+  const color = vizColor.downloads;
   return html`<div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">
     <svg width="${width}" height="${height}" style="display:block">
       <line x1="2" x2="${width - 2}" y1="${baselineY}" y2="${baselineY}" stroke="#333" stroke-dasharray="2,2"></line>
@@ -388,7 +550,7 @@ function makeEnduranceCell(show) {
 
 function makeLateStartersCell(show) {
   if (!show || show.late_starters == null) return html`<span style="color:#666">—</span>`;
-  const color = showColors[show.anilist_id] || "#4a9eff";
+  const color = vizColor.downloads;
   return sparkbar(maxLateStarters, color, x => `${(x * 100).toFixed(0)}%`)(show.late_starters);
 }
 ```
@@ -396,7 +558,7 @@ function makeLateStartersCell(show) {
 ```js
 // Interactive table with multi-select
 const table = Inputs.table(sortedShows, {
-  columns: ["cover_image_url", "title_romaji", "season_rank", "total_downloads", "endurance", "late_starters"],
+  columns: ["cover_image_url", "title_romaji", "season_rank", "total_downloads", "endurance", "late_starters", "average_score", "mal_score", "niconico_very_good_pct"],
   header: {
     cover_image_url: "",
     title_romaji: "Title",
@@ -405,7 +567,10 @@ const table = Inputs.table(sortedShows, {
     // the <b> wrapping is since inputs.css has some odd empty span rule that's margin-block and 0 width,
     // so the default html span also gets that rule and throws off the html.
     endurance: html`<b>Endurance <a href="/about#what-is-endurance" class="info-icon" title="How well shows maintain viewership after episode 1. Click for details.">ⓘ</a></b>`,
-    late_starters: html`<b>Late Starters <a href="/about#what-are-late-starters" class="info-icon" title="Percentage of viewers who started after premiere week. Click for details.">ⓘ</a></b>`
+    late_starters: html`<b>Late Starters <a href="/about#what-are-late-starters" class="info-icon" title="Percentage of viewers who started after premiere week. Click for details.">ⓘ</a></b>`,
+    average_score: html`<b>AniList</b>`,
+    mal_score: html`<b>MAL</b>`,
+    niconico_very_good_pct: html`<b>Niconico <a href="/about#what-is-the-niconico-column" class="info-icon" title="Average % of Niconico live viewers who rated episodes 『とても良かった』(very good). Click for details.">ⓘ</a></b>`
   },
   align: {
     endurance: 'left',
@@ -432,7 +597,19 @@ const table = Inputs.table(sortedShows, {
     },
     total_downloads: (_, i, data) => makeDownloadsCell(data[i]),
     endurance: (_, i, data) => makeEnduranceCell(data[i]),
-    late_starters: (_, i, data) => makeLateStartersCell(data[i])
+    late_starters: (_, i, data) => makeLateStartersCell(data[i]),
+    average_score: (_, i, data) => {
+      const v = data[i].average_score;
+      return v == null ? html`<span style="color:#555">—</span>` : html`<span>${v}</span>`;
+    },
+    mal_score: (_, i, data) => {
+      const v = data[i].mal_score;
+      return v == null ? html`<span style="color:#555">—</span>` : html`<span>${v.toFixed(2)}</span>`;
+    },
+    niconico_very_good_pct: (_, i, data) => {
+      const v = data[i].niconico_very_good_pct;
+      return v == null ? html`<span style="color:#555">—</span>` : html`<span>${v.toFixed(0)}%</span>`;
+    }
   },
   width: {
     cover_image_url: 55,
@@ -440,11 +617,17 @@ const table = Inputs.table(sortedShows, {
     season_rank: 100,
     total_downloads: 140,
     endurance: 150,
-    late_starters: 120
+    late_starters: 120,
+    average_score: 70,
+    mal_score: 60,
+    niconico_very_good_pct: 90
   },
   align: {
     season_rank: "right",
-    endurance: "right"
+    endurance: "right",
+    average_score: "right",
+    mal_score: "right",
+    niconico_very_good_pct: "right"
   },
   multiple: true,
   value: [],
@@ -916,7 +1099,7 @@ display(html`<div class="facet-stack">
               x: "endurance",
               r: 22,
               anchor: "middle",
-              fill: d => highlightMode && !selectedIds.has(d.anilist_id) ? "#333" : showColors[d.anilist_id],
+              fill: d => highlightMode && !selectedIds.has(d.anilist_id) ? "#333" : vizColor.neutral,
               fillOpacity: d => highlightMode && !selectedIds.has(d.anilist_id) ? 0.45 : 0.85,
               stroke: d => selectedIds.has(d.anilist_id) ? "#fff" : "none",
               strokeWidth: 2
@@ -943,7 +1126,7 @@ display(html`<div class="facet-stack">
               anchor: "middle",
               dx: 27,
               dy: 5,
-              fill: d => selectedIds.has(d.anilist_id) ? showColors[d.anilist_id] : "none",
+              fill: d => selectedIds.has(d.anilist_id) ? vizColor.neutral : "none",
               fontSize: 10,
               fontWeight: "600",
               textAnchor: "start"
@@ -1000,7 +1183,7 @@ display(html`<div class="facet-stack">
               anchor: "middle",
               fill: d => {
                 if (highlightMode && !selectedIds.has(d.anilist_id)) return "#333";
-                return d.late_starters >= 0.35 ? "#4ade80" : d.late_starters <= 0.15 ? "#f87171" : showColors[d.anilist_id];
+                return d.late_starters >= 0.35 ? "#4ade80" : d.late_starters <= 0.15 ? "#f87171" : vizColor.neutral;
               },
               fillOpacity: d => highlightMode && !selectedIds.has(d.anilist_id) ? 0.45 : 0.85,
               stroke: d => selectedIds.has(d.anilist_id) ? "#fff" : "none",
@@ -1028,7 +1211,7 @@ display(html`<div class="facet-stack">
               anchor: "middle",
               dx: 27,
               dy: 5,
-              fill: d => selectedIds.has(d.anilist_id) ? showColors[d.anilist_id] : "none",
+              fill: d => selectedIds.has(d.anilist_id) ? vizColor.neutral : "none",
               fontSize: 10,
               fontWeight: "600",
               textAnchor: "start"
@@ -1050,6 +1233,207 @@ display(html`<div class="facet-stack">
 </div>`);
 ```
 
+---
+
+```js
+// --- Cross-source comparison: reception vs downloads ---
+// rank_delta_dl_vs_mal / rank_delta_dl_vs_anilist are precomputed in the ETL.
+// Positive delta = critically loved but comparatively few downloads (underrated
+// gem); negative = downloads outrun reception. Null when a show lacks the metric.
+const ratingDeltaConfigs = [
+  { key: "rank_delta_dl_vs_mal", label: "MyAnimeList", scoreKey: "mal_score" },
+  { key: "rank_delta_dl_vs_anilist", label: "AniList", scoreKey: "average_score" },
+  { key: "rank_delta_dl_vs_niconico", label: "Niconico", scoreKey: "niconico_very_good_pct" }
+].filter(cfg => filteredShows.some(s => s[cfg.key] != null));
+```
+
+```js
+if (ratingDeltaConfigs.length === 0) {
+  display(html`<div class="note">No external rating data available for this season yet.</div>`);
+} else {
+  for (const cfg of ratingDeltaConfigs) {
+    const cfgData = filteredShows
+      .filter(s => s[cfg.key] != null)
+      .map(s => ({ ...s, ep1_bucket: bucketLabel(s.ep1_downloads) }));
+    // Shared symmetric domain across buckets so the swarms are comparable.
+    const maxAbs = d3.max(cfgData, d => Math.abs(d[cfg.key])) || 1;
+    const deltaDomain = [-maxAbs * 1.05, maxAbs * 1.05];
+    display(html`<div class="facet-stack">
+      ${bucketOrder.map(bucket => {
+        const bucketData = cfgData.filter(d => d.ep1_bucket === bucket);
+        return html`<div class="facet-block">
+          ${Plot.plot({
+            title: `${seasonTitle}: Download rank vs ${cfg.label} rank (${bucket})`,
+            subtitle: `← downloads outrun reception   •   underrated by downloads → • NyaaStats`,
+            height: 360,
+            width: plotWidth,
+            marginLeft: 70,
+            marginRight: 40,
+            marginBottom: 40,
+            marginTop: 20,
+            x: {
+              label: `Rank delta (download rank − ${cfg.label} rank)`,
+              domain: deltaDomain
+            },
+            y: { axis: null },
+            marks: [
+              Plot.ruleX([0], { stroke: "#666", strokeDasharray: "4,4" }),
+              Plot.dot(bucketData, Plot.dodgeY({
+                x: cfg.key,
+                r: 22,
+                anchor: "middle",
+                fill: d => {
+                  if (highlightMode && !selectedIds.has(d.anilist_id)) return "#333";
+                  return d[cfg.key] > 0 ? "#4ade80" : d[cfg.key] < 0 ? "#f87171" : vizColor.neutral;
+                },
+                fillOpacity: d => highlightMode && !selectedIds.has(d.anilist_id) ? 0.45 : 0.85,
+                stroke: d => selectedIds.has(d.anilist_id) ? "#fff" : "none",
+                strokeWidth: 2
+              })),
+              Plot.image(bucketData, Plot.dodgeY({
+                x: cfg.key,
+                src: "cover_image_url",
+                width: 36,
+                height: 54,
+                r: 22,
+                anchor: "middle",
+                opacity: d => highlightMode && !selectedIds.has(d.anilist_id) ? 0.35 : 1
+              })),
+              focusMode && selectedShows.length > 0 ? Plot.text(bucketData, Plot.dodgeY({
+                x: cfg.key,
+                text: d => selectedIds.has(d.anilist_id) ? d.title_romaji?.slice(0, 18) : "",
+                r: 22,
+                anchor: "middle",
+                dx: 27,
+                dy: 5,
+                fill: d => selectedIds.has(d.anilist_id) ? vizColor.neutral : "none",
+                fontSize: 10,
+                fontWeight: "600",
+                textAnchor: "start"
+              })) : null,
+              Plot.tip(bucketData, Plot.pointer(Plot.dodgeY({
+                x: cfg.key,
+                r: 22,
+                anchor: "middle",
+                title: d => `${d.title_romaji}\nRank Δ: ${d[cfg.key] > 0 ? "+" : ""}${d[cfg.key]}\n${cfg.label}: ${d[cfg.scoreKey] ?? "—"}\nTotal: ${formatCompact(d.total_downloads)}`
+              })))
+            ].filter(Boolean)
+          })}
+        </div>`;
+      })}
+    </div>`);
+  }
+}
+```
+
+```js
+// 2D scatter: critical score (x) vs nyaa downloads (y, log scale). Distance from
+// the cloud's trend marks shows that over/under-download for their reception. One
+// scatter per available rating source (MAL / AniList / Niconico).
+const scatterScoreLabel = {
+  mal_score: "MyAnimeList score",
+  average_score: "AniList average score",
+  niconico_very_good_pct: "Niconico 『とても良かった』 %"
+};
+
+function renderScatter(cfg) {
+  const scoreKey = cfg.scoreKey;
+  const data = filteredShows.filter(s => s[scoreKey] != null && s.total_downloads > 0);
+  if (data.length === 0) return null;
+
+  // Log-space OLS fit: log10(downloads) = a + b·score. Working in log space (since
+  // downloads span orders of magnitude) makes the trend a straight line on the log
+  // axis, and the residual = actual − predicted in log space is the natural measure
+  // of how far a show over/under-downloads for its score.
+  const fit = (() => {
+    if (data.length < 3) return null;
+    const xs = data.map(d => d[scoreKey]);
+    const ys = data.map(d => Math.log10(d.total_downloads));
+    const mx = d3.mean(xs), my = d3.mean(ys);
+    const denom = d3.sum(xs, x => (x - mx) ** 2);
+    if (!denom) return null;
+    const b = d3.sum(xs.map((x, i) => (x - mx) * (ys[i] - my))) / denom;
+    const a = my - b * mx;
+    return { predict: x => Math.pow(10, a + b * x), predictLog: x => a + b * x, xExtent: d3.extent(xs) };
+  })();
+
+  // Attach residuals, then label the biggest over/under-downloaders + selected.
+  const scored = data.map(d => ({
+    ...d,
+    _resid: fit ? Math.log10(d.total_downloads) - fit.predictLog(d[scoreKey]) : 0
+  }));
+  const labelIds = new Set(
+    [...scored].sort((p, q) => Math.abs(q._resid) - Math.abs(p._resid)).slice(0, 8).map(d => d.anilist_id)
+  );
+  for (const id of selectedIds) labelIds.add(id);
+
+  return Plot.plot({
+    title: `${seasonTitle}: ${cfg.label} score vs nyaa downloads`,
+    subtitle: `Shows far above the cloud over-download for their score; far below, under-download • NyaaStats`,
+    height: 460,
+    width: plotWidth,
+    marginLeft: 70,
+    marginBottom: 50,
+    grid: true,
+    x: { label: `${scatterScoreLabel[scoreKey] || cfg.label} →` },
+    y: { label: "↑ Total downloads (log)", type: "log", tickFormat: formatCompact },
+    marks: [
+      fit ? Plot.ruleX(scored, {
+        x: scoreKey,
+        y1: "total_downloads",
+        y2: d => fit.predict(d[scoreKey]),
+        stroke: d => d._resid >= 0 ? "#4ade80" : "#f87171",
+        strokeOpacity: d => highlightMode && !selectedIds.has(d.anilist_id) ? 0.15 : 0.4,
+        strokeWidth: 1
+      }) : null,
+      fit ? Plot.line(
+        [fit.xExtent[0], fit.xExtent[1]].map(x => ({ x, y: fit.predict(x) })),
+        { x: "x", y: "y", stroke: "#888", strokeWidth: 1.5, strokeDasharray: "5,4" }
+      ) : null,
+      Plot.dot(scored, {
+        x: scoreKey,
+        y: "total_downloads",
+        r: 5,
+        fill: d => highlightMode && !selectedIds.has(d.anilist_id) ? "#333" : vizColor.neutral,
+        fillOpacity: d => highlightMode && !selectedIds.has(d.anilist_id) ? 0.35 : 0.85,
+        stroke: d => selectedIds.has(d.anilist_id) ? "#fff" : "none",
+        strokeWidth: 1.5
+      }),
+      Plot.image(scored.filter(d => selectedIds.has(d.anilist_id)), {
+        x: scoreKey,
+        y: "total_downloads",
+        src: "cover_image_url",
+        width: 30,
+        height: 45
+      }),
+      Plot.text(scored.filter(d => labelIds.has(d.anilist_id)), {
+        x: scoreKey,
+        y: "total_downloads",
+        text: d => (d.title_romaji || "").slice(0, 22),
+        dy: -9,
+        fontSize: 10,
+        fontWeight: "600",
+        fill: "#eee",
+        stroke: "#000",
+        strokeWidth: 3,
+        paintOrder: "stroke",
+        lineAnchor: "bottom"
+      }),
+      Plot.tip(scored, Plot.pointer({
+        x: scoreKey,
+        y: "total_downloads",
+        title: d => `${d.title_romaji}\n${cfg.label}: ${d[scoreKey]}\nTotal: ${formatCompact(d.total_downloads)}`
+      }))
+    ].filter(Boolean)
+  });
+}
+
+for (const cfg of ratingDeltaConfigs) {
+  const plot = renderScatter(cfg);
+  if (plot) display(plot);
+}
+```
+
 <style>
   .note {
     background: #1a1a1a;
@@ -1058,6 +1442,86 @@ display(html`<div class="facet-stack">
     margin: 1rem 0;
     font-size: 0.9rem;
     color: #aaa;
+  }
+
+  /* Season "card grid" — uniform per-show cards */
+  .season-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(208px, 1fr));
+    gap: 8px;
+    margin: 0.75rem 0 1.5rem;
+  }
+  .season-card {
+    position: relative;
+    height: 188px;
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 1px solid #222;
+    background: #0d0d12;
+  }
+  .season-card.is-selected {
+    border-color: #fff;
+    box-shadow: 0 0 0 1px #fff;
+  }
+  .season-card-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center 18%;
+    opacity: 0.30;
+  }
+  .season-card-body {
+    position: relative;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 5px 8px 6px;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.30) 38%, rgba(0,0,0,0.78) 100%);
+    text-shadow: 0 0 3px #000, 1px 1px 2px #000;
+  }
+  .season-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 11px;
+  }
+  .season-card-rank { font-weight: 700; color: var(--card-color); }
+  .season-card-dl { color: #ddd; font-size: 10px; }
+  .season-card-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.15;
+    margin-top: 1px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .season-card-eng {
+    font-size: 9px;
+    color: #bbb;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .season-card-viz {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    margin-top: auto;
+  }
+  .season-card-sparks { flex: 1; min-width: 0; }
+  .spark-row { display: flex; align-items: center; gap: 4px; }
+  .spark-lbl { font-size: 8px; color: #aaa; width: 28px; text-align: right; flex: none; }
+  .season-card-scores {
+    display: flex;
+    justify-content: space-between;
+    font-size: 8.5px;
+    color: #ccc;
+    margin-top: 3px;
   }
 
   /* Table styling */

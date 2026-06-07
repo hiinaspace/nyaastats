@@ -40,6 +40,31 @@ CREATE INDEX IF NOT EXISTS idx_stats_infohash ON stats(infohash);
 CREATE INDEX IF NOT EXISTS idx_stats_timestamp ON stats(timestamp);
 CREATE INDEX IF NOT EXISTS idx_torrents_pubdate ON torrents(pubdate);
 CREATE INDEX IF NOT EXISTS idx_torrents_status ON torrents(status);
+
+-- Cached external rating/ranking data keyed by AniList id (e.g. MyAnimeList via Jikan).
+CREATE TABLE IF NOT EXISTS external_ratings (
+    source TEXT NOT NULL,        -- e.g. 'mal'
+    anilist_id INTEGER NOT NULL,
+    mal_id INTEGER,
+    payload TEXT NOT NULL,       -- JSON blob of captured fields
+    fetched_at TEXT NOT NULL,    -- ISO timestamp of fetch
+    PRIMARY KEY (source, anilist_id)
+);
+
+-- Niconico per-episode official post-broadcast survey (アンケート) results.
+CREATE TABLE IF NOT EXISTS niconico_survey (
+    anilist_id INTEGER NOT NULL,
+    episode INTEGER NOT NULL,
+    very_good_pct REAL,          -- 『とても良かった』%
+    good_pct REAL,
+    normal_pct REAL,
+    bad_pct REAL,
+    very_bad_pct REAL,
+    mean_score REAL,             -- optional weighted 1-5 score
+    source_url TEXT,
+    fetched_at TEXT,
+    PRIMARY KEY (anilist_id, episode)
+);
 """
 
 
@@ -200,6 +225,122 @@ class Database:
                 (infohash, limit),
             )
             return [dict(row) for row in cursor.fetchall()]
+
+    def get_external_ratings(self, source: str) -> dict[int, dict[str, Any]]:
+        """Get all cached external ratings for a source, keyed by anilist_id.
+
+        Args:
+            source: Rating source identifier (e.g. 'mal')
+
+        Returns:
+            Dict mapping anilist_id to {mal_id, payload (parsed), fetched_at}
+        """
+        with self.get_conn() as conn:
+            cursor = conn.execute(
+                """
+                SELECT anilist_id, mal_id, payload, fetched_at
+                FROM external_ratings
+                WHERE source = ?
+                """,
+                (source,),
+            )
+            result: dict[int, dict[str, Any]] = {}
+            for row in cursor.fetchall():
+                result[row["anilist_id"]] = {
+                    "mal_id": row["mal_id"],
+                    "payload": json.loads(row["payload"]),
+                    "fetched_at": row["fetched_at"],
+                }
+            return result
+
+    def upsert_external_rating(
+        self,
+        source: str,
+        anilist_id: int,
+        payload: dict[str, Any],
+        mal_id: int | None = None,
+        fetched_at: str | None = None,
+    ) -> None:
+        """Insert or replace a cached external rating row.
+
+        Args:
+            source: Rating source identifier (e.g. 'mal')
+            anilist_id: AniList id (join key)
+            payload: Captured fields to store as JSON
+            mal_id: Optional MyAnimeList id
+            fetched_at: ISO timestamp; defaults to now
+        """
+        if fetched_at is None:
+            fetched_at = self.now_func().format_common_iso()
+        with self.get_conn() as conn:
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO external_ratings
+                    (source, anilist_id, mal_id, payload, fetched_at)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (source, anilist_id, mal_id, json.dumps(payload), fetched_at),
+            )
+            conn.commit()
+
+    def get_niconico_surveys(self) -> dict[int, list[dict[str, Any]]]:
+        """Get all Niconico survey rows, grouped by anilist_id.
+
+        Returns:
+            Dict mapping anilist_id to a list of per-episode survey dicts
+        """
+        with self.get_conn() as conn:
+            cursor = conn.execute(
+                """
+                SELECT anilist_id, episode, very_good_pct, good_pct, normal_pct,
+                       bad_pct, very_bad_pct, mean_score, source_url, fetched_at
+                FROM niconico_survey
+                ORDER BY anilist_id, episode
+                """
+            )
+            result: dict[int, list[dict[str, Any]]] = {}
+            for row in cursor.fetchall():
+                result.setdefault(row["anilist_id"], []).append(dict(row))
+            return result
+
+    def upsert_niconico_survey(
+        self,
+        anilist_id: int,
+        episode: int,
+        very_good_pct: float | None = None,
+        good_pct: float | None = None,
+        normal_pct: float | None = None,
+        bad_pct: float | None = None,
+        very_bad_pct: float | None = None,
+        mean_score: float | None = None,
+        source_url: str | None = None,
+        fetched_at: str | None = None,
+    ) -> None:
+        """Insert or replace a per-episode Niconico survey row."""
+        if fetched_at is None:
+            fetched_at = self.now_func().format_common_iso()
+        with self.get_conn() as conn:
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO niconico_survey
+                    (anilist_id, episode, very_good_pct, good_pct, normal_pct,
+                     bad_pct, very_bad_pct, mean_score, source_url, fetched_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    anilist_id,
+                    episode,
+                    very_good_pct,
+                    good_pct,
+                    normal_pct,
+                    bad_pct,
+                    very_bad_pct,
+                    mean_score,
+                    source_url,
+                    fetched_at,
+                ),
+            )
+            conn.commit()
 
     def vacuum(self) -> None:
         """Vacuum the database for maintenance."""
