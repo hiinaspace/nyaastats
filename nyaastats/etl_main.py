@@ -40,6 +40,7 @@ async def run_etl_pipeline(
     output_dir: str,
     fuzzy_threshold: int = 85,
     use_mock_anilist: bool = False,
+    skip_external_ratings: bool = False,
 ):
     """Run the complete ETL pipeline.
 
@@ -48,6 +49,7 @@ async def run_etl_pipeline(
         output_dir: Directory to write output files
         fuzzy_threshold: Minimum fuzzy match score (0-100)
         use_mock_anilist: Use mock AniList data instead of real API
+        skip_external_ratings: Use cached external ratings without refreshing
     """
     logger.info("=" * 80)
     logger.info("Starting nyaastats ETL pipeline")
@@ -70,11 +72,17 @@ async def run_etl_pipeline(
 
     # Step 1b: Enrich with external ratings (MyAnimeList via Jikan) + Niconico surveys.
     # Cached in the DB so reruns don't re-hit the APIs.
-    logger.info("\nStep 1b: Fetching external ratings (MyAnimeList via Jikan)...")
     db = Database(db_path)
     if use_mock_anilist:
         mal_ratings: dict = {}
+    elif skip_external_ratings:
+        logger.info("\nStep 1b: Using cached external ratings (--skip-external-ratings enabled)...")
+        mal_ratings = {
+            anilist_id: entry["payload"]
+            for anilist_id, entry in db.get_external_ratings("mal").items()
+        }
     else:
+        logger.info("\nStep 1b: Fetching external ratings (MyAnimeList via Jikan)...")
         mal_ratings = await fetch_mal_ratings(db, all_shows)
         logger.info("Ingesting Niconico per-episode survey ratings...")
         await ingest_niconico_surveys(db, all_shows, MVP_SEASONS)
@@ -477,6 +485,11 @@ def main():
         action="store_true",
         help="Use mock AniList data instead of querying real API (for testing)",
     )
+    parser.add_argument(
+        "--skip-external-ratings",
+        action="store_true",
+        help="Use cached external ratings without refreshing Jikan or Niconico",
+    )
 
     args = parser.parse_args()
 
@@ -493,6 +506,7 @@ def main():
                 output_dir=args.output,
                 fuzzy_threshold=args.fuzzy_threshold,
                 use_mock_anilist=args.mock_anilist,
+                skip_external_ratings=args.skip_external_ratings,
             )
         )
     except Exception:
