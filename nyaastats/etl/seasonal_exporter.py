@@ -2,7 +2,7 @@
 
 import json
 import logging
-from datetime import date
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import polars as pl
@@ -110,9 +110,7 @@ class SeasonalExporter:
         Returns:
             Path to the generated JSON file
         """
-        from datetime import date as dt_date
-
-        today = dt_date.today()
+        today = date.today()
         items = []
 
         for season_config in seasons:
@@ -274,6 +272,11 @@ class SeasonalExporter:
         # Filter episode stats to season shows (no date cutoff; trust AniList season)
         season_episodes = episode_stats.filter(pl.col("anilist_id").is_in(show_ids))
 
+        data_through_date = None
+        if len(season_episodes) > 0:
+            max_date = season_episodes["date"].max()
+            data_through_date = max_date.isoformat() if max_date is not None else None
+
         # Recompute cumulative downloads within the season window
         if len(season_episodes) > 0:
             season_episodes = season_episodes.with_columns(
@@ -410,6 +413,8 @@ class SeasonalExporter:
             "season": season_config.name,
             "start_date": start_date.isoformat(),
             "end_date": end_date.isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
+            "data_through_date": data_through_date,
             "weeks": weeks_data,
             "shows": shows_data,
             "percentiles": {

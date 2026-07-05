@@ -249,10 +249,9 @@ rankText.append("tspan")
 
 // Add watermark overlay
 const treemapTitleLines = seasonLabel.split(" ");
-const isInProgress = seasonTitle !== seasonLabel;
-const todayFmt = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }).format(new Date());
-const treemapSubtitleLines = isInProgress
-  ? [`total downloads (up to ${todayFmt})`, "nyaastats"]
+const titleDateMatch = seasonTitle.match(/\(up to (.+)\)$/);
+const treemapSubtitleLines = titleDateMatch
+  ? [`total downloads (up to ${titleDateMatch[1]})`, "nyaastats"]
   : ["total downloads", "nyaastats"];
 addWatermark(treemapSvg, treemapWidth, treemapHeight, treemapTitleLines, treemapSubtitleLines);
 

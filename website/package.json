@@ -4,8 +4,9 @@
   "description": "Nyaa torrent statistics visualization website",
   "type": "module",
   "scripts": {
+    "clean:generated": "node -e \"require(\\\"node:fs\\\").rmSync(\\\"src/.observablehq/cache/season\\\", {recursive: true, force: true})\"",
     "treemaps": "node scripts/generate-treemaps.js",
-    "prebuild": "npm run treemaps",
+    "prebuild": "npm run clean:generated && npm run treemaps",
     "predev": "npm run treemaps",
     "build": "observable build",
     "dev": "observable preview",
