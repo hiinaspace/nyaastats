@@ -49,7 +49,7 @@ async def run_etl_pipeline(
         output_dir: Directory to write output files
         fuzzy_threshold: Minimum fuzzy match score (0-100)
         use_mock_anilist: Use mock AniList data instead of real API
-        skip_external_ratings: Use cached external ratings without refreshing
+        skip_external_ratings: Use cached MAL ratings while still refreshing Niconico surveys
     """
     logger.info("=" * 80)
     logger.info("Starting nyaastats ETL pipeline")
@@ -81,6 +81,10 @@ async def run_etl_pipeline(
             anilist_id: entry["payload"]
             for anilist_id, entry in db.get_external_ratings("mal").items()
         }
+        # Niconico has a separate, cheap daily CSV refresh. Keep it current
+        # even when MAL API refreshes are deliberately skipped for a deploy.
+        logger.info("Refreshing Niconico per-episode survey ratings...")
+        await ingest_niconico_surveys(db, all_shows, MVP_SEASONS)
     else:
         logger.info("\nStep 1b: Fetching external ratings (MyAnimeList via Jikan)...")
         mal_ratings = await fetch_mal_ratings(db, all_shows)
@@ -488,7 +492,7 @@ def main():
     parser.add_argument(
         "--skip-external-ratings",
         action="store_true",
-        help="Use cached external ratings without refreshing Jikan or Niconico",
+        help="Use cached MAL ratings; refresh Niconico surveys",
     )
 
     args = parser.parse_args()

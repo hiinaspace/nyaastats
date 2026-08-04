@@ -224,4 +224,9 @@ def niconico_season_code(season: str, year: int) -> str | None:
 # Manual mapping from a Niconico series title to an AniList id, for survey rows
 # whose Japanese title doesn't fuzzy-match an AniList native title (mirrors
 # TITLE_OVERRIDES). Populated as mismatches are discovered.
-NICONICO_TITLE_MAP: dict[str, int] = {}
+NICONICO_TITLE_MAP: dict[str, int] = {
+    # AniList uses the original Chinese title for this Japanese-distributed
+    # donghua, while the survey DB uses the Japanese title and season number.
+    "不死身な僕の日常 シーズン4": 156110,  # Xian Wang De Richang Shenghuo 4
+    "盗掘王": 184356,  # Dogul Wang / Tomb Raider King
+}

@@ -98,6 +98,15 @@ def test_match_uses_title_map_override():
     assert any(m["anilist_id"] == 99 for m in matched)
 
 
+def test_known_japanese_title_overrides_match_anilist_records():
+    rows = [
+        {"title": "不死身な僕の日常 シーズン4", "episode": 1, "datetime": "2026-07-06", "pcts": [80, 10, 5, 3, 2]},
+        {"title": "盗掘王", "episode": 1, "datetime": "2026-07-06", "pcts": [70, 15, 8, 4, 3]},
+    ]
+    shows = [_show(156110, "仙王的日常生活 第四季"), _show(184356, "도굴왕")]
+    matched = match_surveys_to_shows(shows, rows)
+    assert {(row["anilist_id"], row["episode"]) for row in matched} == {(156110, 1), (184356, 1)}
+
 def test_fetch_survey_csv_caches(monkeypatch):
     fixed = Instant.from_utc(2026, 6, 1, 12, 0, 0)
     db = Database(":memory:", now_func=lambda: fixed)
