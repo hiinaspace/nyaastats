@@ -14,6 +14,28 @@ from .fuzzy_matcher import TitleMatch
 logger = logging.getLogger(__name__)
 
 
+def extract_guessit_title(guessit_json: str) -> str | None:
+    """Extract a scalar title from serialized guessit data.
+
+    Guessit can return multiple titles for releases containing multiple
+    segments.  The first title is the canonical release title used for
+    matching; alternate values must not leak into a string-typed Polars
+    column.
+    """
+    import json
+
+    try:
+        title = json.loads(guessit_json).get("title")
+    except Exception:
+        return None
+
+    if isinstance(title, str):
+        return title
+    if isinstance(title, list | tuple):
+        return next((item for item in title if isinstance(item, str) and item), None)
+    return None
+
+
 @dataclass
 class EpisodeStats:
     """Aggregated statistics per episode and date."""
@@ -91,14 +113,6 @@ class DownloadAggregator:
         # Parse guessit JSON and add episode/title columns
         import json
 
-        def extract_title(guessit_json: str) -> str | None:
-            """Extract title from guessit JSON."""
-            try:
-                data = json.loads(guessit_json)
-                return data.get("title")
-            except Exception:
-                return None
-
         def extract_episode(guessit_json: str) -> int | None:
             """Extract episode number from guessit JSON.
 
@@ -125,7 +139,7 @@ class DownloadAggregator:
         df = df.with_columns(
             [
                 pl.col("guessit_data")
-                .map_elements(extract_title, return_dtype=pl.Utf8)
+                .map_elements(extract_guessit_title, return_dtype=pl.Utf8)
                 .alias("title"),
                 pl.col("guessit_data")
                 .map_elements(extract_episode, return_dtype=pl.Int64)
