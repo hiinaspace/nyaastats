@@ -50,8 +50,16 @@ SUMMER_2026 = SeasonConfig(
     end_date=Instant.from_utc(2026, 9, 30),
 )
 
+FALL_2026 = SeasonConfig(
+    name="Fall 2026",
+    season="FALL",
+    year=2026,
+    start_date=Instant.from_utc(2026, 10, 1),
+    end_date=Instant.from_utc(2026, 12, 31),
+)
+
 # All seasons to process for MVP
-MVP_SEASONS = [FALL_2025, WINTER_2026, SPRING_2026, SUMMER_2026]
+MVP_SEASONS = [FALL_2025, WINTER_2026, SPRING_2026, SUMMER_2026, FALL_2026]
 
 
 # Manual title overrides for fuzzy matching
@@ -144,7 +152,7 @@ IGNORED_TITLES: set[str] = {
 # --- Movie tracking configuration ---
 
 # Date range for movie tracking (covers entire scraping period)
-MOVIE_DATE_RANGE = (Instant.from_utc(2025, 6, 1), Instant.from_utc(2026, 9, 30))
+MOVIE_DATE_RANGE = (Instant.from_utc(2025, 6, 1), Instant.from_utc(2026, 12, 31))
 
 # AniList format types to query for movies
 MOVIE_FORMATS = ["MOVIE", "ONA", "SPECIAL"]
